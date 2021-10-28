@@ -9,8 +9,9 @@ class Options():
         opt['activation_function']     = "sine"         # sine or relu
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
-        opt["vector_field_name"]       = "Isomag3D"
-        opt["save_name"]               = "Implicit_Isomag3D"    # Folder that the model will be saved to
+        opt['interpolate']             = False
+        opt["vector_field_name"]       = "isotropic1024coarse_ts1.h5"
+        opt["save_name"]               = "Implicit_isotropic1024coarse_ts1"    # Folder that the model will be saved to
         opt["n_layers"]                = 8        # Smallest a dimension can go to upscale from
         opt["nodes_per_layer"]         = 1024
 
@@ -21,10 +22,10 @@ class Options():
         opt["num_nodes"]               = 1
         opt["ranking"]                 = 0
 
-        opt["iterations"]              = 50
+        opt["iterations"]              = 10000
         opt["points_per_iteration"]    = 10000     # Minibatch for training
         opt["lr"]                      = 0.0001    # Learning rate for GAN discriminator
-        opt["beta_1"]                  = 0.9
+        opt["beta_1"]                  = 0.5
         opt["beta_2"]                  = 0.999
 
         opt["iteration_number"]        = 0

@@ -16,9 +16,6 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, opt):
         
         self.opt = opt
-        self.items = None
-        self.item_names = None 
-        self.coord_grid = None
 
         folder_to_load = os.path.join(data_folder, self.opt['vector_field_name'])
 
@@ -32,17 +29,27 @@ class Dataset(torch.utils.data.Dataset):
 
     def get_random_points(self, n_points):        
         if(self.opt['interpolate']):
-            x = (torch.rand([n_points, len(self.data.shape[2:])], 
-                device=self.data.device) - 1) * 2
-        else:
-            if(self.coord_grid is None):
-                self.coord_grid = make_coord_grid(self.data.shape[2:], 
-                    self.opt['data_device'], True)
-            sample_spots = torch.randint(0, self.coord_grid.shape[0], 
-                [self.coord_grid.shape[0]], device=self.opt['data_device'])
-            x = self.coord_grid[sample_spots].clone()
-        
-        y = F.grid_sample(self.data, 
+            x = (torch.rand([1, n_points, len(self.data.shape[2:])], 
+                device=self.data.device) - 0.5) * 2
+            for _ in range(len(self.data.shape[2:])-1):
+                x = x.unsqueeze(-2)
+            y = F.grid_sample(self.data, 
                 x, mode='bilinear', align_corners=False)
-            
+        else:
+            x_dims = []
+            for i in range(len(self.data.shape[2:])):
+                x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
+                    dtype=torch.float32, device=self.opt['data_device'])
+                x += 0.5
+                x *= (2 / (self.data.shape[2+i]+1))
+                x -= 1
+                x_dims.append(x)
+            x = torch.cat(x_dims, -1)
+            for _ in range(len(self.data.shape[2:])-1):
+                x = x.unsqueeze(-2)
+            y = F.grid_sample(self.data, 
+                x, mode='nearest', align_corners=False)
+        x = x.squeeze()
+        y = y.squeeze().permute(1,0)
+        
         return x, y

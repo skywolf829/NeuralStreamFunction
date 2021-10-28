@@ -16,7 +16,7 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 
 def save_model(model,opt):
     folder = create_folder(save_folder, opt["save_name"])
-    path_to_save = os.path.join(opt["save_folder"], folder)
+    path_to_save = os.path.join(save_folder, folder)
     
     torch.save(model.state_dict(), os.path.join(path_to_save, "model.ckpt"))
     save_options(opt, path_to_save)
@@ -62,13 +62,14 @@ class PositionalEncoding(nn.Module):
 class ImplicitModel(nn.Module):
     def __init__ (self, opt):
         super(ImplicitModel, self).__init__()
+        self.opt = opt
         self.activation_function = torch.sin if opt['activation_function'] \
             == 'sin' else torch.relu
         if(opt['use_positional_encoding']):
             self.positional_encoding = PositionalEncoding(opt)
 
-        self.head = nn.Linear(opt['n_dims'] if opt['activation_function'] == "sin" else \
-            opt['positional_encoding_terms'] * opt['n_dims'] * 2, opt['nodes_per_layer'])
+        self.head = nn.Linear(opt['n_dims'] if not opt['use_positional_encoding'] else \
+            opt['num_positional_encoding_terms'] * opt['n_dims'] * 2, opt['nodes_per_layer'])
 
         self.body = nn.ModuleList([])
         for _ in range(opt['n_layers']):
@@ -79,7 +80,7 @@ class ImplicitModel(nn.Module):
     def forward(self,x):
         if(self.opt['use_positional_encoding']):
             x = self.positional_encoding(x)
-
+            
         y_est = self.head(x)
         y_est = self.activation_function(y_est)
 
@@ -88,5 +89,4 @@ class ImplicitModel(nn.Module):
             y_est = self.activation_function(y_est)
         
         y_est = self.tail(y_est)
-
         return y_est
