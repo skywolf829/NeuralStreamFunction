@@ -90,36 +90,37 @@ sim_name, timestep, field, num_components, num_workers):
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
-data_folder = os.path.join(project_folder_path, "Data", "SuperResolutionData")
-save_folder = os.path.join(data_folder, "Mixing3D", "TrainingData")
+data_folder = os.path.join(project_folder_path, "Data")
+save_folder = os.path.join(data_folder)
 
 name = "mixing"
 t0 = time.time()
 count = 0
 startts = 1
-endts = 1000
+endts = 2
 ts_skip = 10
 frames = []
 for i in range(startts, endts, ts_skip):
     print("TS %i/%i" % (i, endts))
-    f = get_full_frame_parallel(0, 1024, 2,#x
-    0, 1024, 2, #y
-    0, 1024, 2, #z
+    f = get_full_frame_parallel(0, 128, 1,#x
+    0, 128, 1, #y
+    0, 128, 1, #z
     name, i, 
     "u", 3, 
     16)    
     print(f.shape)
-    f = np.linalg.norm(f, axis=3)
-    print(f.shape)
+    mags = np.linalg.norm(f, axis=3)
+    f *= (1/mags.max())
+    #print(f.shape)
     # If 2D do next 2 lines
     # f = f[...,0]
     # print(f.shape)
     f = np.expand_dims(f, 0)
-    f -= f.min()
-    f *= 1/(f.max() + 1e-6)
+    #f -= f.min()
+    #f *= 1/(f.max() + 1e-6)
     print(f.shape)
     #frames.append(f)
-    f_h5 = h5py.File(os.path.join(save_folder, str(i-1)+ '.h5'), 'w')
+    f_h5 = h5py.File(os.path.join(save_folder, "isotropic1024coarse_1.h5"), 'w')
     f_h5.create_dataset("data", data=f)
     f_h5.close()
     print("Finished " + str(i))
