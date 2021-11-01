@@ -52,4 +52,4 @@ class Dataset(torch.utils.data.Dataset):
         x = x.squeeze()
         y = y.squeeze().permute(1,0)
 
-        return x, y[:,0:1]
+        return x, y

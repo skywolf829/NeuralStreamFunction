@@ -104,7 +104,7 @@ class ImplicitModel(nn.Module):
             self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
 
-        final_linear = nn.Linear(opt['nodes_per_layer'], 1)
+        final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_dims'])
             
         with torch.no_grad():
             final_linear.weight.uniform_(-np.sqrt(6 / opt['nodes_per_layer']) / 30, 
