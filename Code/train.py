@@ -64,7 +64,7 @@ def train_implicit_model(rank, model, dataset, opt):
         x = x.to(opt['device'])
         y = y.to(opt['device'])
 
-        y_estimated = model(x)
+        y_estimated, coords = model(x)
         loss = loss_func(y, y_estimated)
         loss.backward()
 
