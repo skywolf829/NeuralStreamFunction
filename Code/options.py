@@ -25,7 +25,7 @@ class Options():
         opt["iterations"]              = 10000
         opt["points_per_iteration"]    = 10000     # Minibatch for training
         opt["lr"]                      = 1e-5   # Learning rate for GAN discriminator
-        opt["beta_1"]                  = 0.9
+        opt["beta_1"]                  = 0.5
         opt["beta_2"]                  = 0.999
 
         opt["iteration_number"]        = 0
