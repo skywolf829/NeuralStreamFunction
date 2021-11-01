@@ -113,8 +113,13 @@ class ImplicitModel(nn.Module):
             self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
 
-        self.net.append(SineLayer(opt['nodes_per_layer'], opt['n_dims'], 
-                                      is_first=False, omega_0=30))
+        final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_dims'])
+            
+        with torch.no_grad():
+            final_linear.weight.uniform_(-np.sqrt(6 / opt['nodes_per_layer']) / 30, 
+                                            np.sqrt(6 / opt['nodes_per_layer']) / 30)
+            
+        self.net.append(final_linear)
         
         self.net = nn.Sequential(*self.net)
     
