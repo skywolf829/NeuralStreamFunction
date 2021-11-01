@@ -62,16 +62,7 @@ class PositionalEncoding(nn.Module):
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
 
-class SineLayer(nn.Module):
-    # See paper sec. 3.2, final paragraph, and supplement Sec. 1.5 for discussion of omega_0.
-    
-    # If is_first=True, omega_0 is a frequency factor which simply multiplies the activations before the 
-    # nonlinearity. Different signals may require different omega_0 in the first layer - this is a 
-    # hyperparameter.
-    
-    # If is_first=False, then the weights will be divided by omega_0 so as to keep the magnitude of 
-    # activations constant, but boost gradients to the weight matrix (see supplement Sec. 1.5)
-    
+class SineLayer(nn.Module):  
     def __init__(self, in_features, out_features, bias=True,
                  is_first=False, omega_0=30):
         super().__init__()
