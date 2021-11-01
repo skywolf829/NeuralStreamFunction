@@ -7,6 +7,9 @@ import os
 from math import pi
 from options import *
 from utility_functions import create_folder
+import math
+import numpy as np
+
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -59,6 +62,46 @@ class PositionalEncoding(nn.Module):
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
 
+def init_weights_normal(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            nn.init.kaiming_normal_(m.weight, a=0.0, nonlinearity='relu', mode='fan_in')
+
+
+def init_weights_selu(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            num_input = m.weight.size(-1)
+            nn.init.normal_(m.weight, std=1 / math.sqrt(num_input))
+
+
+def init_weights_elu(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            num_input = m.weight.size(-1)
+            nn.init.normal_(m.weight, std=math.sqrt(1.5505188080679277) / math.sqrt(num_input))
+
+
+def init_weights_xavier(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            nn.init.xavier_normal_(m.weight)
+
+def sine_init(m):
+    with torch.no_grad():
+        if hasattr(m, 'weight'):
+            num_input = m.weight.size(-1)
+            # See supplement Sec. 1.5 for discussion of factor 30
+            m.weight.uniform_(-np.sqrt(6 / num_input) / 30, np.sqrt(6 / num_input) / 30)
+
+
+def first_layer_sine_init(m):
+    with torch.no_grad():
+        if hasattr(m, 'weight'):
+            num_input = m.weight.size(-1)
+            # See paper sec. 3.2, final paragraph, and supplement Sec. 1.5 for discussion of factor 30
+            m.weight.uniform_(-1 / num_input, 1 / num_input)
+
 class ImplicitModel(nn.Module):
     def __init__ (self, opt):
         super(ImplicitModel, self).__init__()
@@ -77,16 +120,20 @@ class ImplicitModel(nn.Module):
         
         self.tail = nn.Linear(opt['nodes_per_layer'], opt['n_dims'])
 
+        self.head.apply(first_layer_sine_init)
+        self.body.apply(sine_init)
+        self.tail.apply(sine_init)
+
     def forward(self,x):
         if(self.opt['use_positional_encoding']):
             x = self.positional_encoding(x)
             
-        y_est = self.head(x)
+        y_est = self.head(30 * x)
         y_est = self.activation_function(y_est)
 
         for i in range(len(self.body)):
             y_est = self.body[i](y_est)
-            y_est = self.activation_function(y_est)
+            y_est = self.activation_function(30 * y_est)
         
         y_est = self.tail(y_est)
         return y_est
