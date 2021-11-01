@@ -51,5 +51,5 @@ class Dataset(torch.utils.data.Dataset):
                 x, mode='nearest', align_corners=False)
         x = x.squeeze()
         y = y.squeeze().permute(1,0)
-        
-        return x, y
+
+        return x, y[:,0:1]
