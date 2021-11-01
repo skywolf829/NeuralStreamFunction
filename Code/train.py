@@ -49,7 +49,7 @@ def train_implicit_model(rank, model, dataset, opt):
         os.path.join(save_folder, opt["save_name"]))
 
 
-    optimizer = optim.Adam(model.parameters(), lr=opt["lr"])
+    optimizer = optim.SGD(model.parameters(), lr=opt["lr"])
 
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
