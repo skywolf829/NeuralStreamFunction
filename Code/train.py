@@ -88,7 +88,8 @@ def train_implicit_model(rank, model, dataset, opt):
             
             if(iteration % 100 == 0):
                 grid_to_sample = dataset.data.shape[2:]
-                img = model.sample_grid(grid_to_sample)
+                with torch.no_grad():
+                    img = model.sample_grid(grid_to_sample)
                 #grad_img = model.sample_grid_gradient(grid_to_sample)
                 writer.add_image('Reconstruction', img.clamp(dataset.min(), dataset.max()), iteration, dataformats='WHC')
         

@@ -26,7 +26,7 @@ def save_model(model,opt):
     save_options(opt, path_to_save)
 
 def load_model(opt, device):
-    path_to_load = os.path.join(save_folder, opt["save_name"], "model.ckpt")
+    path_to_load = os.path.join(save_folder, opt["save_name"])
     model = ImplicitModel(opt)
     params = torch.load(os.path.join(path_to_load, 'model.ckpt'), 
         map_location = device)
@@ -124,29 +124,12 @@ class ImplicitModel(nn.Module):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
         if(len(coord_grid.shape) == 4):
             coord_grid = coord_grid[:,:,
-            int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
-            :]
+                int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
+                :]
         
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-
-        with torch.no_grad():
-            vals, _ = self.forward(coord_grid)
+        vals, _ = self.forward(coord_grid)
         coord_grid_shape[-1] = self.opt['n_outputs']
         vals = vals.reshape(coord_grid_shape)
         return vals
-
-    def sample_grid_gradient(self, grid):
-        coord_grid = make_coord_grid(grid, self.opt['device'], False)
-        if(len(coord_grid.shape) == 4):
-            coord_grid = coord_grid[:,:,
-            int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
-            :]
-        
-        coord_grid_shape = list(coord_grid.shape)
-        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)
-        vals, _ = self.forward(coord_grid)
-        grads = torch.autograd.grad(vals, coord_grid)
-        print(grads.shape)
-        grads = grads.reshape(coord_grid_shape)
-        return grads

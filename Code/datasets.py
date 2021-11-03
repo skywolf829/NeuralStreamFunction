@@ -48,7 +48,13 @@ class Dataset(torch.utils.data.Dataset):
             return self.data[0]
         else:
             return self.data[0,:,:,:,int(self.data.shape[4]/2)]
-            
+
+    def total_points(self):
+        t = 1
+        for i in range(2, len(self.data.shape)):
+            t *= self.data.shape[i]
+        return t
+
     def get_random_points(self, n_points):        
         if(self.opt['interpolate']):
             x = (torch.rand([1, n_points, len(self.data.shape[2:])], 
@@ -59,19 +65,23 @@ class Dataset(torch.utils.data.Dataset):
                 x, mode='bilinear', align_corners=False)
         else:
             x_dims = []
-            for i in range(len(self.data.shape[2:])):
-                x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
-                    dtype=torch.float32, device=self.opt['data_device'])
-                x += 0.5
-                x *= (2 / (self.data.shape[2+i]+1))
-                x -= 1
-                x_dims.append(x)
-            x = torch.cat(x_dims, -1)
+            if(n_points == self.total_points()):
+                x = make_coord_grid(self.data.shape[2:], 
+                    self.opt['device'], flatten=True).unsqueeze(0)
+            else:
+                for i in range(len(self.data.shape[2:])):
+                    x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
+                        dtype=torch.float32, device=self.opt['data_device'])
+                    x += 0.5
+                    x *= (2 / (self.data.shape[2+i]+1))
+                    x -= 1
+                    x_dims.append(x)
+                x = torch.cat(x_dims, -1)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
+            
             y = F.grid_sample(self.data, 
                 x, mode='nearest', align_corners=False)
-        
         
         x = x.squeeze()
         y = y.squeeze()
