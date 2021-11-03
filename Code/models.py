@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function
 import torch
+import torch.autograd
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.utils.spectral_norm as spectral_norm
 import os
 from math import pi
 from options import *
-from utility_functions import create_folder
+from utility_functions import create_folder, make_coord_grid
 import math
 import numpy as np
 
@@ -104,7 +105,7 @@ class ImplicitModel(nn.Module):
             self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
 
-        final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_dims'])
+        final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_outputs'])
             
         with torch.no_grad():
             final_linear.weight.uniform_(-np.sqrt(6 / opt['nodes_per_layer']) / 30, 
@@ -118,3 +119,34 @@ class ImplicitModel(nn.Module):
         coords = coords.clone().detach().requires_grad_(True) # allows to take derivative w.r.t. input
         output = self.net(coords)
         return output, coords
+
+    def sample_grid(self, grid):
+        coord_grid = make_coord_grid(grid, self.opt['device'], False)
+        if(len(coord_grid.shape) == 4):
+            coord_grid = coord_grid[:,:,
+            int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
+            :]
+        
+        coord_grid_shape = list(coord_grid.shape)
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
+
+        with torch.no_grad():
+            vals, _ = self.forward(coord_grid)
+        coord_grid_shape[-1] = self.opt['n_outputs']
+        vals = vals.reshape(coord_grid_shape)
+        return vals
+
+    def sample_grid_gradient(self, grid):
+        coord_grid = make_coord_grid(grid, self.opt['device'], False)
+        if(len(coord_grid.shape) == 4):
+            coord_grid = coord_grid[:,:,
+            int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
+            :]
+        
+        coord_grid_shape = list(coord_grid.shape)
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)
+        vals, _ = self.forward(coord_grid)
+        grads = torch.autograd.grad(vals, coord_grid)
+        print(grads.shape)
+        grads = grads.reshape(coord_grid_shape)
+        return grads

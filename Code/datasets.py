@@ -16,6 +16,8 @@ class Dataset(torch.utils.data.Dataset):
     def __init__(self, opt):
         
         self.opt = opt
+        self.min_ = None
+        self.max_ = None
 
         folder_to_load = os.path.join(data_folder, self.opt['vector_field_name'])
 
@@ -26,7 +28,27 @@ class Dataset(torch.utils.data.Dataset):
         f.close()
         self.data = d
         self.data = self.data.to(self.opt['data_device']).unsqueeze(0)
+        print("Data size: " + str(self.data.shape))
 
+    def min(self):
+        if self.min_ is not None:
+            return self.min_
+        else:
+            self.min_ = self.data.min()
+            return self.min_
+    def max(self):
+        if self.max_ is not None:
+            return self.max_
+        else:
+            self.max_ = self.data.max()
+            return self.max_
+
+    def get_2D_slice(self):
+        if(len(self.data.shape) == 4):
+            return self.data[0]
+        else:
+            return self.data[0,:,:,:,int(self.data.shape[4]/2)]
+            
     def get_random_points(self, n_points):        
         if(self.opt['interpolate']):
             x = (torch.rand([1, n_points, len(self.data.shape[2:])], 
@@ -49,7 +71,12 @@ class Dataset(torch.utils.data.Dataset):
                 x = x.unsqueeze(-2)
             y = F.grid_sample(self.data, 
                 x, mode='nearest', align_corners=False)
+        
+        
         x = x.squeeze()
-        y = y.squeeze().permute(1,0)
+        y = y.squeeze()
+        if(len(y.shape) == 1):
+            y = y.unsqueeze(0)        
+        y = y.permute(1,0)
 
         return x, y

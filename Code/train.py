@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 from datasets import Dataset
 import datetime
-from utility_functions import str2bool
+from utility_functions import str2bool, PSNR
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
@@ -15,7 +15,6 @@ import os
 from options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
-
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -54,12 +53,13 @@ def train_implicit_model(rank, model, dataset, opt):
 
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
-
+        gt_img = dataset.get_2D_slice()
+        writer.add_image("Ground Truth", gt_img, 0, dataformats="CHW")
     start_time = time.time()    
     loss_func = nn.L1Loss().to(opt["device"])
 
     for iteration in range(0, opt['iterations']):
-
+        model.zero_grad()
         x, y = dataset.get_random_points(opt['points_per_iteration'])
         x = x.to(opt['device'])
         y = y.to(opt['device'])
@@ -74,19 +74,29 @@ def train_implicit_model(rank, model, dataset, opt):
             if(iteration % opt['save_every'] == 0):
                 save_model(model, opt)
 
-            if(iteration % 5 == 0 and (not opt['train_distributed'] or rank == 0)):
+            if(iteration % 5 == 0):
                 print("Iteration %i/%i, loss: %0.06f" % \
                         (iteration, opt['iterations'], 
                         loss.item()))
                 writer.add_scalar('Loss', loss.item(), iteration)
+
+                p = PSNR(y_estimated, y, dataset.max()-dataset.min())
+                writer.add_scalar('PSNR', p.item(), iteration)
                 
                 GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) / (1024**3))
                 writer.add_scalar('GPU memory (GB)', GBytes, iteration)
+            
+            if(iteration % 100 == 0):
+                grid_to_sample = dataset.data.shape[2:]
+                img = model.sample_grid(grid_to_sample)
+                #grad_img = model.sample_grid_gradient(grid_to_sample)
+                writer.add_image('Reconstruction', img.clamp(dataset.min(), dataset.max()), iteration, dataformats='WHC')
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train on an input that is 2D')
 
     parser.add_argument('--n_dims',default=None,type=int)
+    parser.add_argument('--n_outputs',default=None,type=int)
     parser.add_argument('--activation_function',default=None,type=str)
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)

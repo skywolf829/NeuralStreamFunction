@@ -5,14 +5,15 @@ class Options():
     def get_default():
         opt = {}
         # Input info
-        opt["n_dims"]                  = 3              # 2 or 3
-        opt['activation_function']     = "sine"         # sine or relu
+        opt["n_dims"]                  = 3             
+        opt['n_outputs']               = 3
+        opt['activation_function']     = "sine"         
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
         opt['interpolate']             = False
-        opt["vector_field_name"]       = "isotropic1024coarse_ts1.h5"
-        opt["save_name"]               = "Implicit_isotropic1024coarse_ts1"    # Folder that the model will be saved to
-        opt["n_layers"]                = 8        # Smallest a dimension can go to upscale from
+        opt["vector_field_name"]       = "isotropic_coarse.h5"
+        opt["save_name"]               = "isotropic_coarse"   
+        opt["n_layers"]                = 1       
         opt["nodes_per_layer"]         = 1024
 
         opt["train_distributed"]       = False
@@ -23,9 +24,9 @@ class Options():
         opt["ranking"]                 = 0
 
         opt["iterations"]              = 10000
-        opt["points_per_iteration"]    = 10000     # Minibatch for training
-        opt["lr"]                      = 1e-5   # Learning rate for GAN discriminator
-        opt["beta_1"]                  = 0.5
+        opt["points_per_iteration"]    = 262144     
+        opt["lr"]                      = 5e-5 
+        opt["beta_1"]                  = 0.9
         opt["beta_2"]                  = 0.999
 
         opt["iteration_number"]        = 0

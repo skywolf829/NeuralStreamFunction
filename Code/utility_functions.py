@@ -40,6 +40,10 @@ def create_window_3D(window_size, channel):
     window = torch.Tensor(_3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous())
     return window
 
+def PSNR(x, y, range = 1.0):
+    return 20*torch.log10(range) - \
+        10*torch.log10(((y-x)**2).mean())
+        
 def _ssim(img1 : torch.Tensor, img2 : torch.Tensor, window : torch.Tensor, 
 window_size : torch.Tensor, channel : int, size_average : Optional[bool] = True):
     mu1 : torch.Tensor = F.conv2d(img1, window, padding = window_size//2, groups = channel)
