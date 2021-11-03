@@ -59,11 +59,14 @@ if __name__ == '__main__':
         grid = list(dataset.data.shape[2:])
         for i in range(len(grid)):
             grid[i] *= args['supersample']
+            grid[i] = int(grid[i])
         with torch.no_grad():
             img = model.sample_grid(grid)
+        print(img.shape)
         writer.add_image('Supersample x'+str(args['supersample']), 
             img.clamp(dataset.min(), dataset.max()), 0, dataformats='WHC')
-
+    
+    writer.close()
         
 
 

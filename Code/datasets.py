@@ -47,7 +47,7 @@ class Dataset(torch.utils.data.Dataset):
         if(len(self.data.shape) == 4):
             return self.data[0]
         else:
-            return self.data[0,:,:,:,int(self.data.shape[4]/2)]
+            return self.data[0,:,int(self.data.shape[2]/2),:,:]
 
     def total_points(self):
         t = 1

@@ -92,7 +92,8 @@ def train_implicit_model(rank, model, dataset, opt):
                     img = model.sample_grid(grid_to_sample)
                 #grad_img = model.sample_grid_gradient(grid_to_sample)
                 writer.add_image('Reconstruction', img.clamp(dataset.min(), dataset.max()), iteration, dataformats='WHC')
-        
+    writer.close()
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train on an input that is 2D')
 
