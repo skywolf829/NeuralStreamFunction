@@ -93,7 +93,7 @@ project_folder_path = os.path.join(project_folder_path, "..")
 data_folder = os.path.join(project_folder_path, "Data")
 save_folder = os.path.join(data_folder)
 
-name = "mixing"
+name = "isotropic1024coarse"
 t0 = time.time()
 count = 0
 startts = 1
