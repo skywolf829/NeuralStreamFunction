@@ -118,6 +118,7 @@ for i in range(startts, endts, ts_skip):
     f = np.expand_dims(f, 0)
     #f -= f.min()
     #f *= 1/(f.max() + 1e-6)
+    f = np.transpose(f, (0, 4, 1, 2, 3))
     print(f.shape)
     #frames.append(f)
     f_h5 = h5py.File(os.path.join(save_folder, "isotropic1024coarse_1.h5"), 'w')
