@@ -19,7 +19,7 @@ class Dataset(torch.utils.data.Dataset):
         self.min_ = None
         self.max_ = None
 
-        folder_to_load = os.path.join(data_folder, self.opt['vector_field_name'])
+        folder_to_load = os.path.join(data_folder, self.opt['signal_file_name'])
 
         print("Initializing dataset - reading %s" % folder_to_load)
         
