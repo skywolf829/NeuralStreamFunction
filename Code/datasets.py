@@ -67,7 +67,7 @@ class Dataset(torch.utils.data.Dataset):
             x_dims = []
             if(n_points == self.total_points()):
                 x = make_coord_grid(self.data.shape[2:], 
-                    self.opt['device'], flatten=True).unsqueeze(0)
+                    self.opt['data_device'], flatten=True).unsqueeze(0)
             else:
                 for i in range(len(self.data.shape[2:])):
                     x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
