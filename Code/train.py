@@ -59,7 +59,8 @@ def train_implicit_model(rank, model, dataset, opt):
         im_max = gt_img.max()
         gt_img /= im_max
         writer.add_image("Ground Truth", gt_img, 0, dataformats="CHW")
-    start_time = time.time()    
+    
+       
     if(opt['loss'] == 'l1'):
         loss_func = nn.L1Loss().to(opt["device"])
     elif(opt['loss'] == "perpendicular"):
@@ -120,7 +121,9 @@ def train_implicit_model(rank, model, dataset, opt):
                                 "_wrt_inpudim_"+str(input_index), 
                                 grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
                                 iteration, dataformats='WHC')
-    writer.close()
+    
+    if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
+        writer.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train on an input that is 2D')
