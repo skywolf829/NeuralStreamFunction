@@ -60,7 +60,10 @@ def train_implicit_model(rank, model, dataset, opt):
         gt_img /= im_max
         writer.add_image("Ground Truth", gt_img, 0, dataformats="CHW")
     start_time = time.time()    
-    loss_func = nn.L1Loss().to(opt["device"])
+    if(opt['loss'] == 'l1'):
+        loss_func = nn.L1Loss().to(opt["device"])
+    elif(opt['loss'] == "perpendicular"):
+        loss_func = nn.CosineSimilarity().to(opt['device'])
 
     for iteration in range(0, opt['iterations']):
         model.zero_grad()
@@ -68,8 +71,11 @@ def train_implicit_model(rank, model, dataset, opt):
         x = x.to(opt['device'])
         y = y.to(opt['device'])
 
-        y_estimated, coords = model(x)
-        loss = loss_func(y, y_estimated)
+        y_estimated = model(x)
+        if(opt['loss'] == 'l1'):
+            loss = loss_func(y, y_estimated)
+        elif(opt['loss'] == 'perpendicular'):
+            loss = 1 - torch.abs(loss_func(y, y_estimated))
         loss.backward()
 
         optimizer.step()
@@ -91,16 +97,29 @@ def train_implicit_model(rank, model, dataset, opt):
                     / (1024**3))
                 writer.add_scalar('GPU memory (GB)', GBytes, iteration)
             
-            if(iteration % 100 == 0):
+            if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
                 grid_to_sample = dataset.data.shape[2:]
-                with torch.no_grad():
-                    img = model.sample_grid(grid_to_sample)
-                if(im_min < 0):
-                    img -= im_min
-                    img /= im_max
-                #grad_img = model.sample_grid_gradient(grid_to_sample)
-                writer.add_image('Reconstruction', img.clamp(0, 1), 
-                    iteration, dataformats='WHC')
+                if(opt['log_image']):
+                    with torch.no_grad():
+                        img = model.sample_grid(grid_to_sample)
+                    if(im_min < 0):
+                        img -= im_min
+                        img /= im_max
+                    writer.add_image('Reconstruction', img.clamp(0, 1), 
+                        iteration, dataformats='WHC')
+                if(opt['log_gradient']):
+                    grad_img = model.sample_grad_grid(grid_to_sample)
+                    for output_index in range(len(grad_img)):
+                        for input_index in range(grad_img[output_index].shape[-1]):
+                            grad_img[output_index][...,input_index] -= \
+                                grad_img[output_index][...,input_index].min()
+                            grad_img[output_index][...,input_index] /= \
+                                grad_img[output_index][...,input_index].max()
+
+                            writer.add_image('Gradient_outputdim'+str(output_index)+\
+                                "_wrt_inpudim_"+str(input_index), 
+                                grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
+                                iteration, dataformats='WHC')
     writer.close()
 
 if __name__ == '__main__':
@@ -115,7 +134,8 @@ if __name__ == '__main__':
     parser.add_argument('--vector_field_name',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
     parser.add_argument('--n_layers',default=None,type=int)
-    parser.add_argument('--nodes_per_layer',default=None,type=int)
+    parser.add_argument('--nodes_per_layer',default=None,type=int)    
+    parser.add_argument('--loss',default=None,type=str)
     parser.add_argument('--train_distributed',default=None,type=str2bool)
     parser.add_argument('--device',default=None, type=str)
     parser.add_argument('--data_device',default=None,type=str)
@@ -131,6 +151,8 @@ if __name__ == '__main__':
     parser.add_argument('--save_every',default=None, type=int)
     parser.add_argument('--log_every',default=None, type=int)
     parser.add_argument('--load_from',default=None, type=str)
+    parser.add_argument('--log_image',default=None, type=str2bool)
+    parser.add_argument('--log_gradient',default=None, type=str2bool)
 
 
     args = vars(parser.parse_args())

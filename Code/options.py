@@ -15,6 +15,7 @@ class Options():
         opt["save_name"]               = "isotropic_coarse"   
         opt["n_layers"]                = 1       
         opt["nodes_per_layer"]         = 1024
+        opt["loss"]                    = 'l1'
 
         opt["train_distributed"]       = False
         opt["device"]                  = "cuda:0"
@@ -32,6 +33,8 @@ class Options():
         opt["iteration_number"]        = 0
         opt["save_every"]              = 100
         opt['log_every']               = 5
+        opt['log_image']               = False
+        opt['log_gradient']            = False
 
         return opt
 

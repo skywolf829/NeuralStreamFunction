@@ -29,6 +29,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--load_from',default=None,type=str)
     parser.add_argument('--supersample',default=None,type=float)
+    parser.add_argument('--supersample_gradient',default=None,type=float)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -66,6 +67,26 @@ if __name__ == '__main__':
         writer.add_image('Supersample x'+str(args['supersample']), 
             img.clamp(dataset.min(), dataset.max()), 0, dataformats='WHC')
     
+    if(args['supersample_gradient'] is not None):
+        grid = list(dataset.data.shape[2:])
+        for i in range(len(grid)):
+            grid[i] *= args['supersample_gradient']
+            grid[i] = int(grid[i])
+        
+        grad_img = model.sample_grad_grid(grid)
+        
+        for output_index in range(len(grad_img)):
+            for input_index in range(grad_img[output_index].shape[-1]):
+                grad_img[output_index][...,input_index] -= \
+                    grad_img[output_index][...,input_index].min()
+                grad_img[output_index][...,input_index] /= \
+                    grad_img[output_index][...,input_index].max()
+                                                
+                writer.add_image('Supersample gradient_outputdim'+str(output_index)+\
+                    "_wrt_inpudim_"+str(input_index), 
+                    grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
+                    0, dataformats='WHC')
+
     writer.close()
         
 

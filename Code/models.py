@@ -116,9 +116,19 @@ class ImplicitModel(nn.Module):
         self.net = nn.Sequential(*self.net)
     
     def forward(self, coords):
-        coords = coords.clone().detach().requires_grad_(True) # allows to take derivative w.r.t. input
         output = self.net(coords)
-        return output, coords
+        return output
+    
+    def forward_maxpoints(self, coords, max_points=100000):
+        output_shape = list(coords.shape)
+        output_shape[-1] = self.opt['n_outputs']
+        output = torch.empty(output_shape, 
+            dtype=torch.float32, device=self.opt['device'])
+        for start in range(0, coords.shape[0], max_points):
+            #print("%i:%i" % (start, min(start+max_points, coords.shape[0])))
+            output[start:min(start+max_points, coords.shape[0])] = \
+                self.net(coords[start:min(start+max_points, coords.shape[0])])
+        return output
 
     def sample_grid(self, grid):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
@@ -129,7 +139,27 @@ class ImplicitModel(nn.Module):
         
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-        vals, _ = self.forward(coord_grid)
+        vals = self.forward_maxpoints(coord_grid)
         coord_grid_shape[-1] = self.opt['n_outputs']
         vals = vals.reshape(coord_grid_shape)
         return vals
+    
+    def sample_grad_grid(self, grid):
+        coord_grid = make_coord_grid(grid, self.opt['device'], False)
+        if(len(coord_grid.shape) == 4):
+            coord_grid = coord_grid[:,:,
+                int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
+                :]
+        
+        coord_grid_shape = list(coord_grid.shape)
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)
+        vals = self.forward_maxpoints(coord_grid)        
+
+        grad = list(
+            torch.autograd.grad(vals, coord_grid, grad_outputs=torch.ones_like(vals)))
+
+        coord_grid_shape[-1] = self.opt['n_dims']
+        for i in range(len(grad)):
+            grad[i] = grad[i].reshape(coord_grid_shape)
+        
+        return grad
