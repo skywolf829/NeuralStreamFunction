@@ -47,6 +47,7 @@ if __name__ == '__main__':
          
     opt = load_options(os.path.join(save_folder, args["load_from"]))
     opt["device"] = args["device"]
+    opt['data_device'] = args['device']
     opt["save_name"] = args["load_from"]
     for k in args.keys():
         if args[k] is not None:
