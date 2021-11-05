@@ -11,7 +11,7 @@ class Options():
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
         opt['interpolate']             = False
-        opt["vector_field_name"]       = "isotropic_coarse.h5"
+        opt["signal_file_name"]        = "isotropic_coarse.h5"
         opt["save_name"]               = "isotropic_coarse"   
         opt["n_layers"]                = 1       
         opt["nodes_per_layer"]         = 1024

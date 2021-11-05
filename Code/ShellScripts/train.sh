@@ -1,5 +1,5 @@
 #!/bin/sh
-cd /lus/theta-fs0/projects/DL4VIS/DeepHierarchicalSuperResolution
+cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 3 --n_dims 2 \
 --signal_file_name cat.h5 \
