@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>Collapsible sidebar using Bootstrap 4</title>
+    <title>SIREN Model Analysis</title>
 
     <!-- Bootstrap CSS CDN -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
@@ -18,9 +18,9 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
 
     <script>
-        function get_random_item(){
+        function get_gt(){
           $.ajax({
-            url: "/get_random_item",
+            url: "/get_gt",
             type: "get",
             success: function(response){
 
@@ -51,74 +51,20 @@
             } 
           });
         }
-        function perform_SR(){
+        function get_full_reconstruction(){
             $.ajax({
-                url: "/perform_SR",
+                url: "/get_full_reconstruction",
                 type: "get",
                 success: function(response){
 
-                    var sr_img = response['sr_img']
-                    sr_img = sr_img.substring(2, sr_img.length-1)
-                    
-                    var gt_img = response['gt_img']
-                    gt_img = gt_img.substring(2, gt_img.length-1)
-
-                    var lr_img = response['lr_img']
-                    lr_img = lr_img.substring(2, lr_img.length-1)
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
 
                     
-                    document.getElementById('GT_img').src = "data:img/png;base64,"+gt_img; 
-                    document.getElementById('SR_img').src = "data:img/png;base64,"+sr_img; 
-                    document.getElementById('LR_img').src = "data:img/png;base64,"+lr_img; 
+                    document.getElementById('model_img').src = "data:img/png;base64,"+img; 
 
-                    document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
-                    document.getElementById('l1').innerHTML = "L1: " + response['l1'];
-                    
-                    sensetivity_adjustment();
-                    update_feature_maps();
-                } 
-            });
-        }
-
-        function sensetivity_adjustment(){
-            $.ajax({
-                url: "/sensetivity_adjustment",
-                data: {
-                    change: document.getElementById("valuechange").value
-                },
-                type: "get",
-                success: function(response){
-                    var changed_sr_img = response['changed_sr_img']
-                    changed_sr_img = changed_sr_img.substring(2, changed_sr_img.length-1)
-                    
-                    var changed_lr_img = response['changed_lr_img']
-                    changed_lr_img = changed_lr_img.substring(2, changed_lr_img.length-1)
-
-                    var sensitivity_img = response['sensitivity_img']
-                    sensitivity_img = sensitivity_img.substring(2, sensitivity_img.length-1)
-
-                    document.getElementById('changed_SR_img').src = "data:img/png;base64,"+changed_sr_img; 
-                    document.getElementById('changed_LR_img').src = "data:img/png;base64,"+changed_lr_img; 
-                    document.getElementById('sensitivity_img').src = "data:img/png;base64,"+sensitivity_img; 
-
-                } 
-            });
-        }
-
-        function update_feature_maps(){
-            $.ajax({
-                url: "/update_feature_maps",
-                type: "get",
-                success: function(response){
-                    var feature_maps = response['img']
-                    feature_maps = feature_maps.substring(2, feature_maps.length-1)
-
-                    document.getElementById('feature_maps').src = "data:img/png;base64,"+feature_maps; 
-
-                    
-                    var fm_min = response['min']
-                    var fm_max = response['max']
-                    document.getElementById('fm_minmax').innerHTML = "[" + fm_min + ", " + fm_max + "]";
+                    //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
+                    //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
                 } 
             });
         }
@@ -139,21 +85,23 @@
         }
 
         function onstart(){
-            perform_SR();
-            get_available_models();
+            get_gt();
+            get_full_reconstruction();
         }
-        function updateSRratio(val) {
-          document.getElementById('SRratiolabel').innerHTML="SR ratio: " + val; 
+
+        function updateSSfactor(val) {
+          document.getElementById('SSfactorlabel').innerHTML="Supersample factor: " + val; 
         }
+
         function updateCroppingResolution(val){
             document.getElementById('cropsizelabel').innerHTML="Crop size: " + val;
         }
 
-        function change_scale_factor(val) {
+        function change_SS_factor(val) {
             $.ajax({
-                url: "/change_scale_factor",
+                url: "/change_SS_factor",
                 data: {
-                    scale_factor: document.getElementById("SRratio").value
+                    scale_factor: document.getElementById("SSfactor").value
                 },
                 type: "get",
                 success: function(response){
@@ -182,7 +130,7 @@
         <!-- Sidebar  -->
         <nav id="sidebar">
             <div class="sidebar-header">                
-                <h1 class="font-weight-light">Realtime sensitivity analysis</h1>
+                <h1 class="font-weight-light">SIREN model analysis</h1>
             </div>
 
             <ul class="list-unstyled components">
@@ -228,15 +176,14 @@
             <div class="container-fluid">    
                 <div class="row">
                     <div class="col-md-3">
-                        <button onclick="get_random_item()">New item</button>
-                        <button onclick="perform_SR()">Perform SR</button>
+                        <button onclick="get_full_reconstruction()">Evaluate model</button>
                         <br>
-                        <label for="SRratio" id="SRratiolabel" class="form-label">SR ratio: 3</label>
-                        <input type="range" class="form-range" id="SRratio" 
+                        <label for="SSfactor" id="SSfactorlabel" class="form-label">SS factor: 1</label>
+                        <input type="range" class="form-range" id="SSfactor" 
                         min="1" max="4" step="1" value="3"
-                        onchange="updateSRratio(this.value)"
-                        onmouseup="change_scale_factor()" 
-                        ontouchend="change_scale_factor()">
+                        onchange="updateSSfactor(this.value)"
+                        onmouseup="change_SS_factor()" 
+                        ontouchend="change_SS_factor()">
                         
                         <br>
                         <label for="croppingres" id="cropsizelabel" class="form-label">Crop size: 48</label>
@@ -266,64 +213,13 @@
                         style="width:100%;height:100%;">
                     </div>
                     <div class="col-md-3">
-                        Low-res image
+                        SIREN reconstruction
                         <img id='LR_img' 
                         class="img-fluid" alt=""
                         style="width:100%;height:100%;">
                     </div>
-                    <div class="col-md-3">
-                        Super-resolved image
-                        <img id='SR_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
-                    </div>
                 </div>
-                <br>
-                <div class="row">
-                    <div class="col-md-9">
-                        Feature maps
-                        <img id='feature_maps' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
-                    </div>
-                </div>
-                <br>
-                <div class="row">
-                    <div class="col-md-3">
-                        Sensitivity map
-                        <img id='sensitivity_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">   
-                    </div>
-                    <div class="col-md-3">
-                        Changed low-res image
-                        <img id='changed_LR_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
-                    </div>
-                    <div class="col-md-3">
-                        Changed super-resolved image
-                        <img id='changed_SR_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
-                    </div>
-                </div>
-                <br>
-                <div class="row">
-                    <div class="col-md-3">
-                        
-                    </div>
-                    <div class="col-md-3">
-                        <label for="valuechange" class="form-label">Value change</label>
-                        <input type="range" class="form-range" id="valuechange" 
-                        min="-1" max="1" step="0.05"
-                        onmouseup="sensetivity_adjustment()" 
-                        ontouchend="sensetivity_adjustment()">
-                    </div>
-                    <div class="col-md-3">
-
-                    </div>
-                </div>
+                
                 <br>
                 <div class="row">
 
