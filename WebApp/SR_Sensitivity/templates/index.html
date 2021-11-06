@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>Collapsible sidebar using Bootstrap 4</title>
+
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Font Awesome JS -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+    <script>
+        function get_random_item(){
+          $.ajax({
+            url: "/get_random_item",
+            type: "get",
+            success: function(response){
+
+                var img = response['img']
+                img = img.substring(2, img.length-1)
+
+                document.getElementById('GT_img').src = "data:img/png;base64,"+img; 
+            } 
+          });
+        }
+        function get_available_models(){
+            $.ajax({
+            url: "/get_available_models",
+            type: "get",
+            success: function(response){
+
+                var model_names = response['model_names'];                
+                var str = ""
+                for(var i = 0; i < model_names.length; i++){
+                    str += "<li>";                    
+                    str += "<a onclick='load_new_model(this)'>";
+                    str += model_names[i];
+                    str += "</a>";
+                    str += "</li>";
+                }
+                menu = document.getElementById("modelsSubmenu");
+                menu.innerHTML = str;
+            } 
+          });
+        }
+        function perform_SR(){
+            $.ajax({
+                url: "/perform_SR",
+                type: "get",
+                success: function(response){
+
+                    var sr_img = response['sr_img']
+                    sr_img = sr_img.substring(2, sr_img.length-1)
+                    
+                    var gt_img = response['gt_img']
+                    gt_img = gt_img.substring(2, gt_img.length-1)
+
+                    var lr_img = response['lr_img']
+                    lr_img = lr_img.substring(2, lr_img.length-1)
+
+                    
+                    document.getElementById('GT_img').src = "data:img/png;base64,"+gt_img; 
+                    document.getElementById('SR_img').src = "data:img/png;base64,"+sr_img; 
+                    document.getElementById('LR_img').src = "data:img/png;base64,"+lr_img; 
+
+                    document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
+                    document.getElementById('l1').innerHTML = "L1: " + response['l1'];
+                    
+                    sensetivity_adjustment();
+                    update_feature_maps();
+                } 
+            });
+        }
+
+        function sensetivity_adjustment(){
+            $.ajax({
+                url: "/sensetivity_adjustment",
+                data: {
+                    change: document.getElementById("valuechange").value
+                },
+                type: "get",
+                success: function(response){
+                    var changed_sr_img = response['changed_sr_img']
+                    changed_sr_img = changed_sr_img.substring(2, changed_sr_img.length-1)
+                    
+                    var changed_lr_img = response['changed_lr_img']
+                    changed_lr_img = changed_lr_img.substring(2, changed_lr_img.length-1)
+
+                    var sensitivity_img = response['sensitivity_img']
+                    sensitivity_img = sensitivity_img.substring(2, sensitivity_img.length-1)
+
+                    document.getElementById('changed_SR_img').src = "data:img/png;base64,"+changed_sr_img; 
+                    document.getElementById('changed_LR_img').src = "data:img/png;base64,"+changed_lr_img; 
+                    document.getElementById('sensitivity_img').src = "data:img/png;base64,"+sensitivity_img; 
+
+                } 
+            });
+        }
+
+        function update_feature_maps(){
+            $.ajax({
+                url: "/update_feature_maps",
+                type: "get",
+                success: function(response){
+                    var feature_maps = response['img']
+                    feature_maps = feature_maps.substring(2, feature_maps.length-1)
+
+                    document.getElementById('feature_maps').src = "data:img/png;base64,"+feature_maps; 
+
+                    
+                    var fm_min = response['min']
+                    var fm_max = response['max']
+                    document.getElementById('fm_minmax').innerHTML = "[" + fm_min + ", " + fm_max + "]";
+                } 
+            });
+        }
+
+        function load_new_model(item){
+            model_name = item.innerHTML;
+
+            $.ajax({
+                url: "/load_new_model",
+                data: {
+                    new_model_name: model_name
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded new model");
+                } 
+            });
+        }
+
+        function onstart(){
+            perform_SR();
+            get_available_models();
+        }
+        function updateSRratio(val) {
+          document.getElementById('SRratiolabel').innerHTML="SR ratio: " + val; 
+        }
+        function updateCroppingResolution(val){
+            document.getElementById('cropsizelabel').innerHTML="Crop size: " + val;
+        }
+
+        function change_scale_factor(val) {
+            $.ajax({
+                url: "/change_scale_factor",
+                data: {
+                    scale_factor: document.getElementById("SRratio").value
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded changed scale factor");
+                } 
+            });
+             
+        }
+        function change_crop(val){
+            $.ajax({
+                url: "/change_crop",
+                data: {
+                    cropping_resolution: document.getElementById("croppingres").value
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded changed crop size");
+                } 
+            });
+        }
+    </script>
+</head>
+
+<body onload="onstart()">
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+            <div class="sidebar-header">                
+                <h1 class="font-weight-light">Realtime sensitivity analysis</h1>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="#modelsSubmenu" data-toggle="collapse" 
+                    aria-expanded="true" class="dropdown-toggle">Models</a>
+                    <ul class="collapse list-unstyled" id="modelsSubmenu">
+                        <li>
+                            <a href="#">Home 1</a>
+                        </li>
+                        <li>
+                            <a href="#">Home 2</a>
+                        </li>
+                        <li>
+                            <a href="#">Home 3</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content">
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                        <span>Toggle Sidebar</span>
+                    </button>
+                    <button class="btn btn-dark d-inline-block d-lg-none ml-auto" 
+                    type="button" data-toggle="collapse" data-target="#navbarSupportedContent" 
+                    aria-controls="navbarSupportedContent" aria-expanded="false" 
+                    aria-label="Toggle navigation">
+                        <i class="fas fa-align-justify"></i>
+                    </button>
+
+                    
+                </div>
+            </nav>
+
+            <div class="container-fluid">    
+                <div class="row">
+                    <div class="col-md-3">
+                        <button onclick="get_random_item()">New item</button>
+                        <button onclick="perform_SR()">Perform SR</button>
+                        <br>
+                        <label for="SRratio" id="SRratiolabel" class="form-label">SR ratio: 3</label>
+                        <input type="range" class="form-range" id="SRratio" 
+                        min="1" max="4" step="1" value="3"
+                        onchange="updateSRratio(this.value)"
+                        onmouseup="change_scale_factor()" 
+                        ontouchend="change_scale_factor()">
+                        
+                        <br>
+                        <label for="croppingres" id="cropsizelabel" class="form-label">Crop size: 48</label>
+                        <input type="range" class="form-range" id="croppingres" 
+                        min="24" max="1024" step="24" value="48" 
+                        onchange="updateCroppingResolution(this.value)"
+                        onmouseup="change_crop()" 
+                        ontouchend="change_crop()">
+                        <br>
+                        <p><a id="psnr">PSNR: --</a>,<a id="l1"> L1: --</a></p>
+                        <br>                        
+                        <p>Feature map min/max: <br><a id="fm_minmax">[--,--]</a></p>
+                        <br>
+                    </div>
+                    <div class="col-md-3">
+
+                    </div>
+                    <div class="col-md-3">
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        GT image
+                        <img id='GT_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                    <div class="col-md-3">
+                        Low-res image
+                        <img id='LR_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                    <div class="col-md-3">
+                        Super-resolved image
+                        <img id='SR_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-9">
+                        Feature maps
+                        <img id='feature_maps' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-3">
+                        Sensitivity map
+                        <img id='sensitivity_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">   
+                    </div>
+                    <div class="col-md-3">
+                        Changed low-res image
+                        <img id='changed_LR_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                    <div class="col-md-3">
+                        Changed super-resolved image
+                        <img id='changed_SR_img' 
+                        class="img-fluid" alt=""
+                        style="width:100%;height:100%;">
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-3">
+                        
+                    </div>
+                    <div class="col-md-3">
+                        <label for="valuechange" class="form-label">Value change</label>
+                        <input type="range" class="form-range" id="valuechange" 
+                        min="-1" max="1" step="0.05"
+                        onmouseup="sensetivity_adjustment()" 
+                        ontouchend="sensetivity_adjustment()">
+                    </div>
+                    <div class="col-md-3">
+
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+
+                </div>
+            </div>
+
+            </div>
+    </div>
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+        <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
