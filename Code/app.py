@@ -37,6 +37,7 @@ class AppModelAndController():
         self.load_dataset_from_opt(self.opt)
 
     def load_model_from_name(self, model_name, device="cuda:0"):
+        self.gt_im = None
         self.model_name = model_name
         
         self.opt = load_options(os.path.join(self.save_folder, model_name))
@@ -54,10 +55,8 @@ class AppModelAndController():
     def get_gt(self):
         if(self.gt_im is None):
             self.gt_im = self.dataset.get_2D_slice().clone()
-            im_min = self.dataset.min()
-            self.gt_im -= im_min
-            im_max = self.dataset.max()
-            self.gt_im /= im_max
+            self.gt_im -= self.dataset.min()
+            self.gt_im /= (self.dataset.max() - self.dataset.min())
             
             self.gt_im *= 255
             self.gt_im = self.gt_im.type(torch.uint8)
@@ -67,19 +66,7 @@ class AppModelAndController():
         return self.gt_im
     
     def get_gt_crop(self, starts, widths):
-        if(self.gt_im is None):
-            self.gt_im = self.dataset.get_2D_slice().clone()
-            im_min = self.dataset.min()
-            self.gt_im -= im_min
-            im_max = self.dataset.max()
-            self.gt_im /= im_max
-            
-            self.gt_im *= 255
-            self.gt_im = self.gt_im.type(torch.uint8)
-
-            self.gt_im = self.gt_im.permute(1, 2, 0)
-            self.gt_im = self.gt_im.cpu().numpy()
-        
+        self.get_gt()        
         
         return self.gt_im[int(starts[1]*self.dataset.data.shape[2]):
             int((starts[1]+widths[1])*self.dataset.data.shape[2]),
@@ -95,11 +82,13 @@ class AppModelAndController():
 
         with torch.no_grad():
             im = self.model.sample_grid(grid)
-
-        if(self.dataset.min() < 0):
-            im -= self.dataset.min()
-            im /= self.dataset.max()
-        
+        print(im.min())
+        print(im.max())
+        print("dataset")
+        print(self.dataset.min())
+        print(self.dataset.max())
+        im -= self.dataset.min()
+        im /= (self.dataset.max()-self.dataset.min())
         im *= 255
         im = im.clamp(0, 255)
         im = im.type(torch.uint8).permute(1, 0, 2)
@@ -110,13 +99,19 @@ class AppModelAndController():
         samples = []
         for i in range(len(widths)):
             samples.append(int(self.crop_supersample_factor*widths[i]*self.dataset.data.shape[2+i]))    
-        
+        if(len(self.dataset.data.shape) == 5):
+            starts.append(0.5)
+            widths.append(1e-6)
+            samples.append(1)
+
         with torch.no_grad():
             im = self.model.sample_rect(starts, widths, samples)
 
-        if(self.dataset.min() < 0):
-            im -= self.dataset.min()
-            im /= self.dataset.max()
+        if(len(self.dataset.data.shape) == 5):
+            im = im[:,:,0,:]
+
+        im -= self.dataset.min()
+        im /= (self.dataset.max()-self.dataset.min())
         
         im *= 255
         im = im.clamp(0, 255)

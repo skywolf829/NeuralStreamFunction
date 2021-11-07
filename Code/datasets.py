@@ -69,6 +69,8 @@ class Dataset(torch.utils.data.Dataset):
                 x = make_coord_grid(self.data.shape[2:], 
                     self.opt['data_device'], flatten=True).unsqueeze(0)
             else:
+                ## TODO
+                sample_spots = torch.rand(self.data.shape[2:]) 
                 for i in range(len(self.data.shape[2:])):
                     x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
                         dtype=torch.float32, device=self.opt['data_device'])

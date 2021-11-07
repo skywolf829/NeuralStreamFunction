@@ -110,16 +110,18 @@
                         GT image
                         <br>
                         <img id='GT_img' 
-                        class="img-fluid" alt="">
+                        class="img-fluid" alt=""
+                        style="width:100%;">
                     </div>
                     <div class="col-md-5">
                         SIREN reconstruction
                         <br>
                         <img id='model_img' 
-                        class="img-fluid" alt="">
+                        class="img-fluid" alt=""
+                        style="width:100%;">
 
                         <canvas id="model_img_canvas" 
-                        style="width:100%;height:100%;position:absolute;background-color: rgba(0, 0, 0, 0.0);">
+                        style="position:absolute;background-color: rgba(0, 0, 0, 0.0);">
                         </canvas>                   
                     </div>
                 </div>
@@ -176,19 +178,6 @@
             } 
           });
         }
-        function get_gt_crop(){
-          $.ajax({
-            url: "/get_gt_crop",
-            type: "get",
-            success: function(response){
-
-                var img = response['img']
-                img = img.substring(2, img.length-1)
-
-                document.getElementById('gt_img_crop').src = "data:img/png;base64,"+img; 
-            } 
-          });
-        }
         function get_available_models(){
             $.ajax({
             url: "/get_available_models",
@@ -241,6 +230,15 @@
                     console.log("Loaded new model");
                     get_gt();
                     get_full_reconstruction();
+                    if(rect_width > 0 && rect_height > 0){
+                        
+                        const canvas_rect = c.getBoundingClientRect();
+                        get_crop(rect_x, rect_y, rect_width, rect_height,
+                            canvas_rect.width, canvas_rect.height);
+                        get_gt_crop(rect_x, rect_y, rect_width, rect_height,
+                            canvas_rect.width, canvas_rect.height);
+                    }
+
                 } 
             });
         }

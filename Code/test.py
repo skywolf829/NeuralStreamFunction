@@ -56,6 +56,10 @@ if __name__ == '__main__':
     model = load_model(opt, opt['device'])
     model = model.to(opt['device'])
 
+    print(dataset.data.min())
+    print(dataset.data.mean())
+    print(dataset.data.max())
+
     writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
     if(args['supersample'] is not None):
         grid = list(dataset.data.shape[2:])
@@ -64,6 +68,9 @@ if __name__ == '__main__':
             grid[i] = int(grid[i])
         with torch.no_grad():
             img = model.sample_grid(grid)
+        print(img.min())
+        print(img.mean())
+        print(img.max())
         print(img.shape)
         writer.add_image('Supersample x'+str(args['supersample']), 
             img.clamp(dataset.min(), dataset.max()), 0, dataformats='WHC')
