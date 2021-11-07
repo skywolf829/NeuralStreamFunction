@@ -163,3 +163,18 @@ class ImplicitModel(nn.Module):
             grad[i] = grad[i].reshape(coord_grid_shape)
         
         return grad
+    
+    def sample_rect(self, starts, widths, samples):
+        positions = []
+        for i in range(len(starts)):
+            positions.append(
+                torch.arange(starts[i], starts[i] + widths[i], widths[i] / samples[i], 
+                    dtype=torch.float32, device=self.opt['device'])
+            )
+            positions[i] -= 0.5
+            positions[i] *= 2
+        grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1)
+        print(grid_to_sample.shape)
+        vals = self.forward(grid_to_sample)
+        print(vals.shape)
+        return vals

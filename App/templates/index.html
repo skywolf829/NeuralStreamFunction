@@ -17,112 +17,6 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
 
-    <script>
-        function get_gt(){
-          $.ajax({
-            url: "/get_gt",
-            type: "get",
-            success: function(response){
-
-                var img = response['img']
-                img = img.substring(2, img.length-1)
-
-                document.getElementById('GT_img').src = "data:img/png;base64,"+img; 
-            } 
-          });
-        }
-        function get_available_models(){
-            $.ajax({
-            url: "/get_available_models",
-            type: "get",
-            success: function(response){
-
-                var model_names = response['model_names'];                
-                var str = ""
-                for(var i = 0; i < model_names.length; i++){
-                    str += "<li>";                    
-                    str += "<a onclick='load_new_model(this)'>";
-                    str += model_names[i];
-                    str += "</a>";
-                    str += "</li>";
-                }
-                menu = document.getElementById("modelsSubmenu");
-                menu.innerHTML = str;
-            } 
-          });
-        }
-        function get_full_reconstruction(){
-            $.ajax({
-                url: "/get_full_reconstruction",
-                type: "get",
-                success: function(response){
-
-                    var img = response['img']
-                    img = img.substring(2, img.length-1)
-
-                    
-                    document.getElementById('model_img').src = "data:img/png;base64,"+img; 
-
-                    //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
-                    //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
-                } 
-            });
-        }
-
-        function load_new_model(item){
-            model_name = item.innerHTML;
-
-            $.ajax({
-                url: "/load_new_model",
-                data: {
-                    new_model_name: model_name
-                },
-                type: "get",
-                success: function(response){
-                    console.log("Loaded new model");
-                } 
-            });
-        }
-
-        function onstart(){
-            get_gt();
-            get_full_reconstruction();
-        }
-
-        function updateSSfactor(val) {
-          document.getElementById('SSfactorlabel').innerHTML="Supersample factor: " + val; 
-        }
-
-        function updateCroppingResolution(val){
-            document.getElementById('cropsizelabel').innerHTML="Crop size: " + val;
-        }
-
-        function change_SS_factor(val) {
-            $.ajax({
-                url: "/change_SS_factor",
-                data: {
-                    scale_factor: document.getElementById("SSfactor").value
-                },
-                type: "get",
-                success: function(response){
-                    console.log("Loaded changed scale factor");
-                } 
-            });
-             
-        }
-        function change_crop(val){
-            $.ajax({
-                url: "/change_crop",
-                data: {
-                    cropping_resolution: document.getElementById("croppingres").value
-                },
-                type: "get",
-                success: function(response){
-                    console.log("Loaded changed crop size");
-                } 
-            });
-        }
-    </script>
 </head>
 
 <body onload="onstart()">
@@ -177,26 +71,32 @@
                 <div class="row">
                     <div class="col-md-3">
                         <button onclick="get_full_reconstruction()">Evaluate model</button>
-                        <br>
-                        <label for="SSfactor" id="SSfactorlabel" class="form-label">SS factor: 1</label>
-                        <input type="range" class="form-range" id="SSfactor" 
-                        min="1" max="4" step="1" value="3"
-                        onchange="updateSSfactor(this.value)"
-                        onmouseup="change_SS_factor()" 
-                        ontouchend="change_SS_factor()">
+                        
+                    </div>
+                    <div class="col-md-3">
+                        <p><a id="psnr">PSNR: --</a>,<a id="l1"> L1: --</a></p>
+                        
+                        <input type="range" class="form-range" id="SSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        onchange="updateSSFactor(this.value)"
+                        onmouseup="changeSSFactor()" 
+                        ontouchend="changeSSFactor()">
+                        <label for="SSFactor" id="SSFactorLabel" 
+                            class="form-label">SS factor: 1</label>
+
+                    </div>
+                    <div class="col-md-3">
+                        <input type="range" class="form-range" id="cropSSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        onchange="updateCropSSFactor(this.value)"
+                        onmouseup="changeCropSSFactor()" 
+                        ontouchend="changeCropSSFactor()">
+                        <label for="cropSSFactor" id="cropSSFactorLabel" 
+                            class="form-label">Crop SS factor: 1</label>
+
                         
                         <br>
-                        <label for="croppingres" id="cropsizelabel" class="form-label">Crop size: 48</label>
-                        <input type="range" class="form-range" id="croppingres" 
-                        min="24" max="1024" step="24" value="48" 
-                        onchange="updateCroppingResolution(this.value)"
-                        onmouseup="change_crop()" 
-                        ontouchend="change_crop()">
-                        <br>
-                        <p><a id="psnr">PSNR: --</a>,<a id="l1"> L1: --</a></p>
-                        <br>                        
-                        <p>Feature map min/max: <br><a id="fm_minmax">[--,--]</a></p>
-                        <br>
+                    </div>
                     </div>
                     <div class="col-md-3">
 
@@ -206,17 +106,37 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         GT image
+                        <br>
                         <img id='GT_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
+                        class="img-fluid" alt="">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         SIREN reconstruction
-                        <img id='LR_img' 
-                        class="img-fluid" alt=""
-                        style="width:100%;height:100%;">
+                        <br>
+                        <img id='model_img' 
+                        class="img-fluid" alt="">
+
+                        <canvas id="model_img_canvas" 
+                        style="width:100%;height:100%;position:absolute;background-color: rgba(0, 0, 0, 0.0);">
+                        </canvas>                   
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5">
+                        Ground truth crop
+                        <br>
+                        <img id='gt_img_crop' 
+                        class="img-fluid" alt="",
+                        style="width:100%;">
+                    </div>
+                    <div class="col-md-5">
+                        SIREN reconstruction zoom
+                        <br>
+                        <img id='model_img_crop' 
+                        class="img-fluid" alt="",
+                        style="width:100%;">
                     </div>
                 </div>
                 
@@ -242,6 +162,300 @@
                 $('#sidebar').toggleClass('active');
             });
         });
+
+        function get_gt(){
+          $.ajax({
+            url: "/get_gt",
+            type: "get",
+            success: function(response){
+
+                var img = response['img']
+                img = img.substring(2, img.length-1)
+
+                document.getElementById('GT_img').src = "data:img/png;base64,"+img; 
+            } 
+          });
+        }
+        function get_gt_crop(){
+          $.ajax({
+            url: "/get_gt_crop",
+            type: "get",
+            success: function(response){
+
+                var img = response['img']
+                img = img.substring(2, img.length-1)
+
+                document.getElementById('gt_img_crop').src = "data:img/png;base64,"+img; 
+            } 
+          });
+        }
+        function get_available_models(){
+            $.ajax({
+            url: "/get_available_models",
+            type: "get",
+            success: function(response){
+
+                var model_names = response['model_names'];    
+                console.log(model_names)            
+                var str = ""
+                for(var i = 0; i < model_names.length; i++){
+                    str += "<li>";                    
+                    str += "<a onclick='load_new_model(this)'>";
+                    str += model_names[i];
+                    str += "</a>";
+                    str += "</li>";
+                }
+                menu = document.getElementById("modelsSubmenu");
+                menu.innerHTML = str;
+            } 
+          });
+        }
+        function get_full_reconstruction(){
+            $.ajax({
+                url: "/get_full_reconstruction",
+                type: "get",
+                success: function(response){
+
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+
+                    
+                    document.getElementById('model_img').src = "data:img/png;base64,"+img; 
+                    update_canvas();
+                    //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
+                    //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
+                } 
+            });
+        }
+
+        function load_new_model(item){
+            model_name = item.innerHTML;
+
+            $.ajax({
+                url: "/load_new_model",
+                data: {
+                    new_model_name: model_name
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded new model");
+                    get_gt();
+                    get_full_reconstruction();
+                } 
+            });
+        }
+
+        function onstart(){
+            get_gt();
+            get_full_reconstruction();
+            //update_canvas();
+            get_available_models();
+        }
+
+        function updateSSFactor(val) {
+          document.getElementById('SSFactorLabel').innerHTML="SS factor: " + val; 
+        }
+
+        function updateCropSSFactor(val){
+          document.getElementById('cropSSFactorLabel').innerHTML="Crop SS factor: " + val; 
+        }
+
+        function changeSSFactor(val) {
+            $.ajax({
+                url: "/change_SS_factor",
+                data: {
+                    scale_factor: document.getElementById("SSfactor").value
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded changed scale factor");
+                    get_full_reconstruction();
+                } 
+            });
+             
+        }
+        function changeCropSSFactor(val) {
+            $.ajax({
+                url: "/change_crop_SS_factor",
+                data: {
+                    scale_factor: document.getElementById("cropSSFactor").value
+                },
+                type: "get",
+                success: function(response){
+                    console.log("Loaded changed scale factor");
+                    const canvas_rect = c.getBoundingClientRect();
+                    get_crop(rect_x, rect_y, rect_width, rect_height,
+                        canvas_rect.width, canvas_rect.height);
+                } 
+            });
+             
+        }
+        function get_crop(x, y, width, height, full_width, full_height){
+            const scaled_x = (x / full_width);
+            const scaled_y = (y / full_height);
+            const scaled_width = (width / full_width);
+            const scaled_height = (height / full_height);
+
+            $.ajax({
+                url: "/get_crop",
+                data: {
+                    x: scaled_x,
+                    y: scaled_y,
+                    width: scaled_width,
+                    height: scaled_height
+                },
+                type: "get",
+                success: function(response){
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+                    document.getElementById('model_img_crop').src = "data:img/png;base64,"+img; 
+                } 
+            });
+        }
+        function get_gt_crop(x, y, width, height, full_width, full_height){
+            const scaled_x = (x / full_width);
+            const scaled_y = (y / full_height);
+            const scaled_width = (width / full_width);
+            const scaled_height = (height / full_height);
+
+            $.ajax({
+                url: "/get_gt_crop",
+                data: {
+                    x: scaled_x,
+                    y: scaled_y,
+                    width: scaled_width,
+                    height: scaled_height
+                },
+                type: "get",
+                success: function(response){
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+                    document.getElementById('gt_img_crop').src = "data:img/png;base64,"+img; 
+                } 
+            });
+        }
+
+        
+
+
+        function update_canvas() {
+            c = document.getElementById('model_img_canvas');
+            
+            c.style.left = document.getElementById('model_img').offsetLeft + "px";
+            c.style.top = document.getElementById('model_img').offsetTop + "px";
+            
+            c.style.width = document.getElementById('model_img').width + "px";
+            c.style.height = document.getElementById('model_img').height + "px";
+
+            
+            c.width = document.getElementById('model_img').width;               
+            c.height = document.getElementById('model_img').height;
+        }
+        
+        window.addEventListener('resize', update_canvas);
+        
+        function getCursorPosition(canvas, event) {
+            const rect = canvas.getBoundingClientRect()
+            const x = event.clientX - rect.left
+            const y = event.clientY - rect.top
+            //console.log("x: " + x + " y: " + y)
+            return [x, y]
+        }
+
+        var clicked = false;
+        var dragging = false;
+        var drag_start_x = 0;
+        var drag_start_y = 0;
+        var rect_x = 0;
+        var rect_y = 0;
+        var rect_width = 0;
+        var rect_height = 0;
+
+        c = document.getElementById('model_img_canvas')
+
+        c.addEventListener('mousedown', function(e) {
+            const [x, y] = getCursorPosition(c, e);
+            console.log(x);
+            clicked = true;
+            if(rect_width > 0 && rect_height > 0 && 
+                x >= rect_x && x < rect_x + rect_width &
+                y >= rect_y && y < rect_y + rect_height){
+                    dragging = true;
+                    drag_start_x = x;
+                    drag_start_y = y;
+                    //console.log("Start drag");                    
+            }
+            else{
+                //console.log("starting new rect");
+                dragging = false;
+                rect_x = x;
+                rect_y = y;                        
+                rect_width = 0;
+                rect_height = 0;
+            }
+            
+            ctx = c.getContext('2d');
+            //console.log("clicked");
+            ctx.beginPath();
+            ctx.rect(x, y, 4, 4);
+            ctx.fill();
+        })
+        window.addEventListener('mouseup', function(e) {
+            if(clicked || dragging){
+                const [x, y] = getCursorPosition(c, e)
+                ctx = c.getContext('2d');
+                //console.log("released");
+                if(dragging){
+                    rect_x = rect_x - drag_start_x + x;
+                    rect_y = rect_y - drag_start_y + y;                
+                }
+                if(rect_width < 0){
+                    rect_x = rect_x + rect_width;
+                    rect_width = -1 * rect_width;
+                }
+                if(rect_height < 0){
+                    rect_y = rect_y + rect_height;
+                    rect_height = -1 * rect_height;
+                }
+
+                const canvas_rect = c.getBoundingClientRect();
+                //console.log("Getting crop");
+                get_crop(rect_x, rect_y, rect_width, rect_height,
+                    canvas_rect.width, canvas_rect.height);
+                get_gt_crop(rect_x, rect_y, rect_width, rect_height,
+                    canvas_rect.width, canvas_rect.height);
+                
+            }
+            clicked = false;
+            dragging = false;
+        })
+        c.addEventListener('mousemove', function(e) {
+            const [x, y] = getCursorPosition(c, e)
+            ctx = c.getContext('2d');
+            if(clicked){
+                ctx.clearRect(0, 0, c.width, c.height);
+                if(dragging){
+                    ctx.beginPath();
+                    ctx.rect(rect_x - drag_start_x + x, 
+                        rect_y - drag_start_y + y, 
+                        rect_width, rect_height);
+                    ctx.stroke();
+                }
+                else{
+                    ctx.beginPath();
+                    ctx.rect(rect_x, rect_y, x - rect_x, y - rect_y);
+                    ctx.stroke();
+                    rect_height = y - rect_y;
+                    rect_width = x - rect_x;
+                    //console.log("drawing");
+                }
+            }
+            //console.log("moved");
+        })
+        
+        
+        
+    
     </script>
 </body>
 
