@@ -52,7 +52,7 @@
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container-fluid">
 
-                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                    <button hidden="true" type="button" id="sidebarCollapse" class="btn btn-info">
                         <i class="fas fa-align-left"></i>
                         <span>Toggle Sidebar</span>
                     </button>
@@ -68,54 +68,66 @@
             </nav>
 
             <div class="container-fluid">    
-                <div class="row">
-                    <div class="col-md-3">
-                        <button onclick="get_full_reconstruction()">Evaluate model</button>
-                        
-                    </div>
-                    <div class="col-md-3">
-                        <p><a id="psnr">PSNR: --</a>,<a id="l1"> L1: --</a></p>
-                        
-                        <input type="range" class="form-range" id="SSFactor" 
-                        min="0.1" max="10" step="0.1" value="1"
-                        onchange="updateSSFactor(this.value)"
-                        onmouseup="changeSSFactor()" 
-                        ontouchend="changeSSFactor()">
-                        <label for="SSFactor" id="SSFactorLabel" 
-                            class="form-label">SS factor: 1</label>
-
-                    </div>
-                    <div class="col-md-3">
-                        <input type="range" class="form-range" id="cropSSFactor" 
-                        min="0.1" max="10" step="0.1" value="1"
-                        onchange="updateCropSSFactor(this.value)"
-                        onmouseup="changeCropSSFactor()" 
-                        ontouchend="changeCropSSFactor()">
-                        <label for="cropSSFactor" id="cropSSFactorLabel" 
-                            class="form-label">Crop SS factor: 1</label>
-
-                        
-                        <br>
-                    </div>
-                    </div>
-                    <div class="col-md-3">
-
-                    </div>
-                    <div class="col-md-3">
-
-                    </div>
+                <div class='row'>
+                    <button onclick="update_canvas()">Fix bug</button>
                 </div>
                 <div class="row">
-                    <div class="col-md-5">
-                        GT image
-                        <br>
+                    <div class="col-md-4">  
+                    </div>
+                    <div class="col-md-4">
+                        <p hidden="true"><a id="psnr">PSNR: --</a>,<a id="l1"> L1: --</a></p>
+                    </div>
+                    <div class="col-md-4">                      
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <h3>GT image</h3>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <h3>SIREN reconstruction</h3>    
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <label for="gtSSFactor" id="gtFactorLabel" 
+                            class="form-label">GT SS factor: 1</label>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <label for="SSFactor" id="SSFactorLabel" 
+                            class="form-label">SS factor: 1</label>  
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        
+                        <input type="range" class="form-range" id="gtSSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        style="width:30%;"
+                        oninput="updateGTSSFactor(this.value)"
+                        onmouseup="get_gt()" 
+                        ontouchend="get_gt()">
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <input type="range" class="form-range" id="SSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        style="width:30%;"
+                        oninput="updateSSFactor(this.value)"
+                        onmouseup="get_full_reconstruction()" 
+                        ontouchend="get_full_reconstruction()">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
                         <img id='GT_img' 
                         class="img-fluid" alt=""
                         style="width:100%;">
                     </div>
-                    <div class="col-md-5">
-                        SIREN reconstruction
-                        <br>
+                    <div class="col-md-6">
                         <img id='model_img' 
                         class="img-fluid" alt=""
                         style="width:100%;">
@@ -125,17 +137,56 @@
                         </canvas>                   
                     </div>
                 </div>
+                <br>
+                <br>
                 <div class="row">
-                    <div class="col-md-5">
-                        Ground truth crop
-                        <br>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <h3>Ground truth crop</h3>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <h3>SIREN reconstruction crop</h3>  
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <label for="gtSSCropFactor" id="gtCropFactorLabel" 
+                            class="form-label">GT Crop SS factor: 1</label>
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <label for="cropSSFactor" id="cropSSFactorLabel" 
+                            class="form-label">Crop SS factor: 1</label>   
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        
+                        <input type="range" class="form-range" id="gtCropSSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        style="width:30%;"
+                        oninput="updateGTCropSSFactor(this.value)"
+                        onmouseup="get_gt_crop()" 
+                        ontouchend="get_gt_crop()">
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        
+                        
+                        <input type="range" class="form-range" id="cropSSFactor" 
+                        min="0.1" max="10" step="0.1" value="1"
+                        style="width:30%;"
+                        oninput="updateCropSSFactor(this.value)"
+                        onmouseup="get_crop()" 
+                        ontouchend="get_crop()">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
                         <img id='gt_img_crop' 
                         class="img-fluid" alt="",
                         style="width:100%;">
                     </div>
-                    <div class="col-md-5">
-                        SIREN reconstruction zoom
-                        <br>
+                    <div class="col-md-6">
                         <img id='model_img_crop' 
                         class="img-fluid" alt="",
                         style="width:100%;">
@@ -168,6 +219,9 @@
         function get_gt(){
           $.ajax({
             url: "/get_gt",
+            data: {
+                scale_factor: document.getElementById("gtSSFactor").value
+            },
             type: "get",
             success: function(response){
 
@@ -202,6 +256,9 @@
         function get_full_reconstruction(){
             $.ajax({
                 url: "/get_full_reconstruction",
+                data: {
+                    scale_factor: document.getElementById("SSFactor").value
+                },
                 type: "get",
                 success: function(response){
 
@@ -211,8 +268,69 @@
                     
                     document.getElementById('model_img').src = "data:img/png;base64,"+img; 
                     update_canvas();
+                    if(rect_width > 0 && rect_height > 0){
+                        drawRect(rect_x, rect_y, rect_width, rect_height);
+                    }
+                    console.log("Updated reconstruction");
                     //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
                     //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
+                } 
+            });
+        }
+        
+        function get_crop(){
+            
+            const rect = c.getBoundingClientRect();
+            const full_width = rect.width;
+            const full_height = rect.height;
+            
+            const scaled_x = (rect_x / full_width);
+            const scaled_y = (rect_y / full_height);
+            const scaled_width = (rect_width / full_width);
+            const scaled_height = (rect_height / full_height);
+
+            $.ajax({
+                url: "/get_crop",
+                data: {
+                    x: scaled_x,
+                    y: scaled_y,
+                    width: scaled_width,
+                    height: scaled_height,
+                    scale_factor: document.getElementById("cropSSFactor").value
+                },
+                type: "get",
+                success: function(response){
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+                    document.getElementById('model_img_crop').src = "data:img/png;base64,"+img; 
+                } 
+            });
+        }
+        
+        function get_gt_crop(){
+            const rect = c.getBoundingClientRect();
+            const full_width = rect.width;
+            const full_height = rect.height;
+            
+            const scaled_x = (rect_x / full_width);
+            const scaled_y = (rect_y / full_height);
+            const scaled_width = (rect_width / full_width);
+            const scaled_height = (rect_height / full_height);
+
+            $.ajax({
+                url: "/get_gt_crop",
+                data: {
+                    x: scaled_x,
+                    y: scaled_y,
+                    width: scaled_width,
+                    height: scaled_height,
+                    scale_factor: document.getElementById("gtCropSSFactor").value
+                },
+                type: "get",
+                success: function(response){
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+                    document.getElementById('gt_img_crop').src = "data:img/png;base64,"+img; 
                 } 
             });
         }
@@ -232,11 +350,8 @@
                     get_full_reconstruction();
                     if(rect_width > 0 && rect_height > 0){
                         
-                        const canvas_rect = c.getBoundingClientRect();
-                        get_crop(rect_x, rect_y, rect_width, rect_height,
-                            canvas_rect.width, canvas_rect.height);
-                        get_gt_crop(rect_x, rect_y, rect_width, rect_height,
-                            canvas_rect.width, canvas_rect.height);
+                        get_crop();
+                        get_gt_crop();
                     }
 
                 } 
@@ -246,7 +361,7 @@
         function onstart(){
             get_gt();
             get_full_reconstruction();
-            //update_canvas();
+            update_canvas();
             get_available_models();
         }
 
@@ -258,79 +373,11 @@
           document.getElementById('cropSSFactorLabel').innerHTML="Crop SS factor: " + val; 
         }
 
-        function changeSSFactor(val) {
-            $.ajax({
-                url: "/change_SS_factor",
-                data: {
-                    scale_factor: document.getElementById("SSfactor").value
-                },
-                type: "get",
-                success: function(response){
-                    console.log("Loaded changed scale factor");
-                    get_full_reconstruction();
-                } 
-            });
-             
+        function updateGTSSFactor(val){
+          document.getElementById('gtFactorLabel').innerHTML="GT SS factor: " + val; 
         }
-        function changeCropSSFactor(val) {
-            $.ajax({
-                url: "/change_crop_SS_factor",
-                data: {
-                    scale_factor: document.getElementById("cropSSFactor").value
-                },
-                type: "get",
-                success: function(response){
-                    console.log("Loaded changed scale factor");
-                    const canvas_rect = c.getBoundingClientRect();
-                    get_crop(rect_x, rect_y, rect_width, rect_height,
-                        canvas_rect.width, canvas_rect.height);
-                } 
-            });
-             
-        }
-        function get_crop(x, y, width, height, full_width, full_height){
-            const scaled_x = (x / full_width);
-            const scaled_y = (y / full_height);
-            const scaled_width = (width / full_width);
-            const scaled_height = (height / full_height);
-
-            $.ajax({
-                url: "/get_crop",
-                data: {
-                    x: scaled_x,
-                    y: scaled_y,
-                    width: scaled_width,
-                    height: scaled_height
-                },
-                type: "get",
-                success: function(response){
-                    var img = response['img']
-                    img = img.substring(2, img.length-1)
-                    document.getElementById('model_img_crop').src = "data:img/png;base64,"+img; 
-                } 
-            });
-        }
-        function get_gt_crop(x, y, width, height, full_width, full_height){
-            const scaled_x = (x / full_width);
-            const scaled_y = (y / full_height);
-            const scaled_width = (width / full_width);
-            const scaled_height = (height / full_height);
-
-            $.ajax({
-                url: "/get_gt_crop",
-                data: {
-                    x: scaled_x,
-                    y: scaled_y,
-                    width: scaled_width,
-                    height: scaled_height
-                },
-                type: "get",
-                success: function(response){
-                    var img = response['img']
-                    img = img.substring(2, img.length-1)
-                    document.getElementById('gt_img_crop').src = "data:img/png;base64,"+img; 
-                } 
-            });
+        function updateGTCropSSFactor(val){
+          document.getElementById('gtCropFactorLabel').innerHTML="GT Crop SS factor: " + val; 
         }
 
         
@@ -428,21 +475,15 @@
             dragging = false;
         })
         c.addEventListener('mousemove', function(e) {
-            const [x, y] = getCursorPosition(c, e)
-            ctx = c.getContext('2d');
+            const [x, y] = getCursorPosition(c, e);
             if(clicked){
-                ctx.clearRect(0, 0, c.width, c.height);
                 if(dragging){
-                    ctx.beginPath();
-                    ctx.rect(rect_x - drag_start_x + x, 
+                    drawRect(rect_x - drag_start_x + x,
                         rect_y - drag_start_y + y, 
                         rect_width, rect_height);
-                    ctx.stroke();
                 }
                 else{
-                    ctx.beginPath();
-                    ctx.rect(rect_x, rect_y, x - rect_x, y - rect_y);
-                    ctx.stroke();
+                    drawRect(rect_x, rect_y, x - rect_x, y - rect_y);
                     rect_height = y - rect_y;
                     rect_width = x - rect_x;
                     //console.log("drawing");
@@ -451,6 +492,15 @@
             //console.log("moved");
         })
         
+        function drawRect(x, y, width, height){
+            ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.beginPath();
+            ctx.rect(x, 
+                y, 
+                width, height);
+            ctx.stroke();
+        }
         
         
     

@@ -54,10 +54,8 @@ def train_implicit_model(rank, model, dataset, opt):
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
         gt_img = dataset.get_2D_slice()
-        im_min = gt_img.min()
-        gt_img -= im_min
-        im_max = gt_img.max()
-        gt_img /= im_max
+        gt_img -= dataset.min()
+        gt_img /= (dataset.max() - dataset.min())
         writer.add_image("Ground Truth", gt_img, 0, dataformats="CHW")
     
        
@@ -103,9 +101,9 @@ def train_implicit_model(rank, model, dataset, opt):
                 if(opt['log_image']):
                     with torch.no_grad():
                         img = model.sample_grid(grid_to_sample)
-                    if(im_min < 0):
-                        img -= im_min
-                        img /= im_max
+                    if(dataset.min() < 0 or dataset.max() > 1.0):
+                        img -= dataset.min()
+                        img /= (dataset.max() - dataset.min())
                     writer.add_image('Reconstruction', img.clamp(0, 1), 
                         iteration, dataformats='WHC')
                 if(opt['log_gradient']):

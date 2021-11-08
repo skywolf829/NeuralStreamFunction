@@ -26,8 +26,6 @@ class AppModelAndController():
 
         self.device = "cuda:0"
         self.model_name = "cat_8x512"
-        self.supersample_factor = 1.0
-        self.crop_supersample_factor = 1.0
 
         self.file_folder_path = os.path.dirname(os.path.abspath(__file__))
         self.project_folder_path = os.path.join(file_folder_path, "..")
@@ -52,41 +50,65 @@ class AppModelAndController():
     def load_dataset_from_opt(self, opt):
         self.dataset = Dataset(opt)
 
-    def get_gt(self):
-        if(self.gt_im is None):
-            self.gt_im = self.dataset.get_2D_slice().clone()
-            self.gt_im -= self.dataset.min()
-            self.gt_im /= (self.dataset.max() - self.dataset.min())
-            
-            self.gt_im *= 255
-            self.gt_im = self.gt_im.type(torch.uint8)
+    def get_gt(self, factor):
 
-            self.gt_im = self.gt_im.permute(1, 2, 0)
-            self.gt_im = self.gt_im.cpu().numpy()
-        return self.gt_im
-    
-    def get_gt_crop(self, starts, widths):
-        self.get_gt()        
+        gt_im = self.dataset.get_2D_slice()
+        gt_im -= self.dataset.min()
+        gt_im /= (self.dataset.max() - self.dataset.min())
         
-        return self.gt_im[int(starts[1]*self.dataset.data.shape[2]):
-            int((starts[1]+widths[1])*self.dataset.data.shape[2]),
-            int(starts[0]*self.dataset.data.shape[3]):
-            int((starts[0]+widths[0])*self.dataset.data.shape[3]),:]
+        gt_im = F.interpolate(gt_im.unsqueeze(0), 
+            scale_factor=factor, mode='bilinear', 
+            align_corners=False)[0]
+
+        gt_im *= 255
+        gt_im = gt_im.type(torch.uint8)
+
+
+        gt_im = gt_im.permute(1, 2, 0)
+        gt_im = gt_im.cpu().numpy()
+
+        return gt_im
     
-    def get_full_reconstruction(self):
+    def get_gt_crop(self, starts, widths, ss_factor):
+
+        samples = []
+        for i in range(len(widths)):
+            samples.append(int(ss_factor*widths[i]*self.dataset.data.shape[2+i]))    
+
+        if(len(self.dataset.data.shape) == 5):
+            starts.append(0.5)
+            widths.append(1e-6)
+            samples.append(1)
+
+        gt_im = self.dataset.sample_rect(starts, widths, samples)
+        gt_im = gt_im[0]
+
+        if(len(self.dataset.data.shape) == 5):
+            gt_im = gt_im[:,:,:,0]
+        #print(gt_im.shape)
+        
+        gt_im -= self.dataset.min()
+        gt_im /= (self.dataset.max() - self.dataset.min())
+
+        gt_im *= 255
+        gt_im = gt_im.type(torch.uint8).clamp(0, 255).permute(2, 1, 0).cpu().numpy()
+
+        return gt_im
+    
+    def get_full_reconstruction(self, ss_factor):
 
         grid = list(self.dataset.data.shape[2:])
         for i in range(len(grid)):
-            grid[i] *= self.supersample_factor
+            grid[i] *= ss_factor
             grid[i] = int(grid[i])
 
         with torch.no_grad():
             im = self.model.sample_grid(grid)
-        print(im.min())
-        print(im.max())
-        print("dataset")
-        print(self.dataset.min())
-        print(self.dataset.max())
+        #print(im.min())
+        #print(im.max())
+        #print("dataset")
+        #print(self.dataset.min())
+        #print(self.dataset.max())
         im -= self.dataset.min()
         im /= (self.dataset.max()-self.dataset.min())
         im *= 255
@@ -95,10 +117,10 @@ class AppModelAndController():
 
         return im.cpu().numpy()
 
-    def get_crop(self, starts, widths):    
+    def get_crop(self, starts, widths, ss_factor):    
         samples = []
         for i in range(len(widths)):
-            samples.append(int(self.crop_supersample_factor*widths[i]*self.dataset.data.shape[2+i]))    
+            samples.append(int(ss_factor*widths[i]*self.dataset.data.shape[2+i]))    
         if(len(self.dataset.data.shape) == 5):
             starts.append(0.5)
             widths.append(1e-6)
@@ -150,7 +172,12 @@ def index():
 def get_gt():
     global amc
     
-    im = amc.get_gt()
+    factor = float(request.args.get('scale_factor'))
+    im = amc.get_gt(factor)
+
+
+    print("GT")
+    print(im.shape)
 
     success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
     return_img = return_img.tobytes()
@@ -163,8 +190,12 @@ def get_gt():
 @app.route('/get_full_reconstruction')
 def get_full_reconstruction():
     global amc
+    factor = float(request.args.get('scale_factor'))
     
-    im = amc.get_full_reconstruction()
+    im = amc.get_full_reconstruction(factor)
+
+    print("Recon")
+    print(im.shape)
 
     success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
     return_img = return_img.tobytes()
@@ -181,8 +212,11 @@ def get_crop():
     y = float(request.args.get('y'))
     width = float(request.args.get('width'))
     height = float(request.args.get('height'))
+    factor = float(request.args.get('scale_factor'))
 
-    im = amc.get_crop([x, y], [width, height])
+    im = amc.get_crop([x, y], [width, height], factor)
+    print("crop")
+    print(im.shape)
 
     success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
     return_img = return_img.tobytes()
@@ -199,36 +233,17 @@ def get_gt_crop():
     y = float(request.args.get('y'))
     width = float(request.args.get('width'))
     height = float(request.args.get('height'))
+    factor = float(request.args.get('scale_factor'))
 
-    im = amc.get_gt_crop([x, y], [width, height])
+    im = amc.get_gt_crop([x, y], [width, height], factor)
+    print("gt crop")
+    print(im.shape)
 
     success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
     return_img = return_img.tobytes()
     return jsonify(
         {
             "img":str(base64.b64encode(return_img))
-        }
-    )
-
-@app.route('/change_crop_SS_factor')
-def change_crop_SS_factor():
-    global amc
-    factor = float(request.args.get('scale_factor'))
-    amc.crop_supersample_factor = factor
-    return jsonify(
-        {
-            "success":True
-        }
-    )
-
-@app.route('/change_SS_factor')
-def change_SS_factor():
-    global amc
-    factor = float(request.args.get('scale_factor'))
-    amc.supersample_factor = factor
-    return jsonify(
-        {
-            "success":True
         }
     )
 

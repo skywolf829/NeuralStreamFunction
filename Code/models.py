@@ -119,7 +119,7 @@ class ImplicitModel(nn.Module):
         output = self.net(coords)
         return output
     
-    def forward_maxpoints(self, coords, max_points=100000):
+    def forward_maxpoints(self, coords, max_points=500000):
         output_shape = list(coords.shape)
         output_shape[-1] = self.opt['n_outputs']
         output = torch.empty(output_shape, 
@@ -174,7 +174,5 @@ class ImplicitModel(nn.Module):
             positions[i] -= 0.5
             positions[i] *= 2
         grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1)
-        print(grid_to_sample.shape)
         vals = self.forward(grid_to_sample)
-        print(vals.shape)
         return vals

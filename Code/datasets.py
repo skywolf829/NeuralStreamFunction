@@ -28,6 +28,7 @@ class Dataset(torch.utils.data.Dataset):
         f.close()
         self.data = d
         self.data = self.data.to(self.opt['data_device']).unsqueeze(0)
+        self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))
 
     def min(self):
@@ -45,9 +46,26 @@ class Dataset(torch.utils.data.Dataset):
 
     def get_2D_slice(self):
         if(len(self.data.shape) == 4):
-            return self.data[0]
+            return self.data[0].clone()
         else:
-            return self.data[0,:,int(self.data.shape[2]/2),:,:]
+            return self.data[0,:,int(self.data.shape[2]/2),:,:].clone()
+
+    def sample_rect(self, starts, widths, samples):
+        positions = []
+        for i in range(len(starts)):
+            positions.append(
+                torch.arange(starts[i], starts[i] + widths[i], widths[i] / samples[i], 
+                    dtype=torch.float32, device=self.opt['data_device'])
+            )
+            positions[i] -= 0.5
+            positions[i] *= 2
+        grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1).unsqueeze(0)
+        #print(grid_to_sample.shape)
+        vals = F.grid_sample(self.data, 
+                grid_to_sample, mode='bilinear', align_corners=False)
+        print('dataset sample rect vals shape')
+        print(vals.shape)
+        return vals
 
     def total_points(self):
         t = 1
@@ -69,22 +87,26 @@ class Dataset(torch.utils.data.Dataset):
                 x = make_coord_grid(self.data.shape[2:], 
                     self.opt['data_device'], flatten=True).unsqueeze(0)
             else:
-                ## TODO
-                sample_spots = torch.rand(self.data.shape[2:]) 
-                for i in range(len(self.data.shape[2:])):
-                    x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
-                        dtype=torch.float32, device=self.opt['data_device'])
-                    x += 0.5
-                    x *= (2 / (self.data.shape[2+i]+1))
-                    x -= 1
-                    x_dims.append(x)
-                x = torch.cat(x_dims, -1)
+                samples = torch.rand(self.index_grid.shape[0], 
+                    dtype=torch.float32, device=self.opt['data_device']) < \
+                        n_points / self.index_grid.shape[0]
+                
+                #for i in range(len(self.data.shape[2:])):
+                #    x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
+                #        dtype=torch.float32, device=self.opt['data_device'])
+                #    x += 0.5
+                #    x *= (2 / (self.data.shape[2+i]+1))
+                #    x -= 1
+                #    x_dims.append(x)
+                #x = torch.cat(x_dims, -1)
+
+                x = self.index_grid[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             
             y = F.grid_sample(self.data, 
                 x, mode='nearest', align_corners=False)
-        
+                
         x = x.squeeze()
         y = y.squeeze()
         if(len(y.shape) == 1):
