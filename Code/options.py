@@ -5,16 +5,17 @@ class Options():
     def get_default():
         opt = {}
         # Input info
-        opt["n_dims"]                  = 3             
+        opt["n_dims"]                  = 2             
         opt['n_outputs']               = 3
-        opt['activation_function']     = "sine"         
+        opt['activation_function']     = "sine"      
+        opt['periodic']                = False   
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
         opt['interpolate']             = False
-        opt["signal_file_name"]        = "isotropic_coarse.h5"
-        opt["save_name"]               = "isotropic_coarse"   
-        opt["n_layers"]                = 1       
-        opt["nodes_per_layer"]         = 1024
+        opt["signal_file_name"]        = "cat.h5"
+        opt["save_name"]               = "cat"   
+        opt["n_layers"]                = 4       
+        opt["nodes_per_layer"]         = 128
         opt["loss"]                    = 'l1'
 
         opt["train_distributed"]       = False

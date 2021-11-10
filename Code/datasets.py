@@ -83,7 +83,7 @@ class Dataset(torch.utils.data.Dataset):
                 x, mode='bilinear', align_corners=False)
         else:
             x_dims = []
-            if(n_points == self.total_points()):
+            if(n_points >= self.total_points()):
                 x = make_coord_grid(self.data.shape[2:], 
                     self.opt['data_device'], flatten=True).unsqueeze(0)
             else:

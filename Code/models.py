@@ -62,6 +62,7 @@ class PositionalEncoding(nn.Module):
             locations[..., 4::6] = torch.cos(locations[..., 4::6])
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
+    
 
 class SineLayer(nn.Module):  
     def __init__(self, in_features, out_features, bias=True,
@@ -98,6 +99,10 @@ class ImplicitModel(nn.Module):
         
         self.opt = opt
         self.net = []
+        if(self.opt['periodic']):
+            self.factor =  torch.tensor(pi/2, dtype=torch.float32, 
+                device = opt['device'])
+
         self.net.append(SineLayer(opt['n_dims'], opt['nodes_per_layer'], 
                                   is_first=True, omega_0=30))
 
@@ -115,11 +120,18 @@ class ImplicitModel(nn.Module):
         
         self.net = nn.Sequential(*self.net)
     
-    def forward(self, coords):
+    def forward(self, coords):        
+        if(self.opt['periodic']):
+            #coords = torch.sin(coords * self.factor)
+            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
         output = self.net(coords)
         return output
     
     def forward_maxpoints(self, coords, max_points=500000):
+        if(self.opt['periodic']):
+            #coords = torch.sin(coords * self.factor)
+            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
+        output = self.net(coords)
         output_shape = list(coords.shape)
         output_shape[-1] = self.opt['n_outputs']
         output = torch.empty(output_shape, 
@@ -130,13 +142,15 @@ class ImplicitModel(nn.Module):
                 self.net(coords[start:min(start+max_points, coords.shape[0])])
         return output
 
-    def sample_grid(self, grid):
+    def sample_grid(self, grid, boundary_scaling = 1.0):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
         if(len(coord_grid.shape) == 4):
             coord_grid = coord_grid[:,:,
                 int(coord_grid.shape[2]/2),#:int(coord_grid.shape[2]/2)+1,
                 :]
         
+        coord_grid *= boundary_scaling
+
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
         vals = self.forward_maxpoints(coord_grid)
@@ -171,8 +185,6 @@ class ImplicitModel(nn.Module):
                 torch.arange(starts[i], starts[i] + widths[i], widths[i] / samples[i], 
                     dtype=torch.float32, device=self.opt['device'])
             )
-            positions[i] -= 0.5
-            positions[i] *= 2
         grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1)
         vals = self.forward(grid_to_sample)
         return vals

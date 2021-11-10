@@ -121,6 +121,34 @@
                     </div>
                 </div>
 
+                
+
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <label for="boundaryScaling" id="boundaryScalingLabel" 
+                            class="form-label">Boundary scaling: 1</label>  
+                    </div>
+                </div>
+
+                
+                <div class="row">
+                    <div class="col-md-6 d-flex justify-content-center">
+                        
+                      
+                    </div>
+                    <div class="col-md-6 d-flex justify-content-center">
+                        <input type="range" class="form-range" id="boundaryScaling" 
+                        min="1.0" max="5.0" step="0.05" value="1"
+                        style="width:30%;"
+                        oninput="updateBoundaryScaling(this.value)"
+                        onmouseup="get_full_reconstruction()" 
+                        ontouchend="get_full_reconstruction()">
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6">
                         <img id='GT_img' 
@@ -257,7 +285,8 @@
             $.ajax({
                 url: "/get_full_reconstruction",
                 data: {
-                    scale_factor: document.getElementById("SSFactor").value
+                    scale_factor: document.getElementById("SSFactor").value,
+                    boundary_scaling: document.getElementById("boundaryScaling").value
                 },
                 type: "get",
                 success: function(response){
@@ -296,7 +325,8 @@
                     y: scaled_y,
                     width: scaled_width,
                     height: scaled_height,
-                    scale_factor: document.getElementById("cropSSFactor").value
+                    scale_factor: document.getElementById("cropSSFactor").value,
+                    boundary_scaling: document.getElementById("boundaryScaling").value
                 },
                 type: "get",
                 success: function(response){
@@ -371,6 +401,10 @@
 
         function updateCropSSFactor(val){
           document.getElementById('cropSSFactorLabel').innerHTML="Crop SS factor: " + val; 
+        }
+
+        function updateBoundaryScaling(val){
+          document.getElementById('boundaryScalingLabel').innerHTML="Boundary scaling: " + val; 
         }
 
         function updateGTSSFactor(val){

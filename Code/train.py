@@ -75,6 +75,8 @@ def train_implicit_model(rank, model, dataset, opt):
             loss = loss_func(y, y_estimated)
         elif(opt['loss'] == 'perpendicular'):
             loss = 1 - torch.abs(loss_func(y, y_estimated))
+            max_err = loss.max()
+            loss = loss.mean()
         loss.backward()
 
         optimizer.step()
@@ -84,13 +86,22 @@ def train_implicit_model(rank, model, dataset, opt):
                 save_model(model, opt)
 
             if(iteration % 5 == 0):
-                print("Iteration %i/%i, loss: %0.06f" % \
-                        (iteration, opt['iterations'], 
-                        loss.item()))
+                
+                if(opt['loss'] == 'perpendicular'):
+                    print("Iteration %i/%i, loss: %0.06f, max_angle_err:%0.05f" % \
+                            (iteration, opt['iterations'], 
+                            loss.item(), max_err.item()))
+                else:
+                    print("Iteration %i/%i, loss: %0.06f" % \
+                            (iteration, opt['iterations'], 
+                            loss.item()))
                 writer.add_scalar('Loss', loss.item(), iteration)
-
-                p = PSNR(y_estimated, y, dataset.max()-dataset.min())
-                writer.add_scalar('PSNR', p.item(), iteration)
+                
+                if(opt['loss'] == 'perpendicular'):
+                    writer.add_scalar('Max_angle_error', max_err.item(), iteration)
+                else:
+                    p = PSNR(y_estimated, y, dataset.max()-dataset.min())
+                    writer.add_scalar('PSNR', p.item(), iteration)
                 
                 GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
                     / (1024**3))
@@ -129,6 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_dims',default=None,type=int)
     parser.add_argument('--n_outputs',default=None,type=int)
     parser.add_argument('--activation_function',default=None,type=str)
+    parser.add_argument('--periodic',default=None,type=str2bool)
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)
     parser.add_argument('--interpolate',default=None,type=str2bool)

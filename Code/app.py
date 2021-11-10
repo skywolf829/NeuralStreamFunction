@@ -95,7 +95,7 @@ class AppModelAndController():
 
         return gt_im
     
-    def get_full_reconstruction(self, ss_factor):
+    def get_full_reconstruction(self, ss_factor, boundary_scaling):
 
         grid = list(self.dataset.data.shape[2:])
         for i in range(len(grid)):
@@ -103,7 +103,8 @@ class AppModelAndController():
             grid[i] = int(grid[i])
 
         with torch.no_grad():
-            im = self.model.sample_grid(grid)
+            im = self.model.sample_grid(grid, 
+                boundary_scaling=boundary_scaling)
         #print(im.min())
         #print(im.max())
         #print("dataset")
@@ -117,12 +118,15 @@ class AppModelAndController():
 
         return im.cpu().numpy()
 
-    def get_crop(self, starts, widths, ss_factor):    
+    def get_crop(self, starts, widths, ss_factor, boundary_scaling):    
         samples = []
         for i in range(len(widths)):
-            samples.append(int(ss_factor*widths[i]*self.dataset.data.shape[2+i]))    
+            samples.append(int(ss_factor*widths[i]*self.dataset.data.shape[2+i]))  
+            starts[i] -= 0.5
+            starts[i] *= (2*boundary_scaling)
+            widths[i] *= (2*boundary_scaling)   
         if(len(self.dataset.data.shape) == 5):
-            starts.append(0.5)
+            starts.append(0.0)
             widths.append(1e-6)
             samples.append(1)
 
@@ -191,8 +195,9 @@ def get_gt():
 def get_full_reconstruction():
     global amc
     factor = float(request.args.get('scale_factor'))
+    boundary_scaling = float(request.args.get('boundary_scaling'))
     
-    im = amc.get_full_reconstruction(factor)
+    im = amc.get_full_reconstruction(factor, boundary_scaling)
 
     print("Recon")
     print(im.shape)
@@ -213,8 +218,9 @@ def get_crop():
     width = float(request.args.get('width'))
     height = float(request.args.get('height'))
     factor = float(request.args.get('scale_factor'))
+    boundary_scaling = float(request.args.get('boundary_scaling'))
 
-    im = amc.get_crop([x, y], [width, height], factor)
+    im = amc.get_crop([x, y], [width, height], factor, boundary_scaling)
     print("crop")
     print(im.shape)
 
