@@ -100,7 +100,8 @@ def train_implicit_model(rank, model, dataset, opt):
                     if(opt['loss'] == 'perpendicular'):
                         writer.add_scalar('Max_angle_error', max_err.item(), iteration)
                     else:
-                        p = PSNR(y_estimated, y, dataset.max()-dataset.min())
+                        p = PSNR(y_estimated.detach(), y.detach(), 
+                            dataset.max()-dataset.min())
                         writer.add_scalar('PSNR', p.item(), iteration)
                     
                     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
