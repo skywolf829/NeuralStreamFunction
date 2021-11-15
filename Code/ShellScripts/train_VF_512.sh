@@ -31,7 +31,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_4x2048 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:3 --data_device cuda:0 &
+--device cuda:0 --data_device cuda:0 &
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isotropic_coarse_vf_512.h5 \
@@ -39,7 +39,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_4x4096 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:3 --data_device cuda:4 &
+--device cuda:4 --data_device cuda:4 &
 
 
 ###########################################################
@@ -74,7 +74,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_6x2048 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:7 --data_device cuda:1 &
+--device cuda:1 --data_device cuda:1 &
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isotropic_coarse_vf_512.h5 \
@@ -82,7 +82,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_6x4096 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:7 --data_device cuda:5 &
+--device cuda:5 --data_device cuda:5 &
 
 ###########################################################
 
@@ -116,7 +116,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_8x2048 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:3 --data_device cuda:2 &
+--device cuda:2 --data_device cuda:2 &
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isotropic_coarse_vf_512.h5 \
@@ -124,7 +124,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_8x4096 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:3 --data_device cuda:6 &
+--device cuda:6 --data_device cuda:6 &
 
 ###########################################################
 
@@ -159,7 +159,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_10x2048 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:4 --data_device cuda:3 &
+--device cuda:3 --data_device cuda:3 &
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isotropic_coarse_vf_512.h5 \
@@ -167,7 +167,7 @@ python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --save_name isotropic_coarse_vf_512_10x4096 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
---device cuda:4 --data_device cuda:7 
+--device cuda:7 --data_device cuda:7 
 
 
 ###########################################################
