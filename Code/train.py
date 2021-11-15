@@ -86,37 +86,37 @@ def train_implicit_model(rank, model, dataset, opt):
                 save_model(model, opt)
 
             if(iteration % 5 == 0):
-                
-                if(opt['loss'] == 'perpendicular'):
-                    print("Iteration %i/%i, loss: %0.06f, max_angle_err:%0.05f" % \
-                            (iteration, opt['iterations'], 
-                            loss.item(), max_err.item()))
-                else:
-                    print("Iteration %i/%i, loss: %0.06f" % \
-                            (iteration, opt['iterations'], 
-                            loss.item()))
-                writer.add_scalar('Loss', loss.item(), iteration)
-                
-                if(opt['loss'] == 'perpendicular'):
-                    writer.add_scalar('Max_angle_error', max_err.item(), iteration)
-                else:
-                    p = PSNR(y_estimated, y, dataset.max()-dataset.min())
-                    writer.add_scalar('PSNR', p.item(), iteration)
-                
-                GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
-                    / (1024**3))
-                writer.add_scalar('GPU memory (GB)', GBytes, iteration)
+                with torch.no_grad():
+                    if(opt['loss'] == 'perpendicular'):
+                        print("Iteration %i/%i, loss: %0.06f, max_angle_err:%0.05f" % \
+                                (iteration, opt['iterations'], 
+                                loss.item(), max_err.item()))
+                    else:
+                        print("Iteration %i/%i, loss: %0.06f" % \
+                                (iteration, opt['iterations'], 
+                                loss.item()))
+                    writer.add_scalar('Loss', loss.item(), iteration)
+                    
+                    if(opt['loss'] == 'perpendicular'):
+                        writer.add_scalar('Max_angle_error', max_err.item(), iteration)
+                    else:
+                        p = PSNR(y_estimated, y, dataset.max()-dataset.min())
+                        writer.add_scalar('PSNR', p.item(), iteration)
+                    
+                    GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+                        / (1024**3))
+                    writer.add_scalar('GPU memory (GB)', GBytes, iteration)
             
             if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
                 grid_to_sample = dataset.data.shape[2:]
                 if(opt['log_image']):
                     with torch.no_grad():
                         img = model.sample_grid_for_image(grid_to_sample)
-                    if(dataset.min() < 0 or dataset.max() > 1.0):
-                        img -= dataset.min()
-                        img /= (dataset.max() - dataset.min())
-                    writer.add_image('Reconstruction', img.clamp(0, 1), 
-                        iteration, dataformats='WHC')
+                        if(dataset.min() < 0 or dataset.max() > 1.0):
+                            img -= dataset.min()
+                            img /= (dataset.max() - dataset.min())
+                        writer.add_image('Reconstruction', img.clamp(0, 1), 
+                            iteration, dataformats='WHC')
                 if(opt['log_gradient']):
                     grad_img = model.sample_grad_grid_for_image(grid_to_sample)
                     for output_index in range(len(grad_img)):
