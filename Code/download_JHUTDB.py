@@ -102,9 +102,9 @@ ts_skip = 10
 frames = []
 for i in range(startts, endts, ts_skip):
     print("TS %i/%i" % (i, endts))
-    f = get_full_frame_parallel(0, 128, 1,#x
-    0, 128, 1, #y
-    0, 128, 1, #z
+    f = get_full_frame_parallel(0, 512, 1,#x
+    0, 512, 1, #y
+    0, 512, 1, #z
     name, i, 
     "u", 3, 
     16)    
@@ -121,7 +121,7 @@ for i in range(startts, endts, ts_skip):
     f = np.transpose(f, (0, 4, 1, 2, 3))[0]
     print(f.shape)
     #frames.append(f)
-    f_h5 = h5py.File(os.path.join(save_folder, "isotropic_coarse_vf.h5"), 'w')
+    f_h5 = h5py.File(os.path.join(save_folder, "isotropic_coarse_vf_512.h5"), 'w')
     f_h5.create_dataset("data", data=f)
     f_h5.close()
     print("Finished " + str(i))
