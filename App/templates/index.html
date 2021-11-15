@@ -220,7 +220,32 @@
                         style="width:100%;">
                     </div>
                 </div>
-                
+
+                <br>
+                <br>
+
+                <div class="row">
+
+                    <label for="idim">Input dim:</label>
+                    <input type="text" id="input_dim" value='0'>
+                    <label for="odim">Output dim:</label>
+                    <input type="text" id="output_dim" value='0'>
+                    <button onclick="get_full_gradient()">Calculate gradient</button>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <img id='gr_gradient' 
+                        class="img-fluid" alt="",
+                        style="width:100%;">
+                    </div>
+                    <div class="col-md-6">
+                        <img id='model_gradient' 
+                        class="img-fluid" alt="",
+                        style="width:100%;">
+                    </div>
+                </div>
+
                 <br>
                 <div class="row">
 
@@ -301,6 +326,30 @@
                         drawRect(rect_x, rect_y, rect_width, rect_height);
                     }
                     console.log("Updated reconstruction");
+                    //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
+                    //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
+                } 
+            });
+        }
+
+        function get_full_gradient(){
+            $.ajax({
+                url: "/get_full_gradient",
+                data: {
+                    scale_factor: document.getElementById("SSFactor").value,
+                    boundary_scaling: document.getElementById("boundaryScaling").value,
+                    input_dim: document.getElementById("input_dim").value,
+                    output_dim: document.getElementById("output_dim").value
+                },
+                type: "get",
+                success: function(response){
+
+                    var img = response['img']
+                    img = img.substring(2, img.length-1)
+
+                    
+                    document.getElementById('model_gradient').src = "data:img/png;base64,"+img; 
+                    console.log("Updated gradient reconstruction");
                     //document.getElementById('psnr').innerHTML = "PSNR: " + response['psnr'] + " dB";
                     //document.getElementById('l1').innerHTML = "L1: " + response['l1'];
                 } 

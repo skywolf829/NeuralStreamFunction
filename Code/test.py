@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_from',default=None,type=str)
     parser.add_argument('--supersample',default=None,type=float)
     parser.add_argument('--supersample_gradient',default=None,type=float)
+    parser.add_argument('--normal_field',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -94,6 +95,22 @@ if __name__ == '__main__':
                     "_wrt_inpudim_"+str(input_index), 
                     grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
                     0, dataformats='WHC')
+    
+    if(args['normal_field'] is not None):
+        grid = list(dataset.data.shape[2:])
+        
+        with torch.no_grad():
+            vector_field = model.sample_grid(grid)
+            print(vector_field.shape)
+
+        jacobian = model.sample_grad_grid(grid)
+        
+        with torch.no_grad():
+            jacobian = torch.cat(jacobian, dim=1)
+            print(jacobian.shape)
+            
+            normal_field = torch.matmul(jacobian, vector_field)
+            print(normal_field.shape)
 
     writer.close()
         

@@ -103,7 +103,7 @@ class AppModelAndController():
             grid[i] = int(grid[i])
 
         with torch.no_grad():
-            im = self.model.sample_grid(grid, 
+            im = self.model.sample_grid_for_image(grid, 
                 boundary_scaling=boundary_scaling)
         #print(im.min())
         #print(im.max())
@@ -144,6 +144,55 @@ class AppModelAndController():
         im = im.type(torch.uint8).permute(1, 0, 2)
 
         return im.cpu().numpy()
+
+    def get_grad(self, ss_factor, boundary_scaling, input_dim, output_dim):
+        grid = list(self.dataset.data.shape[2:])
+        for i in range(len(grid)):
+            grid[i] *= ss_factor
+            grid[i] = int(grid[i])
+
+        im = self.model.sample_grad_grid_for_image(grid, 
+            boundary_scaling=boundary_scaling, 
+            input_dim = input_dim,
+            output_dim=output_dim)
+
+        im -= im.min()
+        im /= im.max()
+        im *= 255
+        im = im.clamp(0, 255)
+        im = im.type(torch.uint8).permute(1, 0, 2)
+
+        return im.cpu().numpy()
+
+    def get_grad_crop(self, starts, widths, ss_factor, boundary_scaling,
+        input_dim, output_dim):    
+        samples = []
+        for i in range(len(widths)):
+            samples.append(int(ss_factor*widths[i]*self.dataset.data.shape[2+i]))  
+            starts[i] -= 0.5
+            starts[i] *= (2*boundary_scaling)
+            widths[i] *= (2*boundary_scaling)   
+        if(len(self.dataset.data.shape) == 5):
+            starts.append(0.0)
+            widths.append(1e-6)
+            samples.append(1)
+
+        with torch.no_grad():
+            im = self.model.sample_grad_rect(starts, widths, samples, 
+                input_dim, output_dim)
+
+        if(len(self.dataset.data.shape) == 5):
+            im = im[:,:,0,:]
+
+        im -= im.min()
+        im /= im.max()
+        
+        im *= 255
+        im = im.clamp(0, 255)
+        im = im.type(torch.uint8).permute(1, 0, 2)
+
+        return im.cpu().numpy()
+
 
 file_folder_path = os.path.dirname(os.path.abspath(__file__))
 template_folder = os.path.join(file_folder_path, "..", 'App', 
@@ -210,6 +259,27 @@ def get_full_reconstruction():
         }
     )
 
+@app.route('/get_full_gradient')
+def get_full_gradient():
+    global amc
+    factor = float(request.args.get('scale_factor'))
+    boundary_scaling = float(request.args.get('boundary_scaling'))
+    input_dim = int(request.args.get('input_dim'))
+    output_dim = int(request.args.get('output_dim'))
+    
+    im = amc.get_grad(factor, boundary_scaling, input_dim, output_dim)
+
+    print("Full grad")
+    print(im.shape)
+
+    success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+    return_img = return_img.tobytes()
+    return jsonify(
+        {
+            "img":str(base64.b64encode(return_img))
+        }
+    )
+
 @app.route('/get_crop')
 def get_crop():
     global amc
@@ -222,6 +292,31 @@ def get_crop():
 
     im = amc.get_crop([x, y], [width, height], factor, boundary_scaling)
     print("crop")
+    print(im.shape)
+
+    success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+    return_img = return_img.tobytes()
+    return jsonify(
+        {
+            "img":str(base64.b64encode(return_img))
+        }
+    )
+
+@app.route('/get_grad_crop')
+def get_grad_crop():
+    global amc
+    x = float(request.args.get('x'))
+    y = float(request.args.get('y'))
+    width = float(request.args.get('width'))
+    height = float(request.args.get('height'))
+    factor = float(request.args.get('scale_factor'))
+    boundary_scaling = float(request.args.get('boundary_scaling'))
+    input_dim = float(request.args.get('input_dim'))
+    output_dim = float(request.args.get('output_dim'))
+
+    im = amc.get_grad_crop([x, y], [width, height], factor, boundary_scaling,
+        input_dim, output_dim)
+    print("grad crop")
     print(im.shape)
 
     success, return_img = cv2.imencode(".png", cv2.cvtColor(im, cv2.COLOR_BGR2RGB))

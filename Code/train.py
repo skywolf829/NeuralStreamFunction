@@ -111,14 +111,14 @@ def train_implicit_model(rank, model, dataset, opt):
                 grid_to_sample = dataset.data.shape[2:]
                 if(opt['log_image']):
                     with torch.no_grad():
-                        img = model.sample_grid(grid_to_sample)
+                        img = model.sample_grid_for_image(grid_to_sample)
                     if(dataset.min() < 0 or dataset.max() > 1.0):
                         img -= dataset.min()
                         img /= (dataset.max() - dataset.min())
                     writer.add_image('Reconstruction', img.clamp(0, 1), 
                         iteration, dataformats='WHC')
                 if(opt['log_gradient']):
-                    grad_img = model.sample_grad_grid(grid_to_sample)
+                    grad_img = model.sample_grad_grid_for_image(grid_to_sample)
                     for output_index in range(len(grad_img)):
                         for input_index in range(grad_img[output_index].shape[-1]):
                             grad_img[output_index][...,input_index] -= \
