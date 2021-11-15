@@ -145,3 +145,4 @@ dmypy.json
 *.torch
 *.dat
 nohup.out 
+lot.txt
