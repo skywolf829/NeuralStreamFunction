@@ -131,6 +131,7 @@ def train_implicit_model(rank, model, dataset, opt):
                 if(opt['log_image']):
                     with torch.no_grad():
                         img = model.sample_grid_for_image(grid_to_sample)
+                        print("img shape: " + str(img.shape))
                         if(dataset.min() < 0 or dataset.max() > 1.0):
                             img -= dataset.min()
                             img /= (dataset.max() - dataset.min())
