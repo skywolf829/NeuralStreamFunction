@@ -99,21 +99,7 @@ def train_implicit_model(rank, model, dataset, opt):
 
             if(iteration % 5 == 0):
                 with torch.no_grad():
-                    print("Iteration %i/%i, loss: %0.06f" % \
-                            (iteration, opt['iterations'], 
-                            loss.item()))
-                    writer.add_scalar('Loss', loss.item(), iteration)
-
-                    GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
-                        / (1024**3))
-                    writer.add_scalar('GPU memory (GB)', GBytes, iteration)
-            
                     if(opt['loss'] == "l1occupancy"):
-                        print(y_estimated.shape)
-                        print(y.shape)
-                        print(y_estimated.detach()[:,0:-1].shape)
-                        print(y_estimated.detach()[:, -1].shape)
-                        print(torch.isnan(y[:,0]).to(torch.float32).shape)
                         p_vf = PSNR(y_estimated.detach()[:,0:-1], y.detach(), 
                             dataset.max()-dataset.min())
                         p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y[:,0]).to(torch.float32))
@@ -123,6 +109,20 @@ def train_implicit_model(rank, model, dataset, opt):
                         p_vf = PSNR(y_estimated.detach(), y.detach(), 
                             dataset.max()-dataset.min())
                         writer.add_scalar('PSNR', p_vf.item(), iteration)
+
+                    if(opt['loss'] == "l1occupancy"):
+                        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f, psnr_occupancy: %0.03f" % \
+                            (iteration, opt['iterations'], 
+                            loss.item(), p_vf.item(), p_occupancy.item()))
+                    else:
+                        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
+                            (iteration, opt['iterations'], 
+                            loss.item(), p_vf.item()))
+
+                    writer.add_scalar('Loss', loss.item(), iteration)
+                    GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+                        / (1024**3))
+                    writer.add_scalar('GPU memory (GB)', GBytes, iteration)
                     
             
             if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
