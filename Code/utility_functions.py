@@ -40,7 +40,8 @@ def create_window_3D(window_size, channel):
     window = torch.Tensor(_3D_window.expand(channel, 1, window_size, window_size, window_size).contiguous())
     return window
 
-def PSNR(x, y, range = 1.0):
+def PSNR(x, y, range = torch.tensor(1.0, dtype=torch.float32)):
+    range = range.to(x.device)
     return 20*torch.log10(range) - \
         10*torch.log10(((y-x)**2).mean())
         
