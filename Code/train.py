@@ -29,17 +29,9 @@ def l1_occupancy(x, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
     is_nan_mask = torch.isnan(x)[...,0]
-    print("x isnan shape")
-    print(torch.isnan(x)[...,0].shape)
-    print("y shape")
-    print(y[..., -1].shape)
+    
     o_loss = l1(is_nan_mask.to(torch.float32), y[..., -1])
-    print("oloss %0.05f" % o_loss.item())
-    print("(1-is_nan_mask.to(torch.float32))")
-    print(is_nan_mask.shape)
-    vf_loss = l1(x[~is_nan_mask, :], 
-        y[~is_nan_mask, 0:-1])
-    print("vf_loss %0.05f" % vf_loss.item())
+    vf_loss = l1(x[~is_nan_mask, :], y[~is_nan_mask, 0:-1])
     return o_loss + vf_loss
 
 def perpendicular_loss(x, y):
@@ -108,9 +100,9 @@ def train_implicit_model(rank, model, dataset, opt):
             if(iteration % 5 == 0):
                 with torch.no_grad():
                     if(opt['loss'] == 'perpendicular'):
-                        print("Iteration %i/%i, loss: %0.06f, max_angle_err:%0.05f" % \
+                        print("Iteration %i/%i, loss: %0.06f" % \
                                 (iteration, opt['iterations'], 
-                                loss.item(), max_err.item()))
+                                loss.item()))
                     else:
                         print("Iteration %i/%i, loss: %0.06f" % \
                                 (iteration, opt['iterations'], 
