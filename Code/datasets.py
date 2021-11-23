@@ -36,13 +36,13 @@ class Dataset(torch.utils.data.Dataset):
         if self.min_ is not None:
             return self.min_
         else:
-            self.min_ = self.data.min()
+            self.min_ = self.data[~self.data.isnan()].min()
             return self.min_
     def max(self):
         if self.max_ is not None:
             return self.max_
         else:
-            self.max_ = self.data.max()
+            self.max_ = self.data[~self.data.isnan()].max()
             return self.max_
 
     def get_2D_slice(self):
