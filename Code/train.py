@@ -99,26 +99,26 @@ def train_implicit_model(rank, model, dataset, opt):
 
             if(iteration % 5 == 0):
                 with torch.no_grad():
-                    if(opt['loss'] == 'perpendicular'):
-                        print("Iteration %i/%i, loss: %0.06f" % \
-                                (iteration, opt['iterations'], 
-                                loss.item()))
-                    else:
-                        print("Iteration %i/%i, loss: %0.06f" % \
-                                (iteration, opt['iterations'], 
-                                loss.item()))
+                    print("Iteration %i/%i, loss: %0.06f" % \
+                            (iteration, opt['iterations'], 
+                            loss.item()))
                     writer.add_scalar('Loss', loss.item(), iteration)
-                    
-                    if(opt['loss'] == 'perpendicular'):
-                        writer.add_scalar('Max_angle_error', max_err.item(), iteration)
-                    else:
-                        p = PSNR(y_estimated.detach(), y.detach(), 
-                            dataset.max()-dataset.min())
-                        writer.add_scalar('PSNR', p.item(), iteration)
-                    
+
                     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
                         / (1024**3))
                     writer.add_scalar('GPU memory (GB)', GBytes, iteration)
+            
+                    if(opt['loss'] == "l1occupancy"):
+                        p_vf = PSNR(y_estimated.detach()[:,0:-1], y.detach(), 
+                            dataset.max()-dataset.min())
+                        p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y).to(torch.float32))
+                        writer.add_scalar('PSNR', p_vf.item(), iteration)
+                        writer.add_scalar('PSNR_occupancy', p_occupancy.item(), iteration)
+                    else:
+                        p_vf = PSNR(y_estimated.detach(), y.detach(), 
+                            dataset.max()-dataset.min())
+                        writer.add_scalar('PSNR', p_vf.item(), iteration)
+                    
             
             if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
                 grid_to_sample = dataset.data.shape[2:]
