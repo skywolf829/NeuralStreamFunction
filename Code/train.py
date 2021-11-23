@@ -36,7 +36,7 @@ def l1_occupancy(x, y):
     o_loss = l1(is_nan_mask.to(torch.float32), y[..., -1])
     
     print("(1-is_nan_mask.to(torch.float32))")
-    print((1-is_nan_mask.to(torch.float32)).shape())
+    print((1-is_nan_mask.to(torch.float32)).shape)
     vf_loss = l1(x[(1-is_nan_mask.to(torch.float32)).any(), :], 
         y[(1-is_nan_mask.to(torch.float32)).any(), 0:-1])
     return o_loss + vf_loss
