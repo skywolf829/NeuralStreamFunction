@@ -49,7 +49,7 @@ class Dataset(torch.utils.data.Dataset):
         if(len(self.data.shape) == 4):
             return self.data[0].clone()
         else:
-            return self.data[0,:,:,:,int(self.data.shape[2]/2)].clone()
+            return self.data[0,:,:,:,int(self.data.shape[4]/2)].clone()
 
     def sample_rect(self, starts, widths, samples):
         positions = []
