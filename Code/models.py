@@ -187,7 +187,7 @@ class ImplicitModel(nn.Module):
         vals = vals.reshape(coord_grid_shape)
         if(self.opt['loss'] == "l1occupancy"):
             vals = vals[..., 0:-1]
-        return vals.transpose(0, 1)
+        return vals
 
     def sample_occupancy_grid_for_image(self, grid, boundary_scaling = 1.0):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
@@ -210,7 +210,7 @@ class ImplicitModel(nn.Module):
 
         coord_grid = make_coord_grid(grid, self.opt['device'], False)        
         if(len(coord_grid.shape) == 4):
-            coord_grid = coord_grid[:,:,:,:int(coord_grid.shape[3]/2)]
+            coord_grid = coord_grid[:,:,int(coord_grid.shape[2]/2),:]
         coord_grid *= boundary_scaling
         
         coord_grid_shape = list(coord_grid.shape)

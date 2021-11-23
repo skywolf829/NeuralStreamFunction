@@ -61,10 +61,8 @@ class AppModelAndController():
             align_corners=False)[0]
 
         gt_im *= 255
-        gt_im = gt_im.type(torch.uint8)
+        gt_im = gt_im.type(torch.uint8)#.permute(1, 2, 0)
 
-
-        gt_im = gt_im.permute(1, 2, 0)
         gt_im = gt_im.cpu().numpy()
 
         return gt_im
@@ -91,9 +89,9 @@ class AppModelAndController():
         gt_im /= (self.dataset.max() - self.dataset.min())
 
         gt_im *= 255
-        gt_im = gt_im.type(torch.uint8).clamp(0, 255).permute(2, 1, 0).cpu().numpy()
+        gt_im = gt_im.type(torch.uint8).clamp(0, 255)#.permute(2, 1, 0)
 
-        return gt_im
+        return gt_im.cpu().numpy()
     
     def get_full_reconstruction(self, ss_factor, boundary_scaling):
 
@@ -114,7 +112,7 @@ class AppModelAndController():
         im /= (self.dataset.max()-self.dataset.min())
         im *= 255
         im = im.clamp(0, 255)
-        im = im.type(torch.uint8).permute(1, 0, 2)
+        im = im.type(torch.uint8)#.permute(1, 0, 2)
 
         return im.cpu().numpy()
 
@@ -141,7 +139,7 @@ class AppModelAndController():
         
         im *= 255
         im = im.clamp(0, 255)
-        im = im.type(torch.uint8).permute(1, 0, 2)
+        im = im.type(torch.uint8)#.permute(1, 0, 2)
 
         return im.cpu().numpy()
 
@@ -160,7 +158,7 @@ class AppModelAndController():
         im /= im.max()
         im *= 255
         im = im.clamp(0, 255)
-        im = im.type(torch.uint8).permute(1, 0, 2)
+        im = im.type(torch.uint8)#.permute(1, 0, 2)
 
         return im.cpu().numpy()
 
@@ -189,7 +187,7 @@ class AppModelAndController():
         
         im *= 255
         im = im.clamp(0, 255)
-        im = im.type(torch.uint8).permute(1, 0, 2)
+        im = im.type(torch.uint8)#.permute(1, 0, 2)
 
         return im.cpu().numpy()
 

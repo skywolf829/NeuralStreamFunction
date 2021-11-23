@@ -136,7 +136,7 @@ def train_implicit_model(rank, model, dataset, opt):
                             img -= dataset.min()
                             img /= (dataset.max() - dataset.min())
                         writer.add_image('Reconstruction', img.clamp(0, 1), 
-                            iteration, dataformats='WHC')
+                            iteration, dataformats='HWC')
                 if(opt['log_gradient']):
                     grad_img = model.sample_grad_grid_for_image(grid_to_sample)
                     for output_index in range(len(grad_img)):
@@ -149,7 +149,7 @@ def train_implicit_model(rank, model, dataset, opt):
                             writer.add_image('Gradient_outputdim'+str(output_index)+\
                                 "_wrt_inpudim_"+str(input_index), 
                                 grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
-                                iteration, dataformats='WHC')
+                                iteration, dataformats='HWC')
     
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
