@@ -109,6 +109,11 @@ def train_implicit_model(rank, model, dataset, opt):
                     writer.add_scalar('GPU memory (GB)', GBytes, iteration)
             
                     if(opt['loss'] == "l1occupancy"):
+                        print(y_estimated.shape)
+                        print(y.shape)
+                        print(y_estimated.detach()[:,0:-1].shape)
+                        print(y_estimated.detach()[:, -1])
+                        print(torch.isnan(y).to(torch.float32).shape)
                         p_vf = PSNR(y_estimated.detach()[:,0:-1], y.detach(), 
                             dataset.max()-dataset.min())
                         p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y).to(torch.float32))
