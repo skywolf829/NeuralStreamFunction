@@ -30,6 +30,7 @@ class Dataset(torch.utils.data.Dataset):
         self.data = self.data.to(self.opt['data_device']).unsqueeze(0)
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))
+        print("Min/max: %0.04f, %0.04f" % (self.min(), self.max()))
 
     def min(self):
         if self.min_ is not None:
