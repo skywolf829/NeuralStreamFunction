@@ -22,6 +22,19 @@ data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
+def l1(x, y):
+    return F.l1_loss(x, y)
+
+def l1_occupancy(x, y):
+    # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
+    # Where o is occupancy
+    o_loss = l1(torch.isnan(x), y[..., -1])
+    vf_loss = l1(x[(1-torch.isnan(x)).any(), :], y[(1-torch.isnan(x)).any(), 0:-1])
+    return o_loss + vf_loss
+
+def perpendicular_loss(x, y):
+    return F.cosine_similarity(x, y).mean()
+
 
 def train_implicit_model(rank, model, dataset, opt):
     print("Training on device " + str(rank))
@@ -60,9 +73,11 @@ def train_implicit_model(rank, model, dataset, opt):
     
        
     if(opt['loss'] == 'l1'):
-        loss_func = nn.L1Loss().to(opt["device"])
+        loss_func = l1
     elif(opt['loss'] == "perpendicular"):
-        loss_func = nn.CosineSimilarity().to(opt['device'])
+        loss_func = perpendicular_loss
+    elif(opt['loss'] == 'l1occupancy'):
+        loss_func = l1_occupancy
 
     for iteration in range(0, opt['iterations']):
         model.zero_grad()
@@ -71,12 +86,7 @@ def train_implicit_model(rank, model, dataset, opt):
         y = y.to(opt['device'])
 
         y_estimated = model(x)
-        if(opt['loss'] == 'l1'):
-            loss = loss_func(y, y_estimated)
-        elif(opt['loss'] == 'perpendicular'):
-            loss = 1 - torch.abs(loss_func(y, y_estimated))
-            max_err = loss.max()
-            loss = loss.mean()
+        loss = loss_func(y, y_estimated)
         loss.backward()
 
         optimizer.step()
