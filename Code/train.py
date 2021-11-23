@@ -112,11 +112,11 @@ def train_implicit_model(rank, model, dataset, opt):
                         print(y_estimated.shape)
                         print(y.shape)
                         print(y_estimated.detach()[:,0:-1].shape)
-                        print(y_estimated.detach()[:, -1])
-                        print(torch.isnan(y).to(torch.float32).shape)
+                        print(y_estimated.detach()[:, -1].shape)
+                        print(torch.isnan(y[:,0]).to(torch.float32).shape)
                         p_vf = PSNR(y_estimated.detach()[:,0:-1], y.detach(), 
                             dataset.max()-dataset.min())
-                        p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y).to(torch.float32))
+                        p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y[:,0]).to(torch.float32))
                         writer.add_scalar('PSNR', p_vf.item(), iteration)
                         writer.add_scalar('PSNR_occupancy', p_occupancy.item(), iteration)
                     else:
