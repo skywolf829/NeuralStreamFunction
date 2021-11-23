@@ -292,7 +292,7 @@ def make_coord_grid(shape, device, flatten=True):
     ret = torch.stack(torch.meshgrid(*coord_seqs), dim=-1)
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
-    return ret
+    return ret.flip(-1)
 
 def create_folder(start_path, folder_name):
     f_name = folder_name
