@@ -177,7 +177,7 @@ class ImplicitModel(nn.Module):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
         print(coord_grid.shape)
         if(len(coord_grid.shape) == 4):
-            coord_grid = coord_grid[:,:,int(coord_grid.shape[2]/2),:]
+            coord_grid = coord_grid[int(coord_grid.shape[0]/2),:,:,:]
         
         coord_grid *= boundary_scaling
 
