@@ -84,7 +84,7 @@ def train_implicit_model(rank, model, dataset, opt):
     for iteration in range(0, opt['iterations']):
         model.zero_grad()
         x, y = dataset.get_random_points(opt['points_per_iteration'])
-        print(y.sum() / y.shape[0])
+        print(y.isnan().any().sum() / y.shape[0])
         x = x.to(opt['device'])
         y = y.to(opt['device'])
 
