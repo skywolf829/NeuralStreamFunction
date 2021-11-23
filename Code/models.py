@@ -176,7 +176,7 @@ class ImplicitModel(nn.Module):
     def sample_grid_for_image(self, grid, boundary_scaling = 1.0):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
         if(len(coord_grid.shape) == 4):
-            coord_grid = coord_grid[:,:,:,int(coord_grid.shape[4]/2)]
+            coord_grid = coord_grid[:,:,:,int(coord_grid.shape[3]/2)]
         
         coord_grid *= boundary_scaling
 
@@ -210,9 +210,7 @@ class ImplicitModel(nn.Module):
 
         coord_grid = make_coord_grid(grid, self.opt['device'], False)        
         if(len(coord_grid.shape) == 4):
-            coord_grid = coord_grid[:,:,
-                int(coord_grid.shape[3]/2),#:int(coord_grid.shape[2]/2)+1,
-                :]
+            coord_grid = coord_grid[:,:,:,:int(coord_grid.shape[3]/2)]
         coord_grid *= boundary_scaling
         
         coord_grid_shape = list(coord_grid.shape)
