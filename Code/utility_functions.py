@@ -285,9 +285,15 @@ def make_coord_grid(shape, device, flatten=True):
         left = -1.0
         right = 1.0
         seq = left + r + (2 * r) * \
-            torch.arange(0, n, device=device, dtype=torch.float32).float()
+            torch.arange(0, n, 
+            device=device, 
+            dtype=torch.float32).float()
         coord_seqs.insert(0, seq)
     ret = torch.stack(torch.meshgrid(*coord_seqs), dim=-1)
+    if(len(ret.shape) == 4):
+        ret = ret.permute(2, 1, 0, 3)
+    else:
+        ret = ret.permute(1, 0, 2)
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
     return ret
