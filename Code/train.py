@@ -34,11 +34,12 @@ def l1_occupancy(x, y):
     print("y shape")
     print(y[..., -1].shape)
     o_loss = l1(is_nan_mask.to(torch.float32), y[..., -1])
-    
+    print("oloss %0.05f" % o_loss.item())
     print("(1-is_nan_mask.to(torch.float32))")
-    print((1-is_nan_mask.to(torch.float32)).shape)
-    vf_loss = l1(x[(1-is_nan_mask.to(torch.float32)).any(), :], 
-        y[(1-is_nan_mask.to(torch.float32)).any(), 0:-1])
+    print(is_nan_mask.shape)
+    vf_loss = l1(x[~is_nan_mask, :], 
+        y[~is_nan_mask, 0:-1])
+    print("vf_loss %0.05f" % vf_loss.item())
     return o_loss + vf_loss
 
 def perpendicular_loss(x, y):
