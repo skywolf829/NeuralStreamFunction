@@ -28,7 +28,13 @@ def l1(x, y):
 def l1_occupancy(x, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
+    print("x isnan shape")
+    print(torch.isnan(x).shape)
+    print("y shape")
+    print(y.shape)
     o_loss = l1(torch.isnan(x), y[..., -1])
+    print("(1-torch.isnan(x)).any()")
+    print((1-torch.isnan(x)).any().shape)
     vf_loss = l1(x[(1-torch.isnan(x)).any(), :], y[(1-torch.isnan(x)).any(), 0:-1])
     return o_loss + vf_loss
 
