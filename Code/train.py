@@ -100,7 +100,7 @@ def train_implicit_model(rank, model, dataset, opt):
             if(iteration % 5 == 0):
                 with torch.no_grad():
                     if(opt['loss'] == "l1occupancy"):
-                        p_vf = PSNR(y_estimated.detach()[:,0:-1], y.detach(), 
+                        p_vf = PSNR(y_estimated.detach()[:,0:-1][~y.isnan()], y.detach()[~y.isnan()], 
                             dataset.max()-dataset.min())
                         p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y[:,0]).to(torch.float32))
                         writer.add_scalar('PSNR', p_vf.item(), iteration)
