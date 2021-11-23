@@ -187,6 +187,8 @@ class ImplicitModel(nn.Module):
         vals = self.forward_maxpoints(coord_grid)
         coord_grid_shape[-1] = self.opt['n_outputs']
         vals = vals.reshape(coord_grid_shape)
+        if(self.opt['loss'] == "l1occupancy"):
+            vals = vals[..., 0:-1]
         return vals
     
     def sample_grad_grid_for_image(self, grid, boundary_scaling = 1.0, 

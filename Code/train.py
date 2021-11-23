@@ -25,13 +25,13 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 def l1(x, y):
     return F.l1_loss(x, y)
 
-def l1_occupancy(x, y):
+def l1_occupancy(gt, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
-    is_nan_mask = torch.isnan(x)[...,0]
+    is_nan_mask = torch.isnan(gt)[...,0].detach()
     
-    o_loss = l1((~is_nan_mask).to(torch.float32), y[..., -1])
-    vf_loss = l1(x[~is_nan_mask, :], y[~is_nan_mask, 0:-1])
+    o_loss = l1((~is_nan_mask).to(torch.float32).detach(), y[..., -1])
+    vf_loss = l1(gt[~is_nan_mask, :].detach(), y[~is_nan_mask, 0:-1])
     return o_loss + vf_loss
 
 def perpendicular_loss(x, y):
@@ -84,7 +84,7 @@ def train_implicit_model(rank, model, dataset, opt):
     for iteration in range(0, opt['iterations']):
         model.zero_grad()
         x, y = dataset.get_random_points(opt['points_per_iteration'])
-        print(y.isnan().any().sum() / y.shape[0])
+        #print(y.isnan().any().sum() / y.shape[0])
         x = x.to(opt['device'])
         y = y.to(opt['device'])
 
