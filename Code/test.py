@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 from datasets import Dataset
 import datetime
-from utility_functions import str2bool, PSNR, make_coord_grid
+from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
@@ -76,12 +76,14 @@ if __name__ == '__main__':
                 supersampled_volume = supersampled_volume.permute(3, 0, 1, 2).unsqueeze(0)
             else:
                 supersampled_volume = supersampled_volume.permute(2, 0, 1).unsqueeze(0)
-
+            tensor_to_cdf(supersampled_volume, os.path.join(output_folder, opt['save_name']+"_supersampled"))
             print(supersampled_volume.shape)
             p_model = PSNR(original_volume, supersampled_volume).item()
             print("Neural network supersampling PSNR: %0.03f" % p_model)
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
-            align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
+                align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
+
+            tensor_to_cdf(interpolated_volume, os.path.join(output_folder, opt['save_name']+"_interpolated"))
             p_interp = PSNR(original_volume, interpolated_volume).item()
             print("Interpolation supersampling PSNR: %0.03f" % p_interp)
             

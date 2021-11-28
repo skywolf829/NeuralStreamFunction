@@ -6,6 +6,7 @@ from math import exp
 from typing import Optional
 import argparse
 import os
+from netCDF4 import Dataset
 
 def reset_grads(model,require_grad):
     for p in model.parameters():
@@ -311,3 +312,18 @@ def create_folder(start_path, folder_name):
         except OSError:
             print("Creation of the directory %s failed" % full_path)
     return f_name
+
+def tensor_to_cdf(t, location):
+    d = Dataset(location, 'w')
+    d.createDimension('x')
+    d.createDimension('y')
+    dims = ['x', 'y']
+    
+    if(len(t.shape) == 5):
+        d.createDimension('z')
+        dims.append('z')
+
+    for i in range(t.shape[1]):
+        d.createVariable(str(i), np.float32, dims)
+        d[str(i)][:] = t[0,i]
+    d.close()
