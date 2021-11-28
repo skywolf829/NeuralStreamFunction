@@ -12,6 +12,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import time
 import os
+import h5py
 from options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
@@ -62,6 +63,21 @@ if __name__ == '__main__':
     print(dataset.data.max())
 
     writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
+
+    if(args['supersample_psnr'] is not None):
+        original_volume = h5py.File(os.path.join(data_folder, args['original_volume']), 'r')
+        original_volume = torch.tensor(original_volume).to(opt['device']).unsqueeze(0)
+        grid = list(original_volume.shape[2:])
+        with torch.no_grad():
+            supersampled_volume = model.sample_grid(grid)
+            p_model = PSNR(original_volume, supersampled_volume).item()
+            print("Neural network supersampling PSNR: %0.03f" % p_model)
+            interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
+            align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
+            p_interp = PSNR(original_volume, supersampled_volume).item()
+            print("Interpolation supersampling PSNR: %0.03f" % p_interp)
+            
+
     if(args['supersample'] is not None):
         grid = list(dataset.data.shape[2:])
         for i in range(len(grid)):
@@ -75,6 +91,7 @@ if __name__ == '__main__':
         print(img.shape)
         writer.add_image('Supersample x'+str(args['supersample']), 
             img.clamp(dataset.min(), dataset.max()), 0, dataformats='WHC')
+        
     
     if(args['supersample_gradient'] is not None):
         grid = list(dataset.data.shape[2:])
