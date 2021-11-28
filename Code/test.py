@@ -68,9 +68,11 @@ if __name__ == '__main__':
     if(args['supersample_psnr'] is not None):
         original_volume = h5py.File(os.path.join(data_folder, args['supersample_psnr']), 'r')['data']
         original_volume = torch.tensor(original_volume).to(opt['device']).unsqueeze(0)
+        print(original_volume.shape)
         grid = list(original_volume.shape[2:])
         with torch.no_grad():
             supersampled_volume = model.sample_grid(grid)
+            print(supersampled_volume.shape)
             p_model = PSNR(original_volume, supersampled_volume).item()
             print("Neural network supersampling PSNR: %0.03f" % p_model)
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
