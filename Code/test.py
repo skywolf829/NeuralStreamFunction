@@ -72,6 +72,11 @@ if __name__ == '__main__':
         grid = list(original_volume.shape[2:])
         with torch.no_grad():
             supersampled_volume = model.sample_grid(grid)
+            if(len(grid) == 3):
+                supersampled_volume = supersampled_volume.permute(3, 0, 1, 2).unsqueeze(0)
+            else:
+                supersampled_volume = supersampled_volume.permute(2, 0, 1).unsqueeze(0)
+
             print(supersampled_volume.shape)
             p_model = PSNR(original_volume, supersampled_volume).item()
             print("Neural network supersampling PSNR: %0.03f" % p_model)
