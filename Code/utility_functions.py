@@ -318,12 +318,12 @@ def tensor_to_cdf(t, location):
     d.createDimension('x')
     d.createDimension('y')
     dims = ['x', 'y']
-    
+
     if(len(t.shape) == 5):
         d.createDimension('z')
         dims.append('z')
 
     for i in range(t.shape[1]):
         d.createVariable(str(i), np.float32, dims)
-        d[str(i)][:] = t[0,i]
+        d[str(i)][:] = t[0,i].clone().cpu().numpy()
     d.close()

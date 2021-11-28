@@ -87,6 +87,7 @@ if __name__ == '__main__':
             p_interp = PSNR(original_volume, interpolated_volume).item()
             print("Interpolation supersampling PSNR: %0.03f" % p_interp)
             
+            tensor_to_cdf(original_volume, os.path.join(output_folder, args['supersample_psnr']))
 
     if(args['supersample'] is not None):
         grid = list(dataset.data.shape[2:])
