@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 supersampled_volume = supersampled_volume.permute(3, 0, 1, 2).unsqueeze(0)
             else:
                 supersampled_volume = supersampled_volume.permute(2, 0, 1).unsqueeze(0)
-            tensor_to_cdf(supersampled_volume, os.path.join(output_folder, opt['save_name']+"_supersampled"))
+            tensor_to_cdf(supersampled_volume, os.path.join(output_folder, opt['save_name']+"_supersampled.cdf"))
             print(supersampled_volume.shape)
             p_model = PSNR(original_volume, supersampled_volume).item()
             s_model = ssim3D(original_volume, supersampled_volume).item()
@@ -84,12 +84,12 @@ if __name__ == '__main__':
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
                 align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
 
-            tensor_to_cdf(interpolated_volume, os.path.join(output_folder, opt['save_name']+"_interpolated"))
+            tensor_to_cdf(interpolated_volume, os.path.join(output_folder, opt['save_name']+"_interpolated.cdf"))
             p_interp = PSNR(original_volume, interpolated_volume).item()
             s_interp = ssim3D(original_volume, interpolated_volume).item()
-            print("Interpolation supersampling PSNR: %0.03f/%0.05f" % (p_interp, s_interp))
+            print("Interpolation supersampling PSNR/SSIM: %0.03f/%0.05f" % (p_interp, s_interp))
             
-            tensor_to_cdf(original_volume, os.path.join(output_folder, args['supersample_psnr']))
+            tensor_to_cdf(original_volume, os.path.join(output_folder, args['supersample_psnr']+'.cdf'))
 
     if(args['supersample'] is not None):
         grid = list(dataset.data.shape[2:])
