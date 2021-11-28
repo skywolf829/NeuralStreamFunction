@@ -1,9 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import argparse
-from Code.utility_functions import ssim3D
 from datasets import Dataset
 import datetime
-from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf
+from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
