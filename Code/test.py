@@ -82,7 +82,7 @@ if __name__ == '__main__':
             print("Neural network supersampling PSNR: %0.03f" % p_model)
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
             align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
-            p_interp = PSNR(original_volume, supersampled_volume).item()
+            p_interp = PSNR(original_volume, interpolated_volume).item()
             print("Interpolation supersampling PSNR: %0.03f" % p_interp)
             
 
