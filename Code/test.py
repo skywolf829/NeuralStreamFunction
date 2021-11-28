@@ -30,6 +30,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--load_from',default=None,type=str)
     parser.add_argument('--supersample',default=None,type=float)
+    parser.add_argument('--supersample_psnr',default=None,type=str)
     parser.add_argument('--supersample_gradient',default=None,type=float)
     parser.add_argument('--normal_field',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
 
     if(args['supersample_psnr'] is not None):
-        original_volume = h5py.File(os.path.join(data_folder, args['original_volume']), 'r')
+        original_volume = h5py.File(os.path.join(data_folder, args['supersample_psnr']), 'r')
         original_volume = torch.tensor(original_volume).to(opt['device']).unsqueeze(0)
         grid = list(original_volume.shape[2:])
         with torch.no_grad():
