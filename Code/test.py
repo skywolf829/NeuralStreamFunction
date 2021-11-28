@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import argparse
+from Code.utility_functions import ssim3D
 from datasets import Dataset
 import datetime
 from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf
@@ -79,13 +80,15 @@ if __name__ == '__main__':
             tensor_to_cdf(supersampled_volume, os.path.join(output_folder, opt['save_name']+"_supersampled"))
             print(supersampled_volume.shape)
             p_model = PSNR(original_volume, supersampled_volume).item()
-            print("Neural network supersampling PSNR: %0.03f" % p_model)
+            s_model = ssim3D(original_volume, supersampled_volume).item()
+            print("Neural network supersampling PSNR/SSIM: %0.03f/%0.05f" % (p_model, s_model))
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
                 align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
 
             tensor_to_cdf(interpolated_volume, os.path.join(output_folder, opt['save_name']+"_interpolated"))
             p_interp = PSNR(original_volume, interpolated_volume).item()
-            print("Interpolation supersampling PSNR: %0.03f" % p_interp)
+            s_interp = ssim3D(original_volume, interpolated_volume).item()
+            print("Interpolation supersampling PSNR: %0.03f/%0.05f" % (p_interp, s_interp))
             
             tensor_to_cdf(original_volume, os.path.join(output_folder, args['supersample_psnr']))
 
