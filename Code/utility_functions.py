@@ -322,8 +322,9 @@ def tensor_to_cdf(t, location):
     if(len(t.shape) == 5):
         d.createDimension('z')
         dims.append('z')
-
+    ch_start = 'u'
     for i in range(t.shape[1]):
-        d.createVariable(str(i), np.float32, dims)
-        d[str(i)][:] = t[0,i].clone().cpu().numpy()
+        d.createVariable(ch_start, np.float32, dims)
+        d[ch_start][:] = t[0,i].clone().cpu().numpy()
+        ch_start = chr(ord(ch_start)+1)
     d.close()
