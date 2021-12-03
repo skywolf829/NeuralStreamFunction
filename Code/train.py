@@ -87,8 +87,15 @@ def train_implicit_model(rank, model, dataset, opt):
         #print(y.isnan().any().sum() / y.shape[0])
         x = x.to(opt['device'])
         y = y.to(opt['device'])
-
+        
         y_estimated = model(x)
+        if(opt['fit_gradient']):
+            y_estimated = torch.stack(
+                torch.autograd.grad(y_estimated, x, 
+                grad_outputs=torch.ones_like(y_estimated))
+            )
+            print(y_estimated.shape)
+
         loss = loss_func(y, y_estimated)
         loss.backward()
 

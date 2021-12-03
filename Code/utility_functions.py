@@ -7,6 +7,7 @@ from typing import Optional
 import argparse
 import os
 from netCDF4 import Dataset
+import pickle
 
 def reset_grads(model,require_grad):
     for p in model.parameters():
@@ -294,6 +295,14 @@ def make_coord_grid(shape, device, flatten=True):
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
     return ret.flip(-1)
+
+def save_obj(obj,location):
+    with open(location, 'wb') as f:
+        pickle.dump(obj, f, pickle.DEFAULT_PROTOCOL)
+
+def load_obj(location):
+    with open(location, 'rb') as f:
+        return pickle.load(f)
 
 def create_folder(start_path, folder_name):
     f_name = folder_name

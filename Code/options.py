@@ -8,6 +8,7 @@ class Options():
         opt["n_dims"]                  = 2             
         opt['n_outputs']               = 3
         opt['activation_function']     = "sine"      
+        opt['fit_gradient']            = False     
         opt['periodic']                = False   
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6

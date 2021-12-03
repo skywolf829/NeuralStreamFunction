@@ -135,6 +135,7 @@ dmypy.json
 /Output
 /tensorboard
 /Data
+/ForVisualization
 *.npy
 *.png
 *.gif

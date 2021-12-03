@@ -9,7 +9,8 @@ import argparse
 import h5py
 import time
 import torch
-from utility_functions import *
+from utility_functions import str2bool, PSNR, ssim, ssim3D, load_obj, save_obj, toImg, \
+    tensor_to_cdf
 
 
 if __name__ == '__main__':
@@ -107,53 +108,29 @@ if __name__ == '__main__':
             os.system(command)
         dc = np.stack(data_channels)
 
-        rec_psnr = PSNR(dc, d)
-        final_mre : float = relative_error(dc, d).item()
-        final_pwmre: float = pw_relative_error(dc, d).item()
-        #rec_ssim = ssim(d, dc)
+        rec_psnr = PSNR(dc, d, range=d.max()-d.min())
                 
         if(args['dims'] == 2):
             rec_ssim = ssim(torch.Tensor(dc).unsqueeze(0).to(args['device']), 
-                torch.Tensor(d).unsqueeze(0).to(args['device'])).cpu().item()
-            inner_mre = relative_error(dc[:,20:dc.shape[1]-20,20:dc.shape[2]-20], 
-            d[:,20:d.shape[1]-20,20:d.shape[2]-20])
-            inner_pwmre = pw_relative_error(dc[:,20:dc.shape[1]-20,20:dc.shape[2]-20], 
-            d[:,20:d.shape[1]-20,20:d.shape[2]-20])
+                torch.Tensor(d).unsqueeze(0).to(args['device'])).item()
         elif(args['dims'] == 3):      
-            rec_ssim = ssim3D(torch.Tensor(dc).unsqueeze(0), torch.Tensor(d).unsqueeze(0)).cpu().item()
-            inner_mre = relative_error(dc[:,20:dc.shape[1]-20,20:dc.shape[2]-20,20:dc.shape[3]-20], 
-            d[:,20:d.shape[1]-20,20:d.shape[2]-20,20:d.shape[3]-20])
-            inner_pwmre = pw_relative_error(dc[:,20:dc.shape[1]-20,20:dc.shape[2]-20,20:dc.shape[3]-20], 
-            d[:,20:d.shape[1]-20,20:d.shape[2]-20,20:d.shape[3]-20])
+            rec_ssim = ssim3D(torch.Tensor(dc).unsqueeze(0), torch.Tensor(d).unsqueeze(0)).item()
+            
         im = toImg(dc, "2D" if args['dims'] == 2 else "3D")
         imageio.imwrite(os.path.join(save_folder, "tthresh_"+args['file']+"_"+str(value)+".png"), im)
 
         print("Target: " +args['metric'] + " " + str(value))
         print("PSNR: " + str(rec_psnr) + " SSIM: " + str(rec_ssim))
+        print("Final file size: " + str(f_size_kb) + " KB")
 
         if(args['save_netcdf']):
-            from netCDF4 import Dataset
-            rootgrp = Dataset("tthresh_"+args['file']+".nc", "w", format="NETCDF4")
-            rootgrp.createDimension("u")
-            rootgrp.createDimension("v")
-            if(args['dims'] == 3):
-                rootgrp.createDimension("w")
-            rootgrp.createDimension("channels", dc.shape[0])
-            if(args['dims'] == 3):
-                dim_0 = rootgrp.createVariable("velocity magnitude", np.float32, ("u","v","w"))
-            elif(args['dims'] == 2):
-                dim_0 = rootgrp.createVariable("velocity magnitude", np.float32, ("u","v"))
-            dim_0[:] = dc[0]
+            tensor_to_cdf(torch.tensor(dc).unsqueeze(0), "tthresh_"+args['file']+".nc")
 
         results['psnrs'].append(value)
         results['file_size'].append(f_size_kb)
         results['compression_time'].append(compression_time)
         results['rec_psnr'].append(rec_psnr)
         results['rec_ssim'].append(rec_ssim)
-        results['rec_mre'].append(final_mre)
-        results['rec_pwmre'].append(final_pwmre)
-        results['rec_inner_mre'].append(inner_mre)
-        results['rec_inner_pwmre'].append(inner_pwmre)
         all_data['TTHRESH'] = results
         save_obj(all_data, os.path.join(save_folder, "results.pkl"))
         value += args['value_skip']

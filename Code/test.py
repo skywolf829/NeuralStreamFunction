@@ -33,6 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--supersample_psnr',default=None,type=str)
     parser.add_argument('--supersample_gradient',default=None,type=float)
     parser.add_argument('--normal_field',default=None,type=str2bool)
+    parser.add_argument('--cdf',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -77,15 +78,33 @@ if __name__ == '__main__':
             else:
                 supersampled_volume = supersampled_volume.permute(2, 0, 1).unsqueeze(0)
             tensor_to_cdf(supersampled_volume, os.path.join(output_folder, opt['save_name']+"_supersampled.cdf"))
-            print(supersampled_volume.shape)
-            p_model = PSNR(original_volume, supersampled_volume).item()
+
+
+            p_model = PSNR(original_volume, supersampled_volume, 
+                range=original_volume.max()-original_volume.min()).item()
             s_model = ssim3D(original_volume, supersampled_volume).item()
             print("Neural network supersampling PSNR/SSIM: %0.03f/%0.05f" % (p_model, s_model))
+
+            ss_interp_volume = model.sample_grid(list(dataset.data.shape[2:]))
+            if(len(grid) == 3):
+                ss_interp_volume = ss_interp_volume.permute(3, 0, 1, 2).unsqueeze(0)
+            else:
+                ss_interp_volume = ss_interp_volume.permute(2, 0, 1).unsqueeze(0)
+            ss_interp_volume = F.interpolate(ss_interp_volume, size=original_volume.shape[2:],
+                align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
+
+            tensor_to_cdf(ss_interp_volume, os.path.join(output_folder, opt['save_name']+"_with_interpolation.cdf"))
+            p_ss_interp = PSNR(original_volume, ss_interp_volume,
+                range=original_volume.max()-original_volume.min()).item()
+            s_ss_interp = ssim3D(original_volume, ss_interp_volume).item()
+            print("Network + interp supersampling PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
+
             interpolated_volume = F.interpolate(dataset.data.to(opt['device']), size=original_volume.shape[2:],
                 align_corners=False, mode='trilinear' if len(original_volume.shape) == 5 else 'bilinear')
 
             tensor_to_cdf(interpolated_volume, os.path.join(output_folder, opt['save_name']+"_interpolated.cdf"))
-            p_interp = PSNR(original_volume, interpolated_volume).item()
+            p_interp = PSNR(original_volume, interpolated_volume,
+                range=original_volume.max()-original_volume.min()).item()
             s_interp = ssim3D(original_volume, interpolated_volume).item()
             print("Interpolation supersampling PSNR/SSIM: %0.03f/%0.05f" % (p_interp, s_interp))
             
@@ -141,6 +160,25 @@ if __name__ == '__main__':
             
             normal_field = torch.matmul(jacobian, vector_field)
             print(normal_field.shape)
+
+    if(args['cdf'] is not None):
+        grid = list(dataset.data.shape[2:])
+        with torch.no_grad():
+            reconstructed_volume = model.sample_grid(grid)
+        if(len(grid) == 3):
+            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
+        
+        p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            range=dataset.max()-dataset.min()).item()
+        s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
+
+        tensor_to_cdf(reconstructed_volume, 
+            os.path.join(output_folder, opt['save_name']+"_recoonstructed.cdf"))
+        tensor_to_cdf(dataset.data, 
+            os.path.join(output_folder, opt['save_name']+"_original.cdf"))
 
     writer.close()
         
