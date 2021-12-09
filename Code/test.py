@@ -33,7 +33,10 @@ if __name__ == '__main__':
     parser.add_argument('--supersample_psnr',default=None,type=str)
     parser.add_argument('--supersample_gradient',default=None,type=float)
     parser.add_argument('--normal_field',default=None,type=str2bool)
+    parser.add_argument('--implicit_jacobian',default=None,type=str2bool)
+    parser.add_argument('--jacobian_discrete',default=None,type=str2bool)
     parser.add_argument('--cdf',default=None,type=str2bool)
+    parser.add_argument('--grad_cdf',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -124,7 +127,6 @@ if __name__ == '__main__':
         writer.add_image('Supersample x'+str(args['supersample']), 
             img.clamp(dataset.min(), dataset.max()), 0, dataformats='WHC')
         
-    
     if(args['supersample_gradient'] is not None):
         grid = list(dataset.data.shape[2:])
         for i in range(len(grid)):
@@ -161,6 +163,168 @@ if __name__ == '__main__':
             normal_field = torch.matmul(jacobian, vector_field)
             print(normal_field.shape)
 
+    if(args['implicit_jacobian'] is not None):
+        grid = list(dataset.data.shape[2:])
+        coord_grid = make_coord_grid(grid, model.opt['device'], False)
+        coord_grid_shape = list(coord_grid.shape)
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)       
+
+        output_shape = list(coord_grid.shape)
+        output_shape[-1] = model.opt['n_dims']
+        print("Output shape")
+        print(output_shape)
+        output_grad = torch.empty(output_shape, 
+            dtype=torch.float32, device=model.opt['device'], 
+            requires_grad=False)
+
+        output_shape.append(3)
+
+        output_jacobian = torch.empty(output_shape, 
+            dtype=torch.float32, device=model.opt['device'], 
+            requires_grad=False)
+
+        max_points = 1000
+        for start in range(0, coord_grid.shape[0], max_points):
+            points = coord_grid[start:min(start+max_points, coord_grid.shape[0])].clone()
+            vals = model.net(
+                points)
+            grad = torch.autograd.grad(outputs=vals, 
+                inputs=points, 
+                grad_outputs=torch.ones_like(vals),
+                create_graph=True)[0]
+
+            output_grad[start:min(start+max_points, coord_grid.shape[0])] = grad.clone().detach()
+                
+            for dim in range(grad.shape[1]):
+                grad2 = torch.autograd.grad(outputs=grad[:,dim:dim+1],
+                    inputs=points,
+                    grad_outputs=torch.ones_like(grad[:,dim:dim+1]),
+                    retain_graph=True)[0]
+                output_jacobian[start:min(start+max_points, coord_grid.shape[0]), dim] = \
+                    grad2.detach()
+            #print(grad2[0][start:min(start+max_points, coord_grid.shape[0])].shape)
+
+        print(output_grad.shape)
+        print(output_jacobian.shape)
+
+        n = torch.bmm(output_jacobian.transpose(1, 2), output_grad.unsqueeze(-1))[...,0]
+        n /= torch.norm(n, dim=1, keepdim=True)
+        b = torch.cross(n, output_grad, dim=1)
+        b /= torch.norm(b, dim=1, keepdim=True)
+        print(n.shape)
+        print(b.shape)
+
+
+        reconstructed_vf = output_grad.reshape(coord_grid_shape)
+        if(len(grid) == 3):
+            reconstructed_vf = reconstructed_vf.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_vf = reconstructed_vf.permute(2, 0, 1).unsqueeze(0)
+
+        reconstructed_bvf = b.reshape(coord_grid_shape)
+        reconstructed_nvf = n.reshape(coord_grid_shape)
+        if(len(grid) == 3):
+            reconstructed_bvf = reconstructed_bvf.permute(3, 0, 1, 2).unsqueeze(0)
+            reconstructed_nvf = reconstructed_nvf.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_bvf = reconstructed_bvf.permute(2, 0, 1).unsqueeze(0)
+            reconstructed_nvf = reconstructed_nvf.permute(3, 0, 1, 2).unsqueeze(0)
+        
+        tensor_to_cdf(reconstructed_bvf, 
+            os.path.join(output_folder, opt['save_name']+"_binormal_reconstructed.cdf"))
+
+        tensor_to_cdf(reconstructed_nvf, 
+            os.path.join(output_folder, opt['save_name']+"_normal_reconstructed.cdf"))
+
+    if(args['jacobian_discrete'] is not None):
+        grid = list(dataset.data.shape[2:])
+        coord_grid = make_coord_grid(grid, model.opt['device'], False)
+        coord_grid_shape = list(coord_grid.shape)
+        jacobian_shape = list(coord_grid.shape)
+        jacobian_shape.append(3)
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)       
+
+        output_shape = list(coord_grid.shape)
+        output_shape[-1] = model.opt['n_dims']
+        print("Output shape")
+        print(output_shape)
+        output_grad = torch.empty(output_shape, 
+            dtype=torch.float32, device=model.opt['device'], 
+            requires_grad=False)
+
+        output_shape.append(3)
+
+        output_jacobian = torch.empty(jacobian_shape, 
+            dtype=torch.float32, device=model.opt['device'], 
+            requires_grad=False).permute(3, 4, 0, 1, 2).unsqueeze(0)
+
+        print("Jacobian shape")
+        print(output_jacobian.shape)
+        max_points = 1000
+        for start in range(0, coord_grid.shape[0], max_points):
+            points = coord_grid[start:min(start+max_points, coord_grid.shape[0])].clone()
+            vals = model.net(
+                points)
+            grad = torch.autograd.grad(outputs=vals, 
+                inputs=points, 
+                grad_outputs=torch.ones_like(vals),
+                create_graph=True)[0]
+
+            output_grad[start:min(start+max_points, coord_grid.shape[0])] = grad.clone().detach()
+        
+
+        reconstructed_vf = output_grad.reshape(coord_grid_shape)
+        if(len(grid) == 3):
+            reconstructed_vf = reconstructed_vf.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_vf = reconstructed_vf.permute(2, 0, 1).unsqueeze(0)
+        print("reconstructed vf shape")
+        print(reconstructed_vf.shape)
+
+        z_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
+        z_kernel[:, :, 0, 1, 1] = -0.5
+        z_kernel[:, :, 2, 1, 1] = 0.5
+        y_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
+        y_kernel[:, :, 1, 0, 1] = -0.5
+        y_kernel[:, :, 1, 2, 1] = 0.5
+        x_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
+        x_kernel[:, :, 1, 1, 0] = -0.5
+        x_kernel[:, :, 1, 1, 2] = 0.5
+
+        output_jacobian[0,0] = F.conv3d(reconstructed_vf, z_kernel, padding=1)
+        output_jacobian[0,1] = F.conv3d(reconstructed_vf, y_kernel, padding=1)
+        output_jacobian[0,2] = F.conv3d(reconstructed_vf, x_kernel, padding=1)
+
+        output_jacobian = output_jacobian[0].permute(2, 3, 4, 0, 1).flatten(0, 2)
+        print(output_jacobian.shape)
+        reconstructed_vf = reconstructed_vf[0].permute(1, 2, 3, 0).flatten(0, 2)
+        print(reconstructed_vf.shape)
+
+        n = torch.bmm(output_jacobian, reconstructed_vf.unsqueeze(-1))[...,0]
+        n /= torch.norm(n, dim=1, keepdim=True)
+        b = torch.cross(n, output_grad, dim=1)
+        b /= torch.norm(b, dim=1, keepdim=True)
+        print(n.shape)
+        print(b.shape)
+
+
+        
+
+        reconstructed_bvf = b.reshape(coord_grid_shape)
+        reconstructed_nvf = n.reshape(coord_grid_shape)
+        if(len(grid) == 3):
+            reconstructed_bvf = reconstructed_bvf.permute(3, 0, 1, 2).unsqueeze(0)
+            reconstructed_nvf = reconstructed_nvf.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_bvf = reconstructed_bvf.permute(2, 0, 1).unsqueeze(0)
+            reconstructed_nvf = reconstructed_nvf.permute(3, 0, 1, 2).unsqueeze(0)
+        
+        tensor_to_cdf(reconstructed_bvf, 
+            os.path.join(output_folder, opt['save_name']+"_binormal_discrete.cdf"))
+
+        tensor_to_cdf(reconstructed_nvf, 
+            os.path.join(output_folder, opt['save_name']+"_normal_discrete.cdf"))
+
     if(args['cdf'] is not None):
         grid = list(dataset.data.shape[2:])
         with torch.no_grad():
@@ -170,13 +334,31 @@ if __name__ == '__main__':
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
-        p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-            range=dataset.max()-dataset.min()).item()
-        s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
+        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            #range=dataset.max()-dataset.min()).item()
+        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
 
         tensor_to_cdf(reconstructed_volume, 
-            os.path.join(output_folder, opt['save_name']+"_recoonstructed.cdf"))
+            os.path.join(output_folder, opt['save_name']+"_reconstructed.cdf"))
+        tensor_to_cdf(dataset.data, 
+            os.path.join(output_folder, opt['save_name']+"_original.cdf"))
+
+    if(args['grad_cdf'] is not None):
+        grid = list(dataset.data.shape[2:])
+        reconstructed_volume = model.sample_grad_grid(grid)
+        if(len(grid) == 3):
+            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
+        
+        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            #range=dataset.max()-dataset.min()).item()
+        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
+
+        tensor_to_cdf(reconstructed_volume, 
+            os.path.join(output_folder, opt['save_name']+"_grad_reconstructed.cdf"))
         tensor_to_cdf(dataset.data, 
             os.path.join(output_folder, opt['save_name']+"_original.cdf"))
 

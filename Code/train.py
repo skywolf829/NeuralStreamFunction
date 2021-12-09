@@ -88,15 +88,15 @@ def train_implicit_model(rank, model, dataset, opt):
         x = x.to(opt['device'])
         y = y.to(opt['device'])
         
-        y_estimated = model(x)
         if(opt['fit_gradient']):
-            y_estimated = torch.stack(
-                torch.autograd.grad(y_estimated, x, 
-                grad_outputs=torch.ones_like(y_estimated))
-            )
-            print(y_estimated.shape)
-
-        loss = loss_func(y, y_estimated)
+            y_estimated, x = model.forward_w_grad(x)
+            y_estimated = torch.autograd.grad(y_estimated, x, 
+                    grad_outputs=torch.ones_like(y_estimated),
+                    create_graph=True)[0]
+            loss = loss_func(y, y_estimated)
+        else:
+            y_estimated = model(x)
+            loss = loss_func(y, y_estimated)
         loss.backward()
 
         optimizer.step()
@@ -171,6 +171,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)
     parser.add_argument('--interpolate',default=None,type=str2bool)
+    parser.add_argument('--fit_gradient',default=None,type=str2bool)
     parser.add_argument('--signal_file_name',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
     parser.add_argument('--n_layers',default=None,type=int)

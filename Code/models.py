@@ -126,8 +126,16 @@ class ImplicitModel(nn.Module):
             coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
         output = self.net(coords)
         return output
+
+    def forward_w_grad(self, coords):
+        coords = coords.requires_grad_(True)
+        if(self.opt['periodic']):
+            #coords = torch.sin(coords * self.factor)
+            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
+        output = self.net(coords)
+        return output, coords
     
-    def forward_maxpoints(self, coords, max_points=10000):
+    def forward_maxpoints(self, coords, max_points=100000):
         print(coords.shape)
         if(self.opt['periodic']):
             #coords = torch.sin(coords * self.factor)
@@ -154,24 +162,36 @@ class ImplicitModel(nn.Module):
         vals = vals.reshape(coord_grid_shape)
         return vals
 
-    def sample_grad_grid(self, grid=None, coord_grid=None, input_dim = None, output_dim = None):
+    def sample_grad_grid(self, grid=None, coord_grid=None,
+        input_dim = None, output_dim = None, max_points=1000):
         if(coord_grid is None and grid is not None):
             coord_grid = make_coord_grid(grid, self.opt['device'], False)
         elif(coord_grid is None and grid is None):
             coord_grid = make_coord_grid(self.dataset.data.shape[2:])
         
         coord_grid_shape = list(coord_grid.shape)
-        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)
-        vals = self.forward_maxpoints(coord_grid)        
+        coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)       
 
-        grad = list(
-            torch.autograd.grad(vals, coord_grid, grad_outputs=torch.ones_like(vals)))
+        output_shape = list(coord_grid.shape)
+        output_shape[-1] = self.opt['n_dims']
+        print("Output shape")
+        print(output_shape)
+        output = torch.empty(output_shape, 
+            dtype=torch.float32, device=self.opt['device'], 
+            requires_grad=True)
 
-        coord_grid_shape[-1] = self.opt['n_dims']
-        for i in range(len(grad)):
-            grad[i] = grad[i].reshape(coord_grid_shape)
+        for start in range(0, coord_grid.shape[0], max_points):
+            vals = self.net(
+                coord_grid[start:min(start+max_points, coord_grid.shape[0])])
+            grad = torch.autograd.grad(vals, 
+                coord_grid, 
+                grad_outputs=torch.ones_like(vals))[0][start:min(start+max_points, coord_grid.shape[0])]
+            
+            output[start:min(start+max_points, coord_grid.shape[0])] = grad
+
+        output = output.reshape(coord_grid_shape)
         
-        return grad
+        return output
 
     def sample_grid_for_image(self, grid, boundary_scaling = 1.0):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
