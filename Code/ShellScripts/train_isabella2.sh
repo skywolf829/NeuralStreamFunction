@@ -17,7 +17,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:1 &
+--device cuda:1 --data_device cuda:1 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -26,7 +26,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:2 &
+--device cuda:2 --data_device cuda:2 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -35,7 +35,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:3 &
+--device cuda:3 --data_device cuda:3 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -44,7 +44,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:4 &
+--device cuda:7 --data_device cuda:4 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -53,7 +53,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:5 &
+--device cuda:5 --data_device cuda:5 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -62,7 +62,7 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:6 &
+--device cuda:6 --data_device cuda:6 &
 
 python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
@@ -71,4 +71,4 @@ python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --points_per_iteration 250000 \
 --log_image false --log_gradient false \
 --loss l1 \
---device cuda:0 --data_device cuda:7
+--device cuda:7 --data_device cuda:7

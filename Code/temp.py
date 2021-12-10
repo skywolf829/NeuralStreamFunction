@@ -150,9 +150,43 @@ def genereate_synthetic_vf3(resolution = 128, a=2):
 
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), "synthetic_VF3.cdf")
 
+def genereate_synthetic_vf4(resolution = 128, A=3**0.5, B=2**0.5, C=1):
+
+    # [channels, u, v, w]
+    vf = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -1 
+    end = 1
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+
+                u = A * sin(z) + C * cos(y)
+                v = B * sin(x) + A * cos(z)
+                w = C * sin(y) + B * cos(x)
+
+                vf[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
+                k += 1
+            j += 1
+        i += 1
+    print(vf.max())
+    print(vf.min())
+    print(vf.mean())
+    print(np.linalg.norm(vf, axis=0).max())
+    vf /= np.linalg.norm(vf, axis=0).max()
+    h = h5py.File("synthetic_VF4.h5", 'w')
+    h['data'] = vf
+    h.close()
+
+    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), "synthetic_VF4.cdf")
+
 
 if __name__ == '__main__':
     #genereate_synthetic_vf1()
     #genereate_synthetic_vf2()
-    genereate_synthetic_vf3()
+    genereate_synthetic_vf4()
     quit()
