@@ -45,6 +45,7 @@ class AppModelAndController():
         self.opt["save_name"] = model_name   
         self.model = load_model(self.opt,self.device)
         self.model = self.model.to(self.device)
+        self.model.eval()
         self.load_dataset_from_opt(self.opt)
     
     def load_dataset_from_opt(self, opt):

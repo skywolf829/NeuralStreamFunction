@@ -8,6 +8,7 @@ import argparse
 import os
 from netCDF4 import Dataset
 import pickle
+import h5py
 
 def reset_grads(model,require_grad):
     for p in model.parameters():
@@ -322,7 +323,7 @@ def create_folder(start_path, folder_name):
             print("Creation of the directory %s failed" % full_path)
     return f_name
 
-def tensor_to_cdf(t, location):
+def tensor_to_cdf(t, location, channel_names=None):
     d = Dataset(location, 'w')
     d.createDimension('x')
     d.createDimension('y')
@@ -331,9 +332,19 @@ def tensor_to_cdf(t, location):
     if(len(t.shape) == 5):
         d.createDimension('z')
         dims.append('z')
-    ch_start = 'u'
+    if(channel_names is None):
+        ch_default = 'a'
     for i in range(t.shape[1]):
-        d.createVariable(ch_start, np.float32, dims)
-        d[ch_start][:] = t[0,i].clone().cpu().numpy()
-        ch_start = chr(ord(ch_start)+1)
+        if(channel_names is None):
+            ch = ch_default
+            ch_default = chr(ord(ch)+1)
+        else:
+            ch = channel_names[i]
+        d.createVariable(ch, np.float32, dims)
+        d[ch][:] = t[0,i].clone().detach().cpu().numpy()
     d.close()
+
+def tensor_to_h5(t, location):
+    h = h5py.File(location, mode='w')
+    h['data'] = t[0].clone().detach().cpu().numpy()
+    h.close()

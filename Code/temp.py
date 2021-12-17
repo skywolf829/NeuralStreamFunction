@@ -70,8 +70,10 @@ def genereate_synthetic_vf1(resolution = 128):
     h = h5py.File("synthetic_VF1.h5", 'w')
     h['data'] = a
     h.close()
+    channel_names = ['u', 'v', 'w']
 
-    tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), "synthetic_VF1.cdf")
+    tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
+        "synthetic_VF1.cdf", channel_names)
 
 def genereate_synthetic_vf2(resolution = 128, a=2):
 
@@ -114,29 +116,32 @@ def genereate_synthetic_vf2(resolution = 128, a=2):
 
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), "synthetic_VF2.cdf")
 
-def genereate_synthetic_vf3(resolution = 128, a=2):
+def genereate_synthetic_vf3(resolution = 128, a=1):
 
     # [channels, u, v, w]
     vf = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
 
     # max vf mag = 6.78233, divide all components by that
     i = 0
-    start = 1 
-    end = 10
+    start = -2.5
+    end = 2.5
+    center = (end+start)/2
     for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
         j = 0
         for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
             k = 0
             for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
-
-                r = (((x-5)**2) + ((y-5)**2))**0.5
-                theta = atan((y-5)/(x-5))
+                y1 = y-center
+                x1 = x-center
+                r = (x1**2 + y1**2)**0.5
+                theta = atan(y1/x1)
                 u = (a**2)/(r**2) * cos(2*theta) - 1
                 v = (a**2)/(r**2) * sin(2*theta)
                 w = 0
 
                 vf[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
                 k += 1
+                print("%f %f %f" % (x, y, z))
             j += 1
         i += 1
     print(vf.max())
@@ -144,11 +149,136 @@ def genereate_synthetic_vf3(resolution = 128, a=2):
     print(vf.mean())
     print(np.linalg.norm(vf, axis=0).max())
     vf /= np.linalg.norm(vf, axis=0).max()
+    print(vf.max())
+    print(vf.min())
+    print(vf.mean())
     h = h5py.File("synthetic_VF3.h5", 'w')
     h['data'] = vf
     h.close()
+    channel_names = ['u', 'v', 'w']
 
-    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), "synthetic_VF3.cdf")
+    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3.cdf", channel_names)
+
+def genereate_synthetic_vf3_jacobian(resolution = 128, a=1):
+
+    # [channels, u, v, w]
+    vf = np.zeros([9, resolution, resolution, resolution], dtype=np.float32)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -2.5
+    end = 2.5
+    center = (end+start)/2
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+                y1 = y-center
+                x1 = x-center
+                r = (x1**2 + y1**2)**0.5
+                theta = atan(y1/x1)
+                dudx = (2*a*y1*sin(2*atan(theta)) - a*x*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dudy = (-2*a*x1*sin(2*atan(theta)) + a*y*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dudz = 0
+                dvdx = (-a*x1*sin(2*atan(theta)) - 2*a*y*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dvdy = (2*a*x1*cos(2*atan(theta)) - a*y*sin(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dvdz = 0
+                dwdx = 0
+                dwdy = 0
+                dwdz = 0
+
+                vf[:,k,j,i] = np.array([dudx, dudy, dudz, 
+                    dvdx, dvdy, dvdz, dwdx, dwdy, dwdz], dtype=np.float32)
+                k += 1
+                print("%f %f %f" % (x, y, z))
+            j += 1
+        i += 1
+    print(vf.max())
+    print(vf.min())
+    print(vf.mean())
+    #print(np.linalg.norm(vf, axis=0).max())
+    #vf /= np.linalg.norm(vf, axis=0).max()
+    #h = h5py.File("synthetic_VF3_jacobian.h5", 'w')
+    #h['data'] = vf
+    #h.close()
+    channel_names = ['dudx', 'dudy', 'dudz', 'dvdx', 'dvdy', 'dvdz', 'dwdx', 'dwdy', 'dwdz']
+    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
+        "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
+
+def genereate_synthetic_vf3_normal(resolution = 128, a=1, device="cpu"):
+
+    # [channels, u, v, w]
+    jac = torch.zeros([resolution, resolution, resolution, 3, 3], 
+    dtype=torch.float32, device=device)
+    vf = torch.zeros([resolution, resolution, resolution, 3, 1], 
+    dtype=torch.float32, device=device)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -2.5
+    end = 2.5
+    center = (end+start)/2
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+                y1 = y-center
+                x1 = x-center
+                r = (x1**2 + y1**2)**0.5
+                theta = atan(y1/x1)
+                dudx = (2*a*y1*sin(2*atan(theta)) - a*x*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dudy = (-2*a*x1*sin(2*atan(theta)) + a*y*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dudz = 0
+                dvdx = (-a*x1*sin(2*atan(theta)) - 2*a*y*cos(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dvdy = (2*a*x1*cos(2*atan(theta)) - a*y*sin(2*atan(theta))) \
+                    / (((x1**2)+(y1**2))**1.5)
+                dvdz = 0
+                dwdx = 0
+                dwdy = 0
+                dwdz = 0
+
+                u = (a**2)/(r**2) * cos(2*theta) - 1
+                v = (a**2)/(r**2) * sin(2*theta)
+                w = 0
+
+                vf[k,j,i,:, 0] = torch.tensor([u, v, w], 
+                    dtype=torch.float32, device=device)
+
+                #jac[k,j,i,:,:] = torch.tensor(
+                #    [[dudx, dudy, dudz], 
+                #    [dvdx, dvdy, dvdz], 
+                #    [dwdx, dwdy, dwdz]], 
+                #    dtype=torch.float32, device=device)
+                jac[k,j,i,:,:] = torch.tensor(
+                    [[dudx, dvdx, dwdx], 
+                    [dudy, dvdy, dwdy], 
+                    [dudz, dvdz, dwdz]], 
+                    dtype=torch.float32, device=device)
+                k += 1
+                print("%f %f %f" % (x, y, z))
+            j += 1
+        i += 1
+   
+    vf_norm = torch.bmm(jac.flatten(0,2), vf.flatten(0,2))[...,0]
+    print(vf_norm.shape)
+    vf_norm = vf_norm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
+    vf_norm /= np.linalg.norm(vf_norm, axis=0).max()
+
+    print(vf_norm.max())
+    print(vf_norm.min())
+    channel_names = ['u', 'v', 'w']
+    tensor_to_cdf(vf_norm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3_normal.cdf", channel_names=channel_names)
 
 def genereate_synthetic_vf4(resolution = 128, A=3**0.5, B=2**0.5, C=1):
 
@@ -186,7 +316,8 @@ def genereate_synthetic_vf4(resolution = 128, A=3**0.5, B=2**0.5, C=1):
 
 
 if __name__ == '__main__':
+    # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
     #genereate_synthetic_vf2()
-    genereate_synthetic_vf4()
+    genereate_synthetic_vf3_normal()
     quit()

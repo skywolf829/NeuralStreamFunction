@@ -102,13 +102,19 @@ class ImplicitModel(nn.Module):
         if(self.opt['periodic']):
             self.factor =  torch.tensor(pi/2, dtype=torch.float32, 
                 device = opt['device'])
+        if(self.opt['dropout']):
+            self.dropout = nn.Dropout(self.opt['dropout_p'])
 
         self.net.append(SineLayer(opt['n_dims'], opt['nodes_per_layer'], 
                                   is_first=True, omega_0=30))
+        if(self.opt['dropout']):
+            self.net.append(self.dropout)
 
         for i in range(opt['n_layers']):
             self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
+            if(self.opt['dropout']):
+                self.net.append(self.dropout)
 
         final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_outputs'])
             

@@ -12,6 +12,8 @@ class Options():
         opt['periodic']                = False   
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
+        opt['dropout']                 = False
+        opt['dropout_p']               = 0.2
         opt['interpolate']             = False
         opt["signal_file_name"]        = "cat.h5"
         opt["save_name"]               = "cat"   

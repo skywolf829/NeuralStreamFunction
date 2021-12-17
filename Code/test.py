@@ -2,7 +2,8 @@ from __future__ import absolute_import, division, print_function
 import argparse
 from datasets import Dataset
 import datetime
-from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D
+from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
+    tensor_to_h5
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
@@ -62,10 +63,12 @@ if __name__ == '__main__':
     dataset = Dataset(opt)
     model = load_model(opt, opt['device'])
     model = model.to(opt['device'])
+    
+    model.eval()
 
-    print(dataset.data.min())
-    print(dataset.data.mean())
-    print(dataset.data.max())
+    #print(dataset.data.min())
+    #print(dataset.data.mean())
+    #print(dataset.data.max())
 
     writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
 
@@ -185,6 +188,7 @@ if __name__ == '__main__':
 
         max_points = 1000
         for start in range(0, coord_grid.shape[0], max_points):
+            model.zero_grad()
             points = coord_grid[start:min(start+max_points, coord_grid.shape[0])].clone()
             vals = model.net(
                 points)
@@ -196,21 +200,29 @@ if __name__ == '__main__':
             output_grad[start:min(start+max_points, coord_grid.shape[0])] = grad.clone().detach()
                 
             for dim in range(grad.shape[1]):
+                model.zero_grad()
                 grad2 = torch.autograd.grad(outputs=grad[:,dim:dim+1],
                     inputs=points,
                     grad_outputs=torch.ones_like(grad[:,dim:dim+1]),
                     retain_graph=True)[0]
-                output_jacobian[start:min(start+max_points, coord_grid.shape[0]), 2-dim] = \
+                
+                output_jacobian[start:min(start+max_points, coord_grid.shape[0]), dim] = \
                     grad2.detach()
+                
             #print(grad2[0][start:min(start+max_points, coord_grid.shape[0])].shape)
 
         print(output_grad.shape)
         print(output_jacobian.shape)
-
+        print(output_jacobian.max())
+        print(output_jacobian.min())
         n = torch.bmm(output_jacobian, output_grad.unsqueeze(-1))[...,0]
-        n /= torch.norm(n, dim=1, keepdim=True)
+        n /= torch.norm(n, dim=1).max()
+        print(n.max())
+        print(n.min())
         b = torch.cross(n, output_grad, dim=1)
-        b /= torch.norm(b, dim=1, keepdim=True)
+        b /= torch.norm(b, dim=1).max()
+        print(b.max())
+        print(b.min())
         print(n.shape)
         print(b.shape)
 
@@ -231,10 +243,12 @@ if __name__ == '__main__':
             reconstructed_nvf = reconstructed_nvf.permute(3, 0, 1, 2).unsqueeze(0)
         
         tensor_to_cdf(reconstructed_bvf, 
-            os.path.join(output_folder, opt['save_name']+"_binormal_reconstructed.cdf"))
+            os.path.join(output_folder, opt['save_name']+"_binormal_reconstructed.cdf"),
+            ['u', 'v', 'w'])
 
         tensor_to_cdf(reconstructed_nvf, 
-            os.path.join(output_folder, opt['save_name']+"_normal_reconstructed.cdf"))
+            os.path.join(output_folder, opt['save_name']+"_normal_reconstructed.cdf"),
+            ['u', 'v', 'w'])
 
     if(args['jacobian_discrete'] is not None):
         
@@ -244,24 +258,45 @@ if __name__ == '__main__':
         print("reconstructed vf shape")
         print(reconstructed_vf.shape)
 
-        z_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
-        z_kernel[:, :, 0, 1, 1] = -0.5
-        z_kernel[:, :, 2, 1, 1] = 0.5
-        y_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
-        y_kernel[:, :, 1, 0, 1] = -0.5
-        y_kernel[:, :, 1, 2, 1] = 0.5
-        x_kernel = torch.zeros([3, 3, 3, 3, 3], device=opt['device'])
-        x_kernel[:, :, 1, 1, 0] = -0.5
-        x_kernel[:, :, 1, 1, 2] = 0.5
+        z_kernel = torch.zeros([3, 3, 3], device=opt['device'])
+        z_kernel[0, 1, 1] = -0.5
+        z_kernel[2, 1, 1] = 0.5
+        z_kernel = z_kernel.unsqueeze(0).expand(3, 1, 3, 3, 3)
+        y_kernel = torch.zeros([3, 3, 3], device=opt['device'])
+        y_kernel[1, 0, 1] = -0.5
+        y_kernel[1, 2, 1] = 0.5
+        y_kernel = y_kernel.unsqueeze(0).expand(3, 1, 3, 3, 3)
+        x_kernel = torch.zeros([3, 3, 3], device=opt['device'])
+        x_kernel[1, 1, 0] = -0.5
+        x_kernel[1, 1, 2] = 0.5
+        x_kernel = x_kernel.unsqueeze(0).expand(3, 1, 3, 3, 3)
 
         j_shape = list(reconstructed_vf.shape)
         j_shape.insert(1, 3)
+        
 
         output_jacobian  = torch.zeros(j_shape, device=opt['device'])
+        
+        output_jacobian[0,:,0] = F.conv3d(F.pad(reconstructed_vf, 
+            mode='replicate', pad=[1, 1, 1, 1, 1, 1]),
+            x_kernel, groups=reconstructed_vf.shape[1])
+        output_jacobian[0,:,1] = F.conv3d(F.pad(reconstructed_vf, 
+            mode='replicate', pad=[1, 1, 1, 1, 1, 1]), 
+            y_kernel, groups=reconstructed_vf.shape[1])
+        output_jacobian[0,:,2] = F.conv3d(F.pad(reconstructed_vf, 
+            mode='replicate', pad=[1, 1, 1, 1, 1, 1]), 
+            z_kernel, groups=reconstructed_vf.shape[1])
 
-        output_jacobian[0,0] = F.conv3d(reconstructed_vf, x_kernel, padding=1)
-        output_jacobian[0,1] = F.conv3d(reconstructed_vf, y_kernel, padding=1)
-        output_jacobian[0,2] = F.conv3d(reconstructed_vf, z_kernel, padding=1)
+        output_jacobian_s = list(output_jacobian.shape)
+        output_jacobian = output_jacobian.flatten(1,2)
+        print(output_jacobian.shape)
+        tensor_to_cdf(output_jacobian / output_jacobian.abs().max(), 
+            os.path.join(output_folder, opt['save_name']+"_cd_jacobian.cdf"),
+            ['dudx', 'dudy', 'dudz', 'dvdx', 'dvdy', 'dvdz', 'dwdx', 'dwdy', 'dwdz'])
+        print(output_jacobian.min())
+        print(output_jacobian.max())
+        print("rest")
+        output_jacobian = output_jacobian.reshape(output_jacobian_s)
 
         output_jacobian = output_jacobian[0].permute(2, 3, 4, 0, 1).flatten(0, 2)
         print(output_jacobian.shape)
@@ -269,23 +304,32 @@ if __name__ == '__main__':
         print(reconstructed_vf.shape)
 
         n = torch.bmm(output_jacobian, reconstructed_vf.unsqueeze(-1))[...,0]
-        n /= torch.norm(n, dim=1, keepdim=True)
+        print(n.max())
+        print(n.min())
+        n = n / torch.norm(n, dim=1).max()
         b = torch.cross(n, reconstructed_vf, dim=1)
-        b /= torch.norm(b, dim=1, keepdim=True)
+        print(b.max())
+        print(b.min())
+        b = b / torch.norm(b, dim=1).max()
         print(n.shape)
         print(b.shape)
-
-
-        
 
         reconstructed_bvf = b.permute(1, 0).reshape(s)
         reconstructed_nvf = n.permute(1, 0).reshape(s)
         
         tensor_to_cdf(reconstructed_bvf, 
-            os.path.join(output_folder, opt['save_name']+"_binormal_discrete.cdf"))
+            os.path.join(output_folder, opt['save_name']+"_binormal_discrete.cdf"),
+            ['u', 'v', 'w'])
+
+        tensor_to_h5(reconstructed_bvf, 
+            os.path.join(output_folder, opt['save_name']+"_binormal_discrete.h5"))
 
         tensor_to_cdf(reconstructed_nvf, 
-            os.path.join(output_folder, opt['save_name']+"_normal_discrete.cdf"))
+            os.path.join(output_folder, opt['save_name']+"_normal_discrete.cdf"),
+            ['u', 'v', 'w'])
+            
+        tensor_to_h5(reconstructed_nvf, 
+            os.path.join(output_folder, opt['save_name']+"_normal_discrete.h5"))
 
     if(args['cdf'] is not None):
         grid = list(dataset.data.shape[2:])
@@ -297,9 +341,11 @@ if __name__ == '__main__':
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-            #range=dataset.max()-dataset.min()).item()
+        #    range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
+        #s_ss_interp = 1.0
+        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+        #    (opt['save_name'], p_ss_interp, s_ss_interp))
 
         tensor_to_cdf(reconstructed_volume, 
             os.path.join(output_folder, opt['save_name']+"_reconstructed.cdf"))
@@ -319,10 +365,10 @@ if __name__ == '__main__':
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
         #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
 
-        tensor_to_cdf(reconstructed_volume, 
+        tensor_to_cdf(reconstructed_volume.detach(), 
             os.path.join(output_folder, opt['save_name']+"_grad_reconstructed.cdf"))
-        tensor_to_cdf(dataset.data, 
-            os.path.join(output_folder, opt['save_name']+"_original.cdf"))
+        #tensor_to_cdf(dataset.data.cpu().numpy(), 
+        #    os.path.join(output_folder, opt['save_name']+"_original.cdf"))
 
     writer.close()
         

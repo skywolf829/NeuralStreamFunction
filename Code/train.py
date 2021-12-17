@@ -81,6 +81,8 @@ def train_implicit_model(rank, model, dataset, opt):
     elif(opt['loss'] == 'l1occupancy'):
         loss_func = l1_occupancy
 
+    model.train(True)
+
     for iteration in range(0, opt['iterations']):
         model.zero_grad()
         x, y = dataset.get_random_points(opt['points_per_iteration'])
@@ -170,6 +172,8 @@ if __name__ == '__main__':
     parser.add_argument('--periodic',default=None,type=str2bool)
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)
+    parser.add_argument('--dropout',default=None,type=str2bool)
+    parser.add_argument('--dropout_p',default=None,type=float)
     parser.add_argument('--interpolate',default=None,type=str2bool)
     parser.add_argument('--fit_gradient',default=None,type=str2bool)
     parser.add_argument('--signal_file_name',default=None,type=str)
