@@ -37,6 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--implicit_jacobian',default=None,type=str2bool)
     parser.add_argument('--jacobian_discrete',default=None,type=str2bool)
     parser.add_argument('--cdf',default=None,type=str2bool)
+    parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     dataset = Dataset(opt)
     model = load_model(opt, opt['device'])
     model = model.to(opt['device'])
-    
+
     model.eval()
 
     #print(dataset.data.min())
@@ -251,7 +252,6 @@ if __name__ == '__main__':
             ['u', 'v', 'w'])
 
     if(args['jacobian_discrete'] is not None):
-        
 
         reconstructed_vf = dataset.data.clone()
         s = list(reconstructed_vf.shape)
@@ -303,16 +303,20 @@ if __name__ == '__main__':
         reconstructed_vf = reconstructed_vf[0].permute(1, 2, 3, 0).flatten(0, 2)
         print(reconstructed_vf.shape)
 
-        n = torch.bmm(output_jacobian, reconstructed_vf.unsqueeze(-1))[...,0]
-        print(n.max())
-        print(n.min())
-        n = n / torch.norm(n, dim=1).max()
-        b = torch.cross(n, reconstructed_vf, dim=1)
+        Jt = torch.bmm(output_jacobian, reconstructed_vf.unsqueeze(-1))[...,0]
+        b = torch.cross(Jt, reconstructed_vf, dim=1)
+        n = torch.cross(b, reconstructed_vf, dim=1)
         print(b.max())
         print(b.min())
-        b = b / torch.norm(b, dim=1).max()
-        print(n.shape)
-        print(b.shape)
+        print(n.max())
+        print(n.min())
+
+        n /= n.norm(dim=1).max()
+        b /= b.norm(dim=1).max()
+        print(b.max())
+        print(b.min())
+        print(n.max())
+        print(n.min())
 
         reconstructed_bvf = b.permute(1, 0).reshape(s)
         reconstructed_nvf = n.permute(1, 0).reshape(s)
@@ -340,18 +344,58 @@ if __name__ == '__main__':
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
-        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-        #    range=dataset.max()-dataset.min()).item()
+        p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        #s_ss_interp = 1.0
-        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
-        #    (opt['save_name'], p_ss_interp, s_ss_interp))
+        s_ss_interp = 1.0
+        print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+            (opt['save_name'], p_ss_interp, s_ss_interp))
 
         tensor_to_cdf(reconstructed_volume, 
             os.path.join(output_folder, opt['save_name']+"_reconstructed.cdf"))
         tensor_to_cdf(dataset.data, 
             os.path.join(output_folder, opt['save_name']+"_original.cdf"))
 
+    if(args['uncertainty'] is not None):
+        grid = list(dataset.data.shape[2:])
+        model.train(True)
+        forward_passes = []
+        n_passes = 25
+        for i in range(n_passes):
+            with torch.no_grad():
+                reconstructed_volume = model.sample_grid(grid)
+            if(len(grid) == 3):
+                reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+            else:
+                reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
+            
+            if(i == 0):
+                s = list(reconstructed_volume.shape)
+                s[0] = n_passes
+                forward_passes = torch.zeros(s, device=opt['device'])
+            forward_passes[i] = reconstructed_volume.detach()
+            print(reconstructed_volume[0,0,50,50,50])
+        forward_passes = forward_passes.to("cpu")
+        v = torch.var(forward_passes, dim=0, keepdim=True).to(opt['device'])
+        m = torch.mean(forward_passes, dim=0, keepdim=True).to(opt['device'])
+        del forward_passes
+        
+        p_ss_interp = PSNR(dataset.data, m,
+            range=dataset.max()-dataset.min()).item()
+        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        s_ss_interp = 1.0
+        print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+            (opt['save_name'], p_ss_interp, s_ss_interp))
+
+        tensor_to_cdf(m, 
+            os.path.join(output_folder, opt['save_name']+"_mean.cdf"))
+        tensor_to_cdf(v, 
+            os.path.join(output_folder, opt['save_name']+"_variance.cdf"))
+        tensor_to_cdf(torch.abs(m-dataset.data), 
+            os.path.join(output_folder, opt['save_name']+"_error.cdf"))
+
+        model.train(False)
+        
     if(args['grad_cdf'] is not None):
         grid = list(dataset.data.shape[2:])
         reconstructed_volume = model.sample_grad_grid(grid)

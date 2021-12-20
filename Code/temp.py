@@ -6,7 +6,7 @@ from netCDF4 import Dataset
 from math import pi, sin, atan, cos, tan
 import skimage
 from torch import tensor
-from utility_functions import tensor_to_cdf
+from utility_functions import tensor_to_cdf, tensor_to_h5
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -211,7 +211,7 @@ def genereate_synthetic_vf3_jacobian(resolution = 128, a=1):
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
         "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
 
-def genereate_synthetic_vf3_normal(resolution = 128, a=1, device="cpu"):
+def genereate_synthetic_vf3_binormal(resolution = 128, a=1, device="cpu"):
 
     # [channels, u, v, w]
     jac = torch.zeros([resolution, resolution, resolution, 3, 3], 
@@ -268,17 +268,45 @@ def genereate_synthetic_vf3_normal(resolution = 128, a=1, device="cpu"):
                 print("%f %f %f" % (x, y, z))
             j += 1
         i += 1
-   
-    vf_norm = torch.bmm(jac.flatten(0,2), vf.flatten(0,2))[...,0]
-    print(vf_norm.shape)
-    vf_norm = vf_norm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
-    vf_norm /= np.linalg.norm(vf_norm, axis=0).max()
+    vf_max_norm = vf.norm(dim=3).max()
+    vf /= vf_max_norm
+    
+    Jt = torch.bmm(jac.flatten(0,2) / vf_max_norm, 
+        vf.flatten(0,2))
 
-    print(vf_norm.max())
-    print(vf_norm.min())
+    print(Jt.shape)
+    vf_binorm = torch.cross(Jt, vf.flatten(0,2))
+    vf_norm = torch.cross(vf_binorm, vf.flatten(0,2))
+
+    print(vf_norm.shape)
+    print( vf_norm.norm(dim=1).unsqueeze(-1).shape)
+    print(vf.flatten(0,2).norm(dim=1).shape)
+    vf_norm = vf_norm / vf_norm.norm(dim=1).unsqueeze(-1)
+    vf_norm *= vf.flatten(0,2).norm(dim=1).unsqueeze(-1)
+    
+    vf_binorm = vf_binorm / vf_binorm.norm(dim=1).unsqueeze(-1)
+    vf_binorm *= vf.flatten(0,2).norm(dim=1).unsqueeze(-1)
+
+    vf_binorm = vf_binorm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
+    vf_norm = vf_norm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
+    
+    print(vf_norm.norm(dim=0).max())
+    print(vf_binorm.norm(dim=0).max())
+
+    vf_norm /= vf_norm.norm(dim=0).max()
+    vf_binorm /= vf_binorm.norm(dim=0).max()
+
     channel_names = ['u', 'v', 'w']
     tensor_to_cdf(vf_norm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_normal.cdf", channel_names=channel_names)
+    tensor_to_cdf(vf_binorm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3_binormal.cdf", channel_names=channel_names)
+
+        
+    tensor_to_h5(vf_norm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3_normal.h5")
+    tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3_binormal.h5")
 
 def genereate_synthetic_vf4(resolution = 128, A=3**0.5, B=2**0.5, C=1):
 
@@ -319,5 +347,5 @@ if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
     #genereate_synthetic_vf2()
-    genereate_synthetic_vf3_normal()
+    genereate_synthetic_vf3_binormal()
     quit()

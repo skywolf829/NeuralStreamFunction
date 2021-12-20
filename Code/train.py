@@ -25,6 +25,9 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 def l1(x, y):
     return F.l1_loss(x, y)
 
+def mse(x, y):
+    return F.mse_loss(x, y)
+
 def l1_occupancy(gt, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
@@ -37,6 +40,10 @@ def l1_occupancy(gt, y):
 def perpendicular_loss(x, y):
     return F.cosine_similarity(x, y).mean()
 
+def magangle_loss(x, y):
+    mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
+    angles = F.cosine_similarity(x, y).abs().mean()
+    return mags + angles
 
 def train_implicit_model(rank, model, dataset, opt):
     print("Training on device " + str(rank))
@@ -53,7 +60,6 @@ def train_implicit_model(rank, model, dataset, opt):
 
     torch.manual_seed(0)
     
-    
     if(opt['train_distributed']):
         model = DDP(model, device_ids=[rank])
     else:
@@ -65,6 +71,8 @@ def train_implicit_model(rank, model, dataset, opt):
 
     optimizer = optim.Adam(model.parameters(), lr=opt["lr"],
         betas=[opt['beta_1'], opt['beta_2']]) 
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 
+        step_size=3333, gamma=0.1)
 
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
@@ -80,7 +88,10 @@ def train_implicit_model(rank, model, dataset, opt):
         loss_func = perpendicular_loss
     elif(opt['loss'] == 'l1occupancy'):
         loss_func = l1_occupancy
-
+    elif(opt['loss'] == 'magangle'):
+        loss_func = magangle_loss
+    elif(opt['loss'] == 'mse'):
+        loss_func = mse
     model.train(True)
 
     for iteration in range(0, opt['iterations']):
@@ -102,6 +113,7 @@ def train_implicit_model(rank, model, dataset, opt):
         loss.backward()
 
         optimizer.step()
+        scheduler.step()
 
         if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
             if(iteration % opt['save_every'] == 0):
@@ -109,23 +121,11 @@ def train_implicit_model(rank, model, dataset, opt):
 
             if(iteration % 5 == 0):
                 with torch.no_grad():
-                    if(opt['loss'] == "l1occupancy"):
-                        p_vf = PSNR(y_estimated.detach()[:,0:-1][~y.isnan()], y.detach()[~y.isnan()], 
-                            dataset.max()-dataset.min())
-                        p_occupancy = PSNR(y_estimated.detach()[:, -1], torch.isnan(y[:,0]).to(torch.float32))
-                        writer.add_scalar('PSNR', p_vf.item(), iteration)
-                        writer.add_scalar('PSNR_occupancy', p_occupancy.item(), iteration)
-                    else:
-                        p_vf = PSNR(y_estimated.detach(), y.detach(), 
-                            dataset.max()-dataset.min())
-                        writer.add_scalar('PSNR', p_vf.item(), iteration)
+                    p_vf = PSNR(y_estimated.detach(), y.detach(), 
+                        dataset.max()-dataset.min())
+                    writer.add_scalar('PSNR', p_vf.item(), iteration)
 
-                    if(opt['loss'] == "l1occupancy"):
-                        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f, psnr_occupancy: %0.03f" % \
-                            (iteration, opt['iterations'], 
-                            loss.item(), p_vf.item(), p_occupancy.item()))
-                    else:
-                        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
+                    print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
                             (iteration, opt['iterations'], 
                             loss.item(), p_vf.item()))
 
