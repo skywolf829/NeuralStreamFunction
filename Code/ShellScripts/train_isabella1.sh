@@ -3,8 +3,8 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name isabella13.h5 \
---n_layers 6 --nodes_per_layer 512 \
---save_name isabel_6x512_dropout0.1 \
+--n_layers 8 --nodes_per_layer 1024 \
+--save_name isabel_8x1024_dropout0.1 \
 --points_per_iteration 100000 \
 --log_image false --log_gradient false \
 --loss l1 \
