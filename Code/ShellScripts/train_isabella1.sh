@@ -1,15 +1,17 @@
 #!/bin/sh
 cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
-python -u Code/train.py --n_outputs 3 --n_dims 3 \
---signal_file_name isabella13.h5 \
---n_layers 8 --nodes_per_layer 1024 \
---save_name isabel_8x1024_dropout0.1 \
---points_per_iteration 100000 \
---log_image false --log_gradient false \
---loss l1 \
---device cuda:0 --data_device cuda:0 \
---dropout true --dropout_p 0.1
+python ./Code/test.py --load_from isabel_8x1024_dropout0.1 --uncertainty true --cdf true
+
+#python -u Code/train.py --n_outputs 3 --n_dims 3 \
+#--signal_file_name isabella13.h5 \
+#--n_layers 8 --nodes_per_layer 1024 \
+#--save_name isabel_8x1024_dropout0.1 \
+#--points_per_iteration 100000 \
+#--log_image false --log_gradient false \
+#--loss l1 \
+#--device cuda:0 --data_device cuda:0 \
+#--dropout true --dropout_p 0.1
 
 #python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 #--signal_file_name isabella13.h5 \
