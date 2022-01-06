@@ -25,7 +25,7 @@ class AppModelAndController():
         self.gt_im = None
 
         self.device = "cuda:0"
-        self.model_name = "cat_8x512"
+        self.model_name = "cameraman_4x128"
 
         self.file_folder_path = os.path.dirname(os.path.abspath(__file__))
         self.project_folder_path = os.path.join(file_folder_path, "..")
@@ -62,7 +62,7 @@ class AppModelAndController():
             align_corners=False)[0]
 
         gt_im *= 255
-        gt_im = gt_im.type(torch.uint8)#.permute(1, 2, 0)
+        gt_im = gt_im.type(torch.uint8).permute(1, 2, 0)
 
         gt_im = gt_im.cpu().numpy()
 
@@ -90,7 +90,7 @@ class AppModelAndController():
         gt_im /= (self.dataset.max() - self.dataset.min())
 
         gt_im *= 255
-        gt_im = gt_im.type(torch.uint8).clamp(0, 255)#.permute(2, 1, 0)
+        gt_im = gt_im.type(torch.uint8).clamp(0, 255).permute(2, 1, 0)
 
         return gt_im.cpu().numpy()
     
@@ -140,7 +140,7 @@ class AppModelAndController():
         
         im *= 255
         im = im.clamp(0, 255)
-        im = im.type(torch.uint8)#.permute(1, 0, 2)
+        im = im.type(torch.uint8).permute(1, 0, 2)
 
         return im.cpu().numpy()
 

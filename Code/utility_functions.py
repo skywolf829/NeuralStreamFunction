@@ -324,7 +324,11 @@ def create_folder(start_path, folder_name):
     return f_name
 
 def tensor_to_cdf(t, location, channel_names=None):
+    # Assumes t is a tensor with shape (1, c, d, h[, w])
+
     d = Dataset(location, 'w')
+
+    # Setup dimensions
     d.createDimension('x')
     d.createDimension('y')
     dims = ['x', 'y']
@@ -332,8 +336,11 @@ def tensor_to_cdf(t, location, channel_names=None):
     if(len(t.shape) == 5):
         d.createDimension('z')
         dims.append('z')
+
+    # ['u', 'v', 'w']
     if(channel_names is None):
         ch_default = 'a'
+
     for i in range(t.shape[1]):
         if(channel_names is None):
             ch = ch_default
