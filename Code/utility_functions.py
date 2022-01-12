@@ -355,3 +355,32 @@ def tensor_to_h5(t, location):
     h = h5py.File(location, mode='w')
     h['data'] = t[0].clone().detach().cpu().numpy()
     h.close()
+
+def solution_to_cdf(data, location, channel_names = ['data']):
+    '''
+    Saves a 3D grid of data as a NetCDF file.
+
+    data: a numpy array of shape [channels, depth, height, width]
+        to conform to axis ordering c, z, y, x. 
+    location: the location on disc to save the file to
+    channel_names: a list of channel names for each
+        channel in data
+    '''
+    assert data.shape[0] == len(channel_names), \
+        "data.shape[0] should equal len(channel_names)"
+    assert len(data.shape) == 4, \
+        "len(data.shape) should equal 4, for [c, d, h, w]"
+
+    d = Dataset(location, 'w')
+
+    # Setup dimensions
+    d.createDimension('z')
+    d.createDimension('y')
+    d.createDimension('x')
+
+    # Put data into the NetCDF file
+    for i in range(data.shape[1]):
+        d.createVariable(channel_names[i], 
+            data.dtype, ('z', 'y', 'x'))
+        d[channel_names[i]][:] = data[i]
+    d.close()
