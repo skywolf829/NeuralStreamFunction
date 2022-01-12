@@ -360,7 +360,7 @@ if __name__ == '__main__':
         grid = list(dataset.data.shape[2:])
         model.train(True)
         forward_passes = []
-        n_passes = 25
+        n_passes = 500
         for i in range(n_passes):
             with torch.no_grad():
                 reconstructed_volume = model.sample_grid(grid)
@@ -380,19 +380,19 @@ if __name__ == '__main__':
         m = torch.mean(forward_passes, dim=0, keepdim=True).to(opt['device'])
         del forward_passes
         
-        p_ss_interp = PSNR(dataset.data, m,
-            range=dataset.max()-dataset.min()).item()
+        #p_ss_interp = PSNR(dataset.data, m,
+        #    range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        s_ss_interp = 1.0
-        print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
-            (opt['save_name'], p_ss_interp, s_ss_interp))
-
-        tensor_to_cdf(m, 
-            os.path.join(output_folder, opt['save_name']+"_mean.cdf"))
-        tensor_to_cdf(v, 
-            os.path.join(output_folder, opt['save_name']+"_variance.cdf"))
-        tensor_to_cdf(torch.abs(m-dataset.data), 
-            os.path.join(output_folder, opt['save_name']+"_error.cdf"))
+        #s_ss_interp = 1.0
+        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+        #    (opt['save_name'], p_ss_interp, s_ss_interp))
+        print(m.shape)
+        print(v.shape)
+        tensor_to_cdf(torch.cat([m, v], dim=1), 
+            os.path.join(output_folder, opt['save_name']+"_uncertainty.cdf"),
+            ['mean', 'variance'])
+        #tensor_to_cdf(torch.abs(m-dataset.data), 
+        #    os.path.join(output_folder, opt['save_name']+"_error.cdf"))
 
         model.train(False)
         
