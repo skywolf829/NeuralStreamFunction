@@ -40,6 +40,10 @@ class Options():
         opt['log_image']               = False
         opt['log_gradient']            = False
 
+        opt['pruning']                 = None
+        opt['quantization']            = None
+        opt['coding']                  = None
+
         return opt
 
 def save_options(opt, save_location):

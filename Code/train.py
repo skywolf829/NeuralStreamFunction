@@ -15,6 +15,8 @@ import os
 from options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
+from nn_compression.prune import VanillaPruner
+from nn_compression.quantize import Quantizer
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -44,6 +46,65 @@ def magangle_loss(x, y):
     mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
     angles = F.cosine_similarity(x, y).abs().mean()
     return mags + angles
+
+def train_loop(model, dataset, loss_func, opt):
+    model.zero_grad()
+    x, y = dataset.get_random_points(opt['points_per_iteration'])
+    #print(y.isnan().any().sum() / y.shape[0])
+    x = x.to(opt['device'])
+    y = y.to(opt['device'])
+    
+    if(opt['fit_gradient']):
+        y_estimated, x = model.forward_w_grad(x)
+        y_estimated = torch.autograd.grad(y_estimated, x, 
+                grad_outputs=torch.ones_like(y_estimated),
+                create_graph=True)[0]
+        loss = loss_func(y, y_estimated)
+    else:
+        y_estimated = model(x)
+        loss = loss_func(y, y_estimated)
+    loss.backward()
+
+    return x, y, y_estimated, loss
+
+def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):    
+    with torch.no_grad():
+        p_vf = PSNR(y_estimated.detach(), y.detach(), 
+            dataset.max()-dataset.min())
+        writer.add_scalar('PSNR', p_vf.item(), iteration)
+
+        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
+                (iteration, opt['iterations'], 
+                loss.item(), p_vf.item()))
+
+        writer.add_scalar('Loss', loss.item(), iteration)
+        GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
+        writer.add_scalar('GPU memory (GB)', GBytes, iteration)
+
+def log_image(model, dataset, grid_to_sample, writer, iteration):
+    with torch.no_grad():
+        img = model.sample_grid_for_image(grid_to_sample)
+        print("img shape: " + str(img.shape))
+        if(dataset.min() < 0 or dataset.max() > 1.0):
+            img -= dataset.min()
+            img /= (dataset.max() - dataset.min())
+        writer.add_image('Reconstruction', img.clamp(0, 1), 
+            iteration, dataformats='HWC')
+
+def log_grad_image(model, grid_to_sample, writer, iteration):
+    grad_img = model.sample_grad_grid_for_image(grid_to_sample)
+    for output_index in range(len(grad_img)):
+        for input_index in range(grad_img[output_index].shape[-1]):
+            grad_img[output_index][...,input_index] -= \
+                grad_img[output_index][...,input_index].min()
+            grad_img[output_index][...,input_index] /= \
+                grad_img[output_index][...,input_index].max()
+
+            writer.add_image('Gradient_outputdim'+str(output_index)+\
+                "_wrt_inpudim_"+str(input_index), 
+                grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
+                iteration, dataformats='HWC')
 
 def train_implicit_model(rank, model, dataset, opt):
     print("Training on device " + str(rank))
@@ -94,74 +155,75 @@ def train_implicit_model(rank, model, dataset, opt):
         loss_func = mse
     model.train(True)
 
+
     for iteration in range(0, opt['iterations']):
-        model.zero_grad()
-        x, y = dataset.get_random_points(opt['points_per_iteration'])
-        #print(y.isnan().any().sum() / y.shape[0])
-        x = x.to(opt['device'])
-        y = y.to(opt['device'])
         
-        if(opt['fit_gradient']):
-            y_estimated, x = model.forward_w_grad(x)
-            y_estimated = torch.autograd.grad(y_estimated, x, 
-                    grad_outputs=torch.ones_like(y_estimated),
-                    create_graph=True)[0]
-            loss = loss_func(y, y_estimated)
-        else:
-            y_estimated = model(x)
-            loss = loss_func(y, y_estimated)
-        loss.backward()
+        x, y, y_estimated, loss = train_loop(model, dataset, loss_func, opt)
 
         optimizer.step()
         scheduler.step()
-
         if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
             if(iteration % opt['save_every'] == 0):
                 save_model(model, opt)
 
             if(iteration % 5 == 0):
-                with torch.no_grad():
-                    p_vf = PSNR(y_estimated.detach(), y.detach(), 
-                        dataset.max()-dataset.min())
-                    writer.add_scalar('PSNR', p_vf.item(), iteration)
-
-                    print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
-                            (iteration, opt['iterations'], 
-                            loss.item(), p_vf.item()))
-
-                    writer.add_scalar('Loss', loss.item(), iteration)
-                    GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
-                        / (1024**3))
-                    writer.add_scalar('GPU memory (GB)', GBytes, iteration)
+                log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt)
                     
             
             if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
                 grid_to_sample = dataset.data.shape[2:]
                 if(opt['log_image']):
-                    with torch.no_grad():
-                        img = model.sample_grid_for_image(grid_to_sample)
-                        print("img shape: " + str(img.shape))
-                        if(dataset.min() < 0 or dataset.max() > 1.0):
-                            img -= dataset.min()
-                            img /= (dataset.max() - dataset.min())
-                        writer.add_image('Reconstruction', img.clamp(0, 1), 
-                            iteration, dataformats='HWC')
+                    log_image(model, dataset, grid_to_sample, writer, iteration)
                 if(opt['log_gradient']):
-                    grad_img = model.sample_grad_grid_for_image(grid_to_sample)
-                    for output_index in range(len(grad_img)):
-                        for input_index in range(grad_img[output_index].shape[-1]):
-                            grad_img[output_index][...,input_index] -= \
-                                grad_img[output_index][...,input_index].min()
-                            grad_img[output_index][...,input_index] /= \
-                                grad_img[output_index][...,input_index].max()
-
-                            writer.add_image('Gradient_outputdim'+str(output_index)+\
-                                "_wrt_inpudim_"+str(input_index), 
-                                grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
-                                iteration, dataformats='HWC')
+                    log_grad_image(model, grid_to_sample, writer, iteration)
     
+    
+
+    if(opt['pruning'] != None):
+        print("pruning")
+        pruning_rules = []
+        for name, param in model.named_parameters():
+            print(name, param.size())
+            pruning_rules.append(
+                [name, 'element', 
+                    opt['pruning'], 'abs']
+            )
+        pruner = VanillaPruner(rule=pruning_rules)
+
+        for epoch in range(0, 100):
+            if(epoch == 0):
+                pruner.prune(model, update_masks=True)
+            x, y, y_estimated, loss = train_loop(model, dataset, loss_func, opt)
+            optimizer.step()
+            scheduler.step()
+            pruner.prune(model, update_masks=False)
+            if(epoch % 5 == 0):
+                log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt)
+    
+    if(opt['quantization'] != None):
+        print("quantizing")
+        quantization_rules = []
+        for name, param in model.named_parameters():
+            print(name, param.size())
+            quantization_rules.append(
+                [name, 'k-means', 
+                    opt['quantization'], 'k-means++']
+                )
+        quantizer = Quantizer(rule=quantization_rules, fix_zeros=True)
+        
+        for epoch in range(0, 100):
+            x, y, y_estimated, loss = train_loop(model, dataset, loss_func, opt)
+            optimizer.step()
+            scheduler.step()
+            quantizer.quantize(model=model, update_labels=True, re_quantize=False)
+            if(epoch % 5 == 0):
+                log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt)
+
+
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
+
+    save_model(model, opt)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train on an input that is 2D')
@@ -198,6 +260,9 @@ if __name__ == '__main__':
     parser.add_argument('--load_from',default=None, type=str)
     parser.add_argument('--log_image',default=None, type=str2bool)
     parser.add_argument('--log_gradient',default=None, type=str2bool)
+    parser.add_argument('--pruning',default=None, type=float)
+    parser.add_argument('--quantization',default=None, type=int)
+    parser.add_argument('--coding',default=None, type=str2bool)
 
 
     args = vars(parser.parse_args())

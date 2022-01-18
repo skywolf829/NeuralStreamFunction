@@ -10,7 +10,7 @@ from options import *
 from utility_functions import create_folder, make_coord_grid
 import math
 import numpy as np
-
+from nn_compression.coding import Codec
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -22,15 +22,36 @@ def save_model(model,opt):
     folder = create_folder(save_folder, opt["save_name"])
     path_to_save = os.path.join(save_folder, folder)
     
-    torch.save(model.state_dict(), os.path.join(path_to_save, "model.ckpt"))
+    if(opt['coding'] != None):
+        print("coding")
+        rule = []
+        for name, param in model.named_parameters():
+            print(name, param.size())
+            rule.append((name, 'huffman', 0, 0, 4))
+        codec = Codec(rule=rule)
+        encoded_model = codec.encode(model=model)
+        torch.save({'state_dict': encoded_model.state_dict()}, 
+            os.path.join(path_to_save, "model.ckpt.tar"),
+            pickle_protocol=4
+        )
+    else:
+        torch.save({'state_dict': model.state_dict()}, 
+            os.path.join(path_to_save, "model.ckpt.tar"),
+            pickle_protocol=4
+        )
     save_options(opt, path_to_save)
 
 def load_model(opt, device):
     path_to_load = os.path.join(save_folder, opt["save_name"])
     model = ImplicitModel(opt)
-    params = torch.load(os.path.join(path_to_load, 'model.ckpt'), 
+
+    ckpt = torch.load(os.path.join(path_to_load, 'model.ckpt.tar'), 
         map_location = device)
-    model.load_state_dict(params)
+    
+    if(opt['coding'] != None):
+        model = Codec.decode(model=model, state_dict=ckpt['state_dict'])
+    else:
+        model.load_state_dict(ckpt['state_dict'])
 
     return model
 
@@ -63,7 +84,6 @@ class PositionalEncoding(nn.Module):
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
     
-
 class SineLayer(nn.Module):  
     def __init__(self, in_features, out_features, bias=True,
                  is_first=False, omega_0=30):
@@ -113,7 +133,7 @@ class ImplicitModel(nn.Module):
         for i in range(opt['n_layers']):
             self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
-            if(self.opt['dropout']):
+            if(self.opt['dropout'] and i < opt['n_layers'] - 1):
                 self.net.append(self.dropout)
 
         final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_outputs'])

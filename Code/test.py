@@ -3,7 +3,7 @@ import argparse
 from datasets import Dataset
 import datetime
 from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
-    tensor_to_h5
+    tensor_to_h5, create_folder
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
@@ -39,6 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--cdf',default=None,type=str2bool)
     parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
+    parser.add_argument('--seeding_curve',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -350,11 +351,11 @@ if __name__ == '__main__':
         s_ss_interp = 1.0
         print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
             (opt['save_name'], p_ss_interp, s_ss_interp))
-
+        create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume, 
-            os.path.join(output_folder, opt['save_name']+"_reconstructed.cdf"))
+            os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
         tensor_to_cdf(dataset.data, 
-            os.path.join(output_folder, opt['save_name']+"_original.cdf"))
+            os.path.join(output_folder, opt['save_name'], "original.cdf"))
 
     if(args['uncertainty'] is not None):
         grid = list(dataset.data.shape[2:])
@@ -408,11 +409,14 @@ if __name__ == '__main__':
             #range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
         #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
-
+        create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume.detach(), 
-            os.path.join(output_folder, opt['save_name']+"_grad_reconstructed.cdf"))
+            os.path.join(output_folder, opt['save_name'], "grad_reconstructed.cdf"))
         #tensor_to_cdf(dataset.data.cpu().numpy(), 
         #    os.path.join(output_folder, opt['save_name']+"_original.cdf"))
+
+    if(args['seeding_curve'] is not None):
+        input_x = torch.arange()
 
     writer.close()
         
