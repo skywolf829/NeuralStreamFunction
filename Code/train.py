@@ -42,13 +42,22 @@ def l1_occupancy(gt, y):
 def perpendicular_loss(x, y):
     return F.cosine_similarity(x, y).mean()
 
-def angle_loss(x, y):
-    angles = F.cosine_similarity(x, y).abs().mean()
+def angle_same_loss(x, y):
+    angles = (1 - (F.cosine_similarity(x, y)**2)).mean()
     return angles
 
-def magangle_loss(x, y):
+def angle_orthogonal_loss(x, y):
+    angles = (F.cosine_similarity(x, y)**2).mean()
+    return angles
+
+def magangle_orthogonal_loss(x, y):
     mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
-    angles = F.cosine_similarity(x, y).abs().mean()
+    angles = (F.cosine_similarity(x, y)**2).mean()
+    return mags + angles
+
+def magangle_same_loss(x, y):
+    mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
+    angles = (1 - (F.cosine_similarity(x, y)**2)).mean()
     return mags + angles
 
 def train_loop(model, dataset, loss_func, opt):
@@ -63,10 +72,9 @@ def train_loop(model, dataset, loss_func, opt):
         y_estimated = torch.autograd.grad(y_estimated, x, 
                 grad_outputs=torch.ones_like(y_estimated),
                 create_graph=True)[0]
-        loss = loss_func(y, y_estimated)
     else:
         y_estimated = model(x)
-        loss = loss_func(y, y_estimated)
+    loss = loss_func(y, y_estimated)
     loss.backward()
 
     return x, y, y_estimated, loss
@@ -78,7 +86,7 @@ def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):
         #writer.add_scalar('PSNR', p_vf.item(), iteration)
         #writer.add_scalar('loss', loss.item(), iteration)
         print("Iteration %i/%i, loss: %0.06f" % \
-                (iteration, opt['iterations']))
+                (iteration, opt['iterations'], loss.item()))
 
         writer.add_scalar('Loss', loss.item(), iteration)
         GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
@@ -152,10 +160,14 @@ def train_implicit_model(rank, model, dataset, opt):
         loss_func = perpendicular_loss
     elif(opt['loss'] == 'l1occupancy'):
         loss_func = l1_occupancy
-    elif(opt['loss'] == 'magangle'):
-        loss_func = magangle_loss        
-    elif(opt['loss'] == 'angle'):
-        loss_func = angle_loss
+    elif(opt['loss'] == 'magangle_same'):
+        loss_func = magangle_same_loss    
+    elif(opt['loss'] == 'magangle_orthogonal'):
+        loss_func = magangle_orthogonal_loss        
+    elif(opt['loss'] == 'angle_same'):
+        loss_func = angle_same_loss
+    elif(opt['loss'] == 'angle_orthogonal'):
+        loss_func = angle_orthogonal_loss
     elif(opt['loss'] == 'mse'):
         loss_func = mse
     model.train(True)
