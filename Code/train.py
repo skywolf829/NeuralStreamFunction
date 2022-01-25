@@ -42,6 +42,10 @@ def l1_occupancy(gt, y):
 def perpendicular_loss(x, y):
     return F.cosine_similarity(x, y).mean()
 
+def angle_loss(x, y):
+    angles = F.cosine_similarity(x, y).abs().mean()
+    return angles
+
 def magangle_loss(x, y):
     mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
     angles = F.cosine_similarity(x, y).abs().mean()
@@ -69,13 +73,12 @@ def train_loop(model, dataset, loss_func, opt):
 
 def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):    
     with torch.no_grad():
-        p_vf = PSNR(y_estimated.detach(), y.detach(), 
-            dataset.max()-dataset.min())
-        writer.add_scalar('PSNR', p_vf.item(), iteration)
-
-        print("Iteration %i/%i, loss: %0.06f, psnr_vf: %0.03f" % \
-                (iteration, opt['iterations'], 
-                loss.item(), p_vf.item()))
+        #p_vf = PSNR(y_estimated.detach(), y.detach(), 
+        #    dataset.max()-dataset.min())
+        #writer.add_scalar('PSNR', p_vf.item(), iteration)
+        #writer.add_scalar('loss', loss.item(), iteration)
+        print("Iteration %i/%i, loss: %0.06f" % \
+                (iteration, opt['iterations']))
 
         writer.add_scalar('Loss', loss.item(), iteration)
         GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
@@ -150,7 +153,9 @@ def train_implicit_model(rank, model, dataset, opt):
     elif(opt['loss'] == 'l1occupancy'):
         loss_func = l1_occupancy
     elif(opt['loss'] == 'magangle'):
-        loss_func = magangle_loss
+        loss_func = magangle_loss        
+    elif(opt['loss'] == 'angle'):
+        loss_func = angle_loss
     elif(opt['loss'] == 'mse'):
         loss_func = mse
     model.train(True)
