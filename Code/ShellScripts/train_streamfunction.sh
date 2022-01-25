@@ -13,9 +13,9 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 #--dropout true --dropout_p 0.01 \
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF3_normal.h5 \
+--signal_file_name synthetic_VF1_normal.h5 \
 --n_layers 4 --nodes_per_layer 128 \
---save_name synthetic_VF3_4x128_normal_angle \
+--save_name synthetic_VF1_4x128_normal_angle \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --fit_gradient true \
