@@ -418,9 +418,9 @@ if __name__ == '__main__':
 
     if(args['seeding_curve'] is not None):
         n = netCDF4.Dataset(os.path.join(output_folder, 
-            "synthetic_VF3_4x128_normal", "reconstructed.cdf"), 'r')['a']
+            "synth1_normal", "reconstructed.cdf"), 'r')['a']
         b = netCDF4.Dataset(os.path.join(output_folder, 
-            "synthetic_VF3_4x128_binormal", "reconstructed.cdf"), 'r')['a']
+            "synth1_binormal", "reconstructed.cdf"), 'r')['a']
 
         n = torch.tensor(n).to('cuda:0').unsqueeze(0).unsqueeze(0)
         b = torch.tensor(b).to('cuda:0').unsqueeze(0).unsqueeze(0)
@@ -449,7 +449,7 @@ if __name__ == '__main__':
         print("Residuals: ")
         print(solution.residuals)
         t1 = torch.cat([n, b, torch.ones_like(n)], dim=1)
-        tensor_to_cdf(t1, os.path.join(output_folder, "VF3_N_B.cdf"), ['n', 'b', 'constant'])
+        tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b', 'constant'])
 
     writer.close()
         

@@ -292,7 +292,7 @@ def make_coord_grid(shape, device, flatten=True):
             device=device, 
             dtype=torch.float32).float()
         coord_seqs.append(seq)
-    ret = torch.stack(torch.meshgrid(*coord_seqs), dim=-1)
+    ret = torch.stack(torch.meshgrid(*coord_seqs, indexing="ij"), dim=-1)
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
     return ret.flip(-1)

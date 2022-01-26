@@ -3,6 +3,7 @@ import torch
 import h5py
 from utility_functions import make_coord_grid
 import torch.nn.functional as F
+import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -24,7 +25,7 @@ class Dataset(torch.utils.data.Dataset):
         print("Initializing dataset - reading %s" % folder_to_load)
         
         f = h5py.File(folder_to_load, 'r')
-        d = torch.tensor(f.get('data'))
+        d = torch.tensor(np.array(f.get('data')))
         f.close()
         self.data = d
         self.data = self.data.to(self.opt['data_device']).unsqueeze(0)
