@@ -418,9 +418,9 @@ if __name__ == '__main__':
 
     if(args['seeding_curve'] is not None):
         n = netCDF4.Dataset(os.path.join(output_folder, 
-            "synthetic_VF3_4x128_normal", "normal_reconstructed.cdf"), 'r')['a']
+            "synthetic_VF3_4x128_normal", "reconstructed.cdf"), 'r')['a']
         b = netCDF4.Dataset(os.path.join(output_folder, 
-            "synthetic_VF3_4x128_binormal", "binormal_reconstructed.cdf"), 'r')['a']
+            "synthetic_VF3_4x128_binormal", "reconstructed.cdf"), 'r')['a']
 
         n = torch.tensor(n).to('cuda:0').unsqueeze(0).unsqueeze(0)
         b = torch.tensor(b).to('cuda:0').unsqueeze(0).unsqueeze(0)
@@ -430,50 +430,10 @@ if __name__ == '__main__':
         #inputs[:,2] = 1.0
         inputs[:,0] = torch.arange(-1, 0, 1/64)
         inputs = inputs.to("cuda:0")
-        '''
-        class m(nn.Module):
-            def __init__(self, n, b):
-                super().__init__()     
-                self.n = n
-                self.b = b
-                self.a1 = torch.tensor(1.0, device="cuda:0")
-                #self.a2 = torch.tensor(0.5, device="cuda:0")
-                #self.register_parameter("a1", nn.Parameter(torch.tensor(0.5)))
-                self.register_parameter("a2", nn.Parameter(torch.tensor(0.5)))
-                self.register_parameter("b1", nn.Parameter(torch.tensor(0.1)))
-            
-            def forward(self):
-                return self.a1*self.n + self.a2*self.b + self.b1
-
-        model = m(n, b).to('cuda:0')
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
-        print(inputs.shape)
-        for i in range(1000):
-            model.zero_grad()
-            output_field = model.forward()
-            output_points = F.grid_sample(output_field,
-                inputs.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze()
-            loss = torch.abs(output_points).sum()            
-            loss.backward()
-            optimizer.step()
-            print(f"{model.a1 : 0.04f} {model.a2 : 0.04f} {model.b1 : 0.04f}: {loss.item()}")
-        
-        output_field = model.forward()
-        #print(F.grid_sample(output_field,
-        #    inputs.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze())
-
-        print(F.grid_sample(output_field,
-            inputs.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze().min())
-        print(F.grid_sample(output_field,
-            inputs.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze().mean())
-        print(F.grid_sample(output_field,
-            inputs.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze().max())
-        '''    
-        
         #n_output = n[0, 0, 0, :, :].flip(0).diag()
         #b_output = b[0, 0, 0, :, :].flip(0).diag()
-        n_output = n[0, 0, 0:64, 0, 127]
-        b_output = b[0, 0, 0:64, 0, 127]
+        n_output = n[0, 0, 0:64, 0, 0]
+        b_output = b[0, 0, 0:64, 0, 0]
         A = torch.ones([n_output.shape[0], 2], device="cuda:0")
         B = torch.ones([b_output.shape[0], 1], device="cuda:0")
 
