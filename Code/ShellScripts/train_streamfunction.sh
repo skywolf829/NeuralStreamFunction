@@ -13,7 +13,7 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 #--dropout true --dropout_p 0.01 \
 
 
-python -u Code/train.py --n_outputs 1 --n_dims 3 \
+python3 -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name synthetic_VF3_binormal.h5 \
 --n_layers 4 --nodes_per_layer 128 \
 --save_name synth3_binormal \
@@ -22,4 +22,26 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --fit_gradient true \
 --loss angle_same --lr 5e-5 \
 --log_image false --log_gradient false \
---device cuda:0 --data_device cuda:0 
+--device cuda:0 --data_device cuda:0 &
+
+python3 -u Code/train.py --n_outputs 1 --n_dims 3 \
+--signal_file_name synthetic_VF3.h5 \
+--n_layers 4 --nodes_per_layer 128 \
+--save_name synth3 \
+--points_per_iteration 200000 \
+--iterations 10000 \
+--fit_gradient true \
+--loss angle_same --lr 5e-5 \
+--log_image false --log_gradient false \
+--device cuda:1 --data_device cuda:1 &
+
+python3 -u Code/train.py --n_outputs 1 --n_dims 3 \
+--signal_file_name synthetic_VF3_normal.h5 \
+--n_layers 4 --nodes_per_layer 128 \
+--save_name synth3_normal \
+--points_per_iteration 200000 \
+--iterations 10000 \
+--fit_gradient true \
+--loss angle_same --lr 5e-5 \
+--log_image false --log_gradient false \
+--device cuda:2 --data_device cuda:2 
