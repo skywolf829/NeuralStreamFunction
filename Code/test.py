@@ -18,6 +18,8 @@ import netCDF4
 from options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
+import numpy as np
+
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -417,39 +419,37 @@ if __name__ == '__main__':
         #    os.path.join(output_folder, opt['save_name']+"_original.cdf"))
 
     if(args['seeding_curve'] is not None):
-        n = netCDF4.Dataset(os.path.join(output_folder, 
-            "synth1_normal", "reconstructed.cdf"), 'r')['a']
-        b = netCDF4.Dataset(os.path.join(output_folder, 
-            "synth1_binormal", "reconstructed.cdf"), 'r')['a']
+        n = np.array(netCDF4.Dataset(os.path.join(output_folder, 
+            "synth1_normal", "reconstructed.cdf"), 'r')['a'])
+        b = np.array(netCDF4.Dataset(os.path.join(output_folder, 
+            "synth1_binormal", "reconstructed.cdf"), 'r')['a'])
 
         n = torch.tensor(n).to('cuda:0').unsqueeze(0).unsqueeze(0)
         b = torch.tensor(b).to('cuda:0').unsqueeze(0).unsqueeze(0)
         
-        inputs = torch.zeros([64, 3]) - 1
-        #inputs[:,1] = 1.0
-        #inputs[:,2] = 1.0
-        inputs[:,0] = torch.arange(-1, 0, 1/64)
-        inputs = inputs.to("cuda:0")
-        #n_output = n[0, 0, 0, :, :].flip(0).diag()
-        #b_output = b[0, 0, 0, :, :].flip(0).diag()
-        n_output = n[0, 0, 0:64, 0, 0]
-        b_output = b[0, 0, 0:64, 0, 0]
-        A = torch.ones([n_output.shape[0], 2], device="cuda:0")
-        B = torch.ones([b_output.shape[0], 1], device="cuda:0")
+        n_output = n[0, 0, 0:64, 0, 127]
+        b_output = b[0, 0, 0:64, 0, 127]
+        A = torch.ones([n_output.shape[0], 5], device="cuda:0")
+        B = torch.ones([n_output.shape[0], 1], device="cuda:0")
 
+        A[:,0] = n_output*n_output
+        A[:,1] = n_output*b_output
+        A[:,2] = b_output*b_output
+        A[:,3] = n_output
+        A[:,4] = b_output
 
-        A[:,0] = n_output
-        B[:,0] = b_output
+        solution = torch.linalg.lstsq(A, B)
+        
+        print(f"{solution.solution[0,0] : 0.04f}*(n^2) + " + \
+            f"{solution.solution[1,0] : 0.04f}*(n*b) + " + \
+            f"{solution.solution[2,0] : 0.04f}*(b^2) + " + \
+            f"{solution.solution[3,0] : 0.04f}*n + " + \
+            f"{solution.solution[4,0] : 0.04f}*b")
 
-        solution = torch.linalg.lstsq(A, -B)
-        print(f"{solution.solution[0, 0] : 0.04f}*n + 1.0*b + {solution.solution[1,0] : 0.04f}*constant")
-        #print(solution)
-        # print(torch.matmul(A, solution.solution) + B)
-        # print(solution.residuals)
         print("Residuals: ")
         print(solution.residuals)
-        t1 = torch.cat([n, b, torch.ones_like(n)], dim=1)
-        tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b', 'constant'])
+        t1 = torch.cat([n, b], dim=1)
+        tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b'])
 
     writer.close()
         

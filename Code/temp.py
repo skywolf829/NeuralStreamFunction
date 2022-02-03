@@ -36,7 +36,7 @@ def vortex_z(x, y, z, x0, y0, z0, A=720):
     return num / denom
 
 
-def genereate_synthetic_vf1(resolution = 128):
+def generate_synthetic_vf1(resolution = 128):
 
     # [channels, u, v, w]
     a = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
@@ -75,7 +75,7 @@ def genereate_synthetic_vf1(resolution = 128):
     tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
         "synthetic_VF1.cdf", channel_names)
 
-def genereate_synthetic_vf2(resolution = 128, a=1):
+def generate_synthetic_vf2(resolution = 128, a=1):
 
     # [channels, u, v, w]
     vf = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
@@ -119,7 +119,7 @@ def genereate_synthetic_vf2(resolution = 128, a=1):
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
         "synthetic_VF3.cdf", channel_names)
 
-def genereate_synthetic_vf2_jacobian(resolution = 128, a=1):
+def generate_synthetic_vf2_jacobian(resolution = 128, a=1):
 
     # [channels, u, v, w]
     vf = np.zeros([9, resolution, resolution, resolution], dtype=np.float32)
@@ -170,7 +170,7 @@ def genereate_synthetic_vf2_jacobian(resolution = 128, a=1):
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
         "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
 
-def genereate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
+def generate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
 
     # [channels, u, v, w]
     jac = torch.zeros([resolution, resolution, resolution, 3, 3], 
@@ -257,6 +257,159 @@ def genereate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
 
     channel_names = ['u', 'v', 'w']
     tensor_to_cdf(vf_norm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF2_normal.cdf", channel_names=channel_names)
+    tensor_to_cdf(vf_binorm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF2_binormal.cdf", channel_names=channel_names)
+
+        
+    tensor_to_h5(vf_norm.unsqueeze(0).type(torch.float32), 
+        "synthetic_V2F_normal.h5")
+    tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
+        "synthetic_VF2_binormal.h5")
+
+def generate_synthetic_vf3(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1):
+    # [channels, u, v, w]
+    a = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -5 
+    end = 5
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):        
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)): 
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+                u = A*np.sin(z) + C*np.cos(y)
+                v = B*np.sin(x) + A*np.cos(z)
+                w = C*np.sin(y) + B*np.cos(x)
+                a[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
+                #print("%0.02f %0.02f %0.02f" % (x, y, z))
+                #print("%i %i %i" % (i, j, k))
+                k += 1
+            j += 1
+        i += 1
+    print(a.max())
+    print(a.min())
+    print(a.mean())
+    print(np.linalg.norm(a, axis=0).max())
+    a /= np.linalg.norm(a, axis=0).max()
+    h = h5py.File("synthetic_VF3.h5", 'w')
+    h['data'] = a
+    h.close()
+    channel_names = ['u', 'v', 'w']
+
+    tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
+        "synthetic_VF3.cdf", channel_names)
+
+def generate_synthetic_vf3_jacobian(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1):
+
+    # [channels, u, v, w]
+    vf = np.zeros([9, resolution, resolution, resolution], dtype=np.float32)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -5
+    end = 5
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+                dudx = 0
+                dudy = -C*np.sin(y)
+                dudz = A*np.cos(z)
+                dvdx = B*np.cos(x)
+                dvdy = 0
+                dvdz = -A*np.sin(z)
+                dwdx = -B*np.sin(x)
+                dwdy = C*np.cos(y)
+                dwdz = 0
+
+                vf[:,k,j,i] = np.array([dudx, dudy, dudz, 
+                    dvdx, dvdy, dvdz, dwdx, dwdy, dwdz], dtype=np.float32)
+                k += 1
+                print("%f %f %f" % (x, y, z))
+            j += 1
+        i += 1
+    
+    channel_names = ['dudx', 'dudy', 'dudz', 'dvdx', 'dvdy', 'dvdz', 'dwdx', 'dwdy', 'dwdz']
+    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
+        "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
+
+def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1, device="cpu"):
+
+    # [channels, u, v, w]
+    jac = torch.zeros([resolution, resolution, resolution, 3, 3], 
+    dtype=torch.float32, device=device)
+    vf = torch.zeros([resolution, resolution, resolution, 3, 1], 
+    dtype=torch.float32, device=device)
+
+    # max vf mag = 6.78233, divide all components by that
+    i = 0
+    start = -5
+    end = 5
+    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
+        j = 0
+        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+            k = 0
+            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
+                dudx = 0
+                dudy = -C*np.sin(y)
+                dudz = A*np.cos(z)
+                dvdx = B*np.cos(x)
+                dvdy = 0
+                dvdz = -A*np.sin(z)
+                dwdx = -B*np.sin(x)
+                dwdy = C*np.cos(y)
+                dwdz = 0
+
+                u = A*np.sin(z) + C*np.cos(y)
+                v = B*np.sin(x) + A*np.cos(z)
+                w = C*np.sin(y) + B*np.cos(x)
+
+                vf[k,j,i,:, 0] = torch.tensor([u, v, w], 
+                    dtype=torch.float32, device=device)
+
+                jac[k,j,i,:,:] = torch.tensor(
+                    [[dudx, dvdx, dwdx], 
+                    [dudy, dvdy, dwdy], 
+                    [dudz, dvdz, dwdz]], 
+                    dtype=torch.float32, device=device)
+                k += 1
+                print("%f %f %f" % (x, y, z))
+            j += 1
+        i += 1
+    vf_max_norm = vf.norm(dim=3).max()
+    vf /= vf_max_norm
+    
+    Jt = torch.bmm(jac.flatten(0,2) / vf_max_norm, 
+        vf.flatten(0,2))
+
+    print(Jt.shape)
+    vf_binorm = torch.cross(Jt, vf.flatten(0,2))
+    vf_norm = torch.cross(vf_binorm, vf.flatten(0,2))
+
+    print(vf_norm.shape)
+    print( vf_norm.norm(dim=1).unsqueeze(-1).shape)
+    print(vf.flatten(0,2).norm(dim=1).shape)
+    vf_norm = vf_norm / vf_norm.norm(dim=1).unsqueeze(-1)
+    vf_norm *= vf.flatten(0,2).norm(dim=1).unsqueeze(-1)
+    
+    vf_binorm = vf_binorm / vf_binorm.norm(dim=1).unsqueeze(-1)
+    vf_binorm *= vf.flatten(0,2).norm(dim=1).unsqueeze(-1)
+
+    vf_binorm = vf_binorm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
+    vf_norm = vf_norm.reshape([resolution, resolution, resolution, 3]).permute(3, 0, 1, 2)
+    
+    print(vf_norm.norm(dim=0).max())
+    print(vf_binorm.norm(dim=0).max())
+
+    vf_norm /= vf_norm.norm(dim=0).max()
+    vf_binorm /= vf_binorm.norm(dim=0).max()
+
+    channel_names = ['u', 'v', 'w']
+    tensor_to_cdf(vf_norm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_normal.cdf", channel_names=channel_names)
     tensor_to_cdf(vf_binorm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_binormal.cdf", channel_names=channel_names)
@@ -267,9 +420,8 @@ def genereate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
     tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_binormal.h5")
 
-
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
-    genereate_synthetic_vf2_binormal()
+    generate_synthetic_vf3_binormal()
     quit()

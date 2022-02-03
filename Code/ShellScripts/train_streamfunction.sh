@@ -14,9 +14,9 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF2.h5 \
+--signal_file_name synthetic_VF3_binormal.h5 \
 --n_layers 4 --nodes_per_layer 128 \
---save_name synth2 \
+--save_name synth3_binormal \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
