@@ -360,6 +360,29 @@ if __name__ == '__main__':
         tensor_to_cdf(dataset.data, 
             os.path.join(output_folder, opt['save_name'], "original.cdf"))
 
+    if(args['cdf_cross'] is not None):
+        grid = list(dataset.data.shape[2:])
+        with torch.no_grad():
+            reconstructed_volume = model.sample_grid(grid)
+        if(len(grid) == 3):
+            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
+        
+        cross_volume = torch.cross(reconstructed_volume[0], reconstructed_volume[1])
+
+        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            #range=dataset.max()-dataset.min()).item()
+        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        #s_ss_interp = 1.0
+        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+        #    (opt['save_name'], p_ss_interp, s_ss_interp))
+        create_folder(output_folder, opt['save_name'])
+        tensor_to_cdf(reconstructed_volume, 
+            os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
+        tensor_to_cdf(dataset.data, 
+            os.path.join(output_folder, opt['save_name'], "original.cdf"))
+
     if(args['uncertainty'] is not None):
         grid = list(dataset.data.shape[2:])
         model.train(True)
