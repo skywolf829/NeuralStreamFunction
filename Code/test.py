@@ -348,12 +348,12 @@ if __name__ == '__main__':
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
-        p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-            range=dataset.max()-dataset.min()).item()
+        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            #range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        s_ss_interp = 1.0
-        print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
-            (opt['save_name'], p_ss_interp, s_ss_interp))
+        #s_ss_interp = 1.0
+        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+        #    (opt['save_name'], p_ss_interp, s_ss_interp))
         create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume, 
             os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
