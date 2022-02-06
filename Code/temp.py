@@ -419,7 +419,6 @@ def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3)
     tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_binormal.h5")
 
-
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
