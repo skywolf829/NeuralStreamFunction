@@ -35,7 +35,6 @@ def vortex_z(x, y, z, x0, y0, z0, A=720):
     denom = (2*pi) * dist
     return num / denom
 
-
 def generate_synthetic_vf1(resolution = 128):
 
     # [channels, u, v, w]

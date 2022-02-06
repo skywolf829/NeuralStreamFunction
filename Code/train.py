@@ -58,7 +58,7 @@ def magangle_orthogonal_loss(x, y):
 def magangle_same_loss(x, y):
     mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
     angles = (1 - (F.cosine_similarity(x, y)**2)).mean()
-    return mags + angles
+    return 0.9*mags + 0.1*angles
 
 def train_loop(model, dataset, loss_func, opt):
     model.zero_grad()
@@ -72,6 +72,15 @@ def train_loop(model, dataset, loss_func, opt):
         y_estimated = torch.autograd.grad(y_estimated, x, 
                 grad_outputs=torch.ones_like(y_estimated),
                 create_graph=True)[0]
+    elif(opt['dual_streamfunction']):
+        y_estimated, x = model.forward_w_grad(x)
+        grads_f = torch.autograd.grad(y_estimated[:,0], x, 
+                grad_outputs=torch.ones_like(y_estimated[:,0]),
+                create_graph=True)[0]
+        grads_g = torch.autograd.grad(y_estimated[:,1], x, 
+                grad_outputs=torch.ones_like(y_estimated[:,1]),
+                create_graph=True)[0]
+        y_estimated = torch.cross(grads_f, grads_g, dim=1)
     else:
         y_estimated = model(x)
     loss = loss_func(y, y_estimated)
@@ -130,7 +139,7 @@ def train_implicit_model(rank, model, dataset, opt):
         )  
     start_t = time.time()
 
-    torch.manual_seed(0)
+    
     
     if(opt['train_distributed']):
         model = DDP(model, device_ids=[rank])
@@ -255,6 +264,7 @@ if __name__ == '__main__':
     parser.add_argument('--dropout_p',default=None,type=float)
     parser.add_argument('--interpolate',default=None,type=str2bool)
     parser.add_argument('--fit_gradient',default=None,type=str2bool)
+    parser.add_argument('--dual_streamfunction',default=None,type=str2bool)
     parser.add_argument('--signal_file_name',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
     parser.add_argument('--n_layers',default=None,type=int)
@@ -290,6 +300,7 @@ if __name__ == '__main__':
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")
 
+    torch.manual_seed(11235813)
 
     if(args['load_from'] is None):
         # Init models
