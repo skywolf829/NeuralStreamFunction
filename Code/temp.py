@@ -110,13 +110,13 @@ def generate_synthetic_vf2(resolution = 128, a=1):
     print(vf.max())
     print(vf.min())
     print(vf.mean())
-    h = h5py.File("synthetic_VF3.h5", 'w')
+    h = h5py.File("synthetic_VF2.h5", 'w')
     h['data'] = vf
     h.close()
     channel_names = ['u', 'v', 'w']
 
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "synthetic_VF3.cdf", channel_names)
+        "synthetic_VF2.cdf", channel_names)
 
 def generate_synthetic_vf2_jacobian(resolution = 128, a=1):
 
@@ -167,7 +167,7 @@ def generate_synthetic_vf2_jacobian(resolution = 128, a=1):
     #h.close()
     channel_names = ['dudx', 'dudy', 'dudz', 'dvdx', 'dvdy', 'dvdz', 'dwdx', 'dwdy', 'dwdz']
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
-        "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
+        "synthetic_VF2_jacobian.cdf", channel_names=channel_names)
 
 def generate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
 
@@ -418,6 +418,7 @@ def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3)
         "synthetic_VF3_normal.h5")
     tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF3_binormal.h5")
+
 
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
