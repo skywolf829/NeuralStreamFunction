@@ -1,9 +1,9 @@
 #!/bin/sh
 cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
---signal_file_name synthetic_VF2.h5 \
+--signal_file_name synthetic_VF1.h5 \
 --n_layers 4 --nodes_per_layer 128 \
---save_name synth2 \
+--save_name synth1 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --dual_streamfunction true \
