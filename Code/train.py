@@ -97,9 +97,9 @@ def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):
         print("Iteration %i/%i, loss: %0.06f" % \
                 (iteration, opt['iterations'], loss.item()))
         
-        if 'same' in opt['loss']:
+        if 'same' in opt['loss'] or "l1" in opt['loss']:
             p = PSNR(y, y_estimated, range=y.max()-y.min())
-        print(f"PSNR: {p : 0.02f}")
+            print(f"PSNR: {p : 0.02f}")
 
         writer.add_scalar('Loss', loss.item(), iteration)
         GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \

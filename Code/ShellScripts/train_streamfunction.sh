@@ -7,6 +7,6 @@ python3 -u Code/train.py --n_outputs 2 --n_dims 3 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --dual_streamfunction true \
---loss magangle_same --lr 5e-5 \
+--loss l1 --lr 5e-5 \
 --log_image false --log_gradient false \
 --device cuda:0 --data_device cuda:0 
