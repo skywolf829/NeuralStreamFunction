@@ -105,7 +105,6 @@ class Dataset(torch.utils.data.Dataset):
                 x = self.index_grid[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
-            
             y = F.grid_sample(self.data, 
                 x, mode='nearest', align_corners=False)
                 

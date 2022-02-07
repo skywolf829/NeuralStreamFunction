@@ -40,6 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('--implicit_jacobian',default=None,type=str2bool)
     parser.add_argument('--jacobian_discrete',default=None,type=str2bool)
     parser.add_argument('--cdf',default=None,type=str2bool)
+    parser.add_argument('--cdf_cross',default=None,type=str2bool)
     parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
     parser.add_argument('--seeding_curve',default=None,type=str2bool)
@@ -361,28 +362,30 @@ if __name__ == '__main__':
             os.path.join(output_folder, opt['save_name'], "original.cdf"))
 
     if(args['cdf_cross'] is not None):
-        grid = list(dataset.data.shape[2:])
-        with torch.no_grad():
-            reconstructed_volume = model.sample_grid(grid)
-        if(len(grid) == 3):
-            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
-        else:
-            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
-        
-        cross_volume = torch.cross(reconstructed_volume[0], reconstructed_volume[1])
+        x = make_coord_grid(dataset.data.shape[2:], 
+                    opt['data_device'], flatten=True).unsqueeze(0)
+        for _ in range(len(dataset.data.shape[2:])-1):
+            x = x.unsqueeze(-2)
+        y = F.grid_sample(dataset.data, 
+            x, mode='nearest', align_corners=False)
+        x = x.squeeze()
+        y = y.squeeze()
+        if(len(y.shape) == 1):
+            y = y.unsqueeze(0)        
+        y = y.permute(1,0)
+        reconstructed_volume = model.forward_w_grad(x)
+        y_estimated, x = model.forward_w_grad(x)
 
-        #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-            #range=dataset.max()-dataset.min()).item()
-        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
-        #s_ss_interp = 1.0
-        #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
-        #    (opt['save_name'], p_ss_interp, s_ss_interp))
-        create_folder(output_folder, opt['save_name'])
-        tensor_to_cdf(reconstructed_volume, 
-            os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
-        tensor_to_cdf(dataset.data, 
-            os.path.join(output_folder, opt['save_name'], "original.cdf"))
+        grads_f = torch.autograd.grad(y_estimated[:,0], x, 
+                grad_outputs=torch.ones_like(y_estimated[:,0]),
+                create_graph=True)[0]
+        grads_g = torch.autograd.grad(y_estimated[:,1], x, 
+                grad_outputs=torch.ones_like(y_estimated[:,1]),
+                create_graph=True)[0]
+        y_estimated = torch.cross(grads_f, grads_g, dim=1)
 
+        p = PSNR(y, y_estimated,
+            range=dataset.max()-dataset.min()).item()
     if(args['uncertainty'] is not None):
         grid = list(dataset.data.shape[2:])
         model.train(True)
