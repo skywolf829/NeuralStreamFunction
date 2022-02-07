@@ -378,10 +378,10 @@ if __name__ == '__main__':
 
         grads_f = torch.autograd.grad(y_estimated[:,0], x, 
                 grad_outputs=torch.ones_like(y_estimated[:,0]),
-                create_graph=True)[0]
+                create_graph=True)[0].detach()
         grads_g = torch.autograd.grad(y_estimated[:,1], x, 
                 grad_outputs=torch.ones_like(y_estimated[:,1]),
-                create_graph=True)[0]
+                create_graph=True)[0].detach()
         y_estimated = torch.cross(grads_f, grads_g, dim=1)
 
         p = PSNR(y, y_estimated,
