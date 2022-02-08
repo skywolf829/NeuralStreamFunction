@@ -113,6 +113,31 @@ class SineLayer(nn.Module):
         intermediate = self.omega_0 * self.linear(input)
         return torch.sin(intermediate), intermediate
 
+class LReLULayer(nn.Module):  
+    def __init__(self, in_features, out_features, bias=True,
+                 is_first=False):
+        super().__init__()
+        
+        self.in_features = in_features
+        self.linear = nn.Linear(in_features, out_features, 
+            bias=bias)
+        
+        self.init_weights()
+    
+    def init_weights(self):
+        with torch.no_grad():
+            self.linear.weight.xavier_uniform_(
+                gain=torch.nn.init.calculate_gain("leaky_relu", 0.2)
+            )
+
+    def forward(self, input):
+        return F.leaky_relu(self.linear(input), 0.2)
+    
+    def forward_with_intermediate(self, input): 
+        # For visualization of activation distributions
+        intermediate = self.linear(input)
+        return F.leaky_relu(intermediate, 0.2), intermediate
+
 class ImplicitModel(nn.Module):
     def __init__(self, opt):
         super().__init__()
@@ -125,14 +150,25 @@ class ImplicitModel(nn.Module):
         if(self.opt['dropout']):
             self.dropout = nn.Dropout(self.opt['dropout_p'])
 
-        self.net.append(SineLayer(opt['n_dims'], opt['nodes_per_layer'], 
-                                  is_first=True, omega_0=30))
+        if(self.opt['activation'] == "sine"):
+            self.net.append(SineLayer(opt['n_dims'], 
+                opt['nodes_per_layer'], 
+                is_first=True, omega_0=30))
+        elif(self.opt['activation'] == "lrelu"):
+            self.net.append(LReLULayer(opt['n_dims'], 
+                opt['nodes_per_layer'], 
+                is_first=True))
         if(self.opt['dropout']):
             self.net.append(self.dropout)
 
         for i in range(opt['n_layers']):
-            self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
+            if(self.opt['activation'] == "sine"):
+                self.net.append(SineLayer(opt['nodes_per_layer'], opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
+            elif(self.opt['activation'] == "lrelu"):
+                self.net.append(LReLULayer(opt['n_dims'], 
+                    opt['nodes_per_layer'], 
+                    is_first=False))
             if(self.opt['dropout'] and i < opt['n_layers'] - 1):
                 self.net.append(self.dropout)
 

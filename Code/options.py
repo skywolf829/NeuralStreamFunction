@@ -10,6 +10,8 @@ class Options():
         opt['activation_function']     = "sine"      
         opt['fit_gradient']            = False       
         opt['dual_streamfunction']     = False    
+        opt['helmholtz_hodge_decomposition'] = False
+        opt['streamfunction']          = False
         opt['periodic']                = False   
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
@@ -17,6 +19,7 @@ class Options():
         opt['dropout_p']               = 0.2
         opt['interpolate']             = False
         opt["signal_file_name"]        = "cat.h5"
+        opt["activation"]              = "sine"
         opt["save_name"]               = "cat"   
         opt["n_layers"]                = 4       
         opt["nodes_per_layer"]         = 128

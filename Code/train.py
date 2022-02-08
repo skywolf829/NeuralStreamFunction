@@ -43,7 +43,7 @@ def perpendicular_loss(x, y):
     return F.cosine_similarity(x, y).mean()
 
 def angle_same_loss(x, y):
-    angles = (1 - (F.cosine_similarity(x, y)**2)).mean()
+    angles = (1 - F.cosine_similarity(x, y)).mean()
     return angles
 
 def angle_orthogonal_loss(x, y):
@@ -56,8 +56,10 @@ def magangle_orthogonal_loss(x, y):
     return mags + angles
 
 def magangle_same_loss(x, y):
-    mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
-    angles = (1 - (F.cosine_similarity(x, y)**2)).mean()
+    x_norm = torch.norm(x,dim=1)
+    y_norm = torch.norm(y,dim=1)
+    mags = F.mse_loss(x_norm, y_norm)
+    angles = (1 - F.cosine_similarity(x, y)).mean()
     return 0.9*mags + 0.1*angles
 
 def train_loop(model, dataset, loss_func, opt):
@@ -81,6 +83,68 @@ def train_loop(model, dataset, loss_func, opt):
                 grad_outputs=torch.ones_like(y_estimated[:,1]),
                 create_graph=True)[0]
         y_estimated = torch.cross(grads_f, grads_g, dim=1)
+    elif(opt['streamfunction']):
+        vector_potential, x = model.forward_w_grad(x)
+        y_estimated = torch.zeros_like(x)
+        y_estimated[:,2] += torch.autograd.grad(vector_potential[:,0], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,0]),
+                create_graph=True)[0][:,1]
+        y_estimated[:,2] += torch.autograd.grad(vector_potential[:,1], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,1]),
+                create_graph=True)[0][:,0]
+        y_estimated[:,1] += torch.autograd.grad(vector_potential[:,2], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,2]),
+                create_graph=True)[0][:,0]
+        y_estimated[:,1] += torch.autograd.grad(vector_potential[:,0], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,0]),
+                create_graph=True)[0][:,2]
+        y_estimated[:,0] += torch.autograd.grad(vector_potential[:,1], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,1]),
+                create_graph=True)[0][:,2]
+        y_estimated[:,0] += torch.autograd.grad(vector_potential[:,2], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,2]),
+                create_graph=True)[0][:,1]
+
+    elif(opt['helmholtz_hodge_decomposition']):
+        y_estimated, x = model.forward_w_grad(x)
+        scalar_potential = y_estimated[:,0]
+        vector_potential = y_estimated[:,1:]
+
+        curl_free = torch.autograd.grad(scalar_potential, x, 
+                grad_outputs=torch.ones_like(scalar_potential),
+                create_graph=True)[0]
+        divergence_free = torch.zeros_like(curl_free)
+        divergence_free[:,2] += torch.autograd.grad(vector_potential[:,0], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,0]),
+                create_graph=True)[0][:,1]
+        divergence_free[:,2] += torch.autograd.grad(vector_potential[:,1], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,1]),
+                create_graph=True)[0][:,0]
+        divergence_free[:,1] += torch.autograd.grad(vector_potential[:,2], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,2]),
+                create_graph=True)[0][:,0]
+        divergence_free[:,1] += torch.autograd.grad(vector_potential[:,0], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,0]),
+                create_graph=True)[0][:,2]
+        divergence_free[:,0] += torch.autograd.grad(vector_potential[:,1], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,1]),
+                create_graph=True)[0][:,2]
+        divergence_free[:,0] += torch.autograd.grad(vector_potential[:,2], 
+                x, 
+                grad_outputs=torch.ones_like(vector_potential[:,2]),
+                create_graph=True)[0][:,1]
+        y_estimated = curl_free + divergence_free
     else:
         y_estimated = model(x)
     loss = loss_func(y, y_estimated)
@@ -269,7 +333,10 @@ if __name__ == '__main__':
     parser.add_argument('--interpolate',default=None,type=str2bool)
     parser.add_argument('--fit_gradient',default=None,type=str2bool)
     parser.add_argument('--dual_streamfunction',default=None,type=str2bool)
+    parser.add_argument('--helmholtz_hodge_decomposition',default=None,type=str2bool)
+    parser.add_argument('--streamfunction',default=None,type=str2bool)
     parser.add_argument('--signal_file_name',default=None,type=str)
+    parser.add_argument('--activation',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
     parser.add_argument('--n_layers',default=None,type=int)
     parser.add_argument('--nodes_per_layer',default=None,type=int)    

@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
     parser.add_argument('--seeding_curve',default=None,type=str2bool)
+    parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
     args = vars(parser.parse_args())
@@ -476,6 +477,12 @@ if __name__ == '__main__':
         print(solution.residuals)
         t1 = torch.cat([n, b], dim=1)
         tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b'])
+
+    if(args['decompose'] is not None):
+        scalar_potential = torch.zeros_like(dataset.data[2:]).unsqueeze(0)
+        print(scalar_potential.shape)
+
+        
 
     writer.close()
         
