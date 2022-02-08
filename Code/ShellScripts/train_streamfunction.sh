@@ -1,7 +1,7 @@
 #!/bin/sh
 cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
-python3 -u Code/train.py --n_outputs 1 --n_dims 3 \
+python3 -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name synthetic_VF3.h5 \
 --n_layers 4 --nodes_per_layer 128 \
 --save_name synth1 \
