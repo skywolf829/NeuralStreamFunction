@@ -6,7 +6,7 @@ python3 -u Code/train.py --n_outputs 2 --n_dims 3 \
 --save_name synth3_dual_streamfunction \
 --n_layers 4 --nodes_per_layer 256 \
 --points_per_iteration 100000 \
---iterations 10000 \
+--iterations 100000 \
 --dual_streamfunction true \
 --loss l1 --lr 5e-5 \
 --log_image false --log_gradient false \
