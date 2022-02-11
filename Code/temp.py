@@ -266,14 +266,14 @@ def generate_synthetic_vf2_binormal(resolution = 128, a=1, device="cpu"):
     tensor_to_h5(vf_binorm.unsqueeze(0).type(torch.float32), 
         "synthetic_VF2_binormal.h5")
 
-def generate_synthetic_vf3(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1):
+def generate_synthetic_vf3(resolution = 128, A=np.sqrt(3), B=np.sqrt(2), C=1):
     # [channels, u, v, w]
     a = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
 
     # max vf mag = 6.78233, divide all components by that
     i = 0
-    start = -5 
-    end = 5
+    start = 0
+    end = 2*np.pi
     for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):        
         j = 0
         for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)): 
@@ -301,15 +301,15 @@ def generate_synthetic_vf3(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1):
     tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
         "synthetic_VF3.cdf", channel_names)
 
-def generate_synthetic_vf3_jacobian(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1):
+def generate_synthetic_vf3_jacobian(resolution = 128, A=np.sqrt(3), B=np.sqrt(2), C=1):
 
     # [channels, u, v, w]
     vf = np.zeros([9, resolution, resolution, resolution], dtype=np.float32)
 
     # max vf mag = 6.78233, divide all components by that
     i = 0
-    start = -5
-    end = 5
+    start = 0
+    end = 2*np.pi
     for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
         j = 0
         for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
@@ -336,7 +336,7 @@ def generate_synthetic_vf3_jacobian(resolution = 128, A=np.sqrt(2), B=np.sqrt(3)
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32) / np.max(np.abs(vf)), 
         "synthetic_VF3_jacobian.cdf", channel_names=channel_names)
 
-def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3), C=1, device="cpu"):
+def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(3), B=np.sqrt(2), C=1, device="cpu"):
 
     # [channels, u, v, w]
     jac = torch.zeros([resolution, resolution, resolution, 3, 3], 
@@ -346,8 +346,8 @@ def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3)
 
     # max vf mag = 6.78233, divide all components by that
     i = 0
-    start = -5
-    end = 5
+    start = 0
+    end = 2*np.pi
     for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
         j = 0
         for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
@@ -422,5 +422,15 @@ def generate_synthetic_vf3_binormal(resolution = 128, A=np.sqrt(2), B=np.sqrt(3)
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
-    generate_synthetic_vf3_binormal()
+    #generate_synthetic_vf3()
+
+    d = Dataset("tornado3d.nc", 'r')
+    u = d['u'][:]
+    v = d['v'][:]
+    w = d['w'][:]
+
+    data = np.stack([u,v,w])
+    print(data.shape)
+    tensor_to_h5(torch.tensor(data).unsqueeze(0), "tornado3d.h5")
+
     quit()

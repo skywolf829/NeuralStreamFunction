@@ -39,9 +39,6 @@ def l1_occupancy(gt, y):
     vf_loss = l1(gt[~is_nan_mask, :].detach(), y[~is_nan_mask, 0:-1])
     return o_loss + vf_loss
 
-def perpendicular_loss(x, y):
-    return F.cosine_similarity(x, y).mean()
-
 def angle_same_loss(x, y):
     angles = (1 - F.cosine_similarity(x, y)).mean()
     return angles
@@ -53,7 +50,7 @@ def angle_orthogonal_loss(x, y):
 def magangle_orthogonal_loss(x, y):
     mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
     angles = (F.cosine_similarity(x, y)**2).mean()
-    return mags + angles
+    return 0.9*mags + 0.1*angles
 
 def magangle_same_loss(x, y):
     x_norm = torch.norm(x,dim=1)
