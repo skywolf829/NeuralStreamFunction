@@ -384,3 +384,115 @@ def solution_to_cdf(data, location, channel_names = ['data']):
             data.dtype, ('z', 'y', 'x'))
         d[channel_names[i]][:] = data[i]
     d.close()
+
+def normal(vf, b=None):
+    # vf: [1, 3, d, h, w]
+    # jac: [1, 3, 3, d, h, w]
+    
+    if b is None:
+        b = binormal(vf)
+    b = b.squeeze().flatten(1).permute(1,0).unsqueeze(2)
+    n = torch.cross(b,
+        vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
+    return n.squeeze().permute(1,0).reshape(
+        vf.shape[1], vf.shape[2],
+        vf.shape[3], vf.shape[4]).unsqueeze(0)
+
+    
+def binormal(vf, jac=None):
+    # vf: [1, 3, d, h, w]
+    # jac: [1, 3, 3, d, h, w]
+    if jac is None:
+        jac = jacobian(vf)
+
+    Jt = torch.bmm(jac[0].permute(2, 3, 4, 0, 1).flatten(0, 2), 
+        vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
+    b = torch.cross(Jt,
+        vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
+    
+    return b.squeeze().permute(1,0).reshape(
+        vf.shape[1], vf.shape[2],
+        vf.shape[3], vf.shape[4]).unsqueeze(0)
+
+def jacobian(data):
+    # Takes [b, c, d, h, w]
+    # returns [b]
+    jac = []
+    for i in range(data.shape[1]):
+        grads = []
+        for j in range(len(data.shape)-2):
+            g = spatial_gradient(data, i, j)
+            grads.append(g)
+        jac.append(torch.cat(grads, dim=1))
+    return torch.cat(jac, dim=0).unsqueeze(0)
+
+def spatial_gradient(data, channel, dimension):
+    # takes the gradient along dimension in channel
+    # expects data to be [b, c, d, h, w]
+
+    data_padded = F.pad(data[:,channel:channel+1], 
+        [1, 1, 1, 1, 1, 1],
+        mode = "replicate")
+    
+    data_padded[:,:,0] += data_padded[:,:,1] - \
+        data_padded[:,:,2]
+    data_padded[:,:,:,0] += data_padded[:,:,:,1] - \
+        data_padded[:,:,:,2]
+    data_padded[:,:,:,:,0] += data_padded[:,:,:,:,1] - \
+        data_padded[:,:,:,:,2]
+
+    data_padded[:,:,-1] += -data_padded[:,:,-2] + \
+        data_padded[:,:,-3]
+    data_padded[:,:,:,-1] += -data_padded[:,:,:,-2] + \
+        data_padded[:,:,:,-3]
+    data_padded[:,:,:,:,-1] += -data_padded[:,:,:,:,-2] + \
+        data_padded[:,:,:,:,-3]
+
+    if(dimension == 2):
+        weights = torch.tensor(
+            [[[0, 0, 0], 
+            [0, -0.5, 0],
+            [0, 0, 0]],
+
+            [[0, 0, 0], 
+            [0, 0, 0], 
+            [0, 0, 0]],
+
+            [[0, 0, 0], 
+            [0, 0.5, 0], 
+            [0, 0, 0]]]
+            ).to(data.device).type(torch.float32)
+    elif(dimension == 1):        
+        # the second (b) axis in [a, b, c]
+        weights = torch.tensor([
+            [[0, 0, 0], 
+            [0, 0, 0], 
+            [0, 0, 0]],
+
+            [[0, -0.5, 0], 
+            [0, 0, 0], 
+            [0, 0.5, 0]],
+
+            [[0, 0, 0], 
+            [0, 0, 0], 
+            [0, 0, 0]]]
+            ).to(data.device).type(torch.float32)
+    elif(dimension == 0):
+        # the third (c) axis in [a, b, c]
+        weights = torch.tensor([
+            [[0, 0, 0], 
+            [0, 0, 0], 
+            [0, 0, 0]],
+
+            [[0, 0, 0], 
+            [-0.5, 0, 0.5], 
+            [0, 0, 0]],
+
+            [[0, 0, 0], 
+            [0, 0,  0], 
+            [ 0, 0, 0]]]
+            ).to(data.device).type(torch.float32)
+    weights = weights.view(1, 1, 3, 3, 3)
+    output = F.conv3d(data_padded, weights)
+
+    return output

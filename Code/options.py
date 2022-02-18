@@ -8,6 +8,9 @@ class Options():
         opt["n_dims"]                  = 2             
         opt['n_outputs']               = 3
         opt['activation_function']     = "sine"      
+
+        opt['normal']               = False
+        opt['binormal']             = False
         opt['fit_gradient']            = False       
         opt['dual_streamfunction']     = False    
         opt['helmholtz_hodge_decomposition'] = False

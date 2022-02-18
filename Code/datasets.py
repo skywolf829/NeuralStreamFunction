@@ -1,7 +1,7 @@
 import os
 import torch
 import h5py
-from utility_functions import make_coord_grid
+from utility_functions import make_coord_grid, normal, binormal
 import torch.nn.functional as F
 import numpy as np
 
@@ -25,10 +25,13 @@ class Dataset(torch.utils.data.Dataset):
         print("Initializing dataset - reading %s" % folder_to_load)
         
         f = h5py.File(folder_to_load, 'r')
-        d = torch.tensor(np.array(f.get('data')))
+        d = torch.tensor(np.array(f.get('data'))).unsqueeze(0).to(self.opt['data_device'])
         f.close()
+        if(opt['normal']):
+            d = normal(d)
+        elif(opt['binormal']):
+            d = binormal(d)
         self.data = d
-        self.data = self.data.to(self.opt['data_device']).unsqueeze(0)
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))
         print("Min/max: %0.04f, %0.04f" % (self.min(), self.max()))

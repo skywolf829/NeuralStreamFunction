@@ -33,8 +33,8 @@ class TestFilter(VTKPythonAlgorithmBase):
         data = vtkDataSet.GetData(inInfo[0])
 
         pd = dsa.WrapDataObject(data).PointData
-        b = pd['b']
-        n = pd['n']
+        b = pd['a']
+        n = pd['b']
         sf = self.lerp*b+ (1-self.lerp)*n
         sf -= sf.min()
         sf /= sf.max()

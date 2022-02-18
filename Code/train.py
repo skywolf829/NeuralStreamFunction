@@ -43,13 +43,24 @@ def angle_same_loss(x, y):
     angles = (1 - F.cosine_similarity(x, y)).mean()
     return angles
 
+def angle_parallel_loss(x, y):
+    angles = (1 - F.cosine_similarity(x, y)**2).mean()
+    return angles
+
 def angle_orthogonal_loss(x, y):
     angles = (F.cosine_similarity(x, y)**2).mean()
     return angles
 
 def magangle_orthogonal_loss(x, y):
-    mags = F.l1_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
+    mags = F.mse_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
     angles = (F.cosine_similarity(x, y)**2).mean()
+    return 0.9*mags + 0.1*angles
+
+def magangle_parallel_loss(x, y):
+    x_norm = torch.norm(x,dim=1)
+    y_norm = torch.norm(y,dim=1)
+    mags = F.mse_loss(x_norm, y_norm)
+    angles = (1 - F.cosine_similarity(x, y)**2).mean()
     return 0.9*mags + 0.1*angles
 
 def magangle_same_loss(x, y):
@@ -107,7 +118,6 @@ def train_loop(model, dataset, loss_func, opt):
                 x, 
                 grad_outputs=torch.ones_like(vector_potential[:,2]),
                 create_graph=True)[0][:,1]
-
     elif(opt['helmholtz_hodge_decomposition']):
         y_estimated, x = model.forward_w_grad(x)
         scalar_potential = y_estimated[:,0]
@@ -144,7 +154,15 @@ def train_loop(model, dataset, loss_func, opt):
         y_estimated = curl_free + divergence_free
     else:
         y_estimated = model(x)
-    loss = loss_func(y, y_estimated)
+    
+    if(opt['dual_streamfunction']):
+        #loss = angle_orthogonal_loss(grads_f, y)
+        #loss += angle_orthogonal_loss(grads_g, y)
+        #loss = l1(y_estimated, y)
+        loss = angle_same_loss(y_estimated, y)
+        #loss += angle_orthogonal_loss(grads_f, grads_g)
+    else:
+        loss = loss_func(y, y_estimated)
     loss.backward()
 
     return x, y, y_estimated, loss
@@ -231,15 +249,19 @@ def train_implicit_model(rank, model, dataset, opt):
     if(opt['loss'] == 'l1'):
         loss_func = l1
     elif(opt['loss'] == "perpendicular"):
-        loss_func = perpendicular_loss
+        loss_func = angle_orthogonal_loss
     elif(opt['loss'] == 'l1occupancy'):
         loss_func = l1_occupancy
     elif(opt['loss'] == 'magangle_same'):
         loss_func = magangle_same_loss    
+    elif(opt['loss'] == 'magangle_parallel'):
+        loss_func = magangle_parallel_loss   
     elif(opt['loss'] == 'magangle_orthogonal'):
         loss_func = magangle_orthogonal_loss        
     elif(opt['loss'] == 'angle_same'):
-        loss_func = angle_same_loss
+        loss_func = angle_same_loss 
+    elif(opt['loss'] == 'angle_parallel'):
+        loss_func = angle_parallel_loss
     elif(opt['loss'] == 'angle_orthogonal'):
         loss_func = angle_orthogonal_loss
     elif(opt['loss'] == 'mse'):
@@ -328,6 +350,8 @@ if __name__ == '__main__':
     parser.add_argument('--dropout',default=None,type=str2bool)
     parser.add_argument('--dropout_p',default=None,type=float)
     parser.add_argument('--interpolate',default=None,type=str2bool)
+    parser.add_argument('--binormal',default=None,type=str2bool)
+    parser.add_argument('--normal',default=None,type=str2bool)
     parser.add_argument('--fit_gradient',default=None,type=str2bool)
     parser.add_argument('--dual_streamfunction',default=None,type=str2bool)
     parser.add_argument('--helmholtz_hodge_decomposition',default=None,type=str2bool)

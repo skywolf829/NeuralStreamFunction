@@ -92,7 +92,8 @@ class SineLayer(nn.Module):
         self.is_first = is_first
         
         self.in_features = in_features
-        self.linear = nn.Linear(in_features, out_features, bias=bias)
+        self.linear = nn.Linear(in_features, out_features, 
+            bias=bias)
         
         self.init_weights()
     
@@ -126,8 +127,9 @@ class LReLULayer(nn.Module):
     
     def init_weights(self):
         with torch.no_grad():
-            self.linear.weight.xavier_uniform_(
-                gain=torch.nn.init.calculate_gain("leaky_relu", 0.2)
+            self.linear.weight.uniform_(
+                -torch.nn.init.calculate_gain("leaky_relu", 0.2),
+                torch.nn.init.calculate_gain("leaky_relu", 0.2)
             )
 
     def forward(self, input):
