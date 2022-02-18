@@ -242,7 +242,7 @@ class ImplicitModel(nn.Module):
         print(output_shape)
         output = torch.empty(output_shape, 
             dtype=torch.float32, device=self.opt['device'], 
-            requires_grad=True)
+            requires_grad=False)
 
         for start in range(0, coord_grid.shape[0], max_points):
             vals = self.net(
