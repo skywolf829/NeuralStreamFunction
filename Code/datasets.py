@@ -31,7 +31,7 @@ class Dataset(torch.utils.data.Dataset):
             d = normal(d)
         elif(opt['binormal']):
             d = binormal(d)
-        d /= d.norm(dim=1)
+        d /= (d.norm(dim=1) + 1e-8)
         self.data = d
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))
