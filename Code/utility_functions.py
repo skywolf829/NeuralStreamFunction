@@ -394,9 +394,11 @@ def normal(vf, b=None):
     b = b.squeeze().flatten(1).permute(1,0).unsqueeze(2)
     n = torch.cross(b,
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
-    return n.squeeze().permute(1,0).reshape(
+    n = n.squeeze().permute(1,0).reshape(
         vf.shape[1], vf.shape[2],
         vf.shape[3], vf.shape[4]).unsqueeze(0)
+    n /= (n.norm(dim=1) + 1e-8)
+    return n
 
     
 def binormal(vf, jac=None):
@@ -409,10 +411,11 @@ def binormal(vf, jac=None):
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
     b = torch.cross(Jt,
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
-    
-    return b.squeeze().permute(1,0).reshape(
+    b = b.squeeze().permute(1,0).reshape(
         vf.shape[1], vf.shape[2],
         vf.shape[3], vf.shape[4]).unsqueeze(0)
+    b /= (b.norm(dim=1) + 1e-8)
+    return b
 
 def jacobian(data):
     # Takes [b, c, d, h, w]
@@ -424,7 +427,9 @@ def jacobian(data):
             g = spatial_gradient(data, i, j)
             grads.append(g)
         jac.append(torch.cat(grads, dim=1))
-    return torch.cat(jac, dim=0).unsqueeze(0)
+    jac = torch.cat(jac, dim=0).unsqueeze(0)
+    jac /= (data.norm(dim=1) + 1e-8)
+    return jac
 
 def spatial_gradient(data, channel, dimension):
     # takes the gradient along dimension in channel
