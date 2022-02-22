@@ -466,7 +466,7 @@ def isabel_from_bin():
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
-    generate_synthetic_vf2_binormal()
+    #generate_synthetic_vf2_binormal()
     #generate_synthetic_vf3()
     
     quit()

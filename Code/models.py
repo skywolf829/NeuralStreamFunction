@@ -218,20 +218,19 @@ class ImplicitModel(nn.Module):
 
     def sample_grid(self, grid):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
-        
+              
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-        vals = self.forward_maxpoints(coord_grid)
+        vals = self.forward_maxpoints(coord_grid, max_points = 100000)
         coord_grid_shape[-1] = self.opt['n_outputs']
         vals = vals.reshape(coord_grid_shape)
         return vals
 
-    def sample_grad_grid(self, grid=None, coord_grid=None,
-        input_dim = None, output_dim = None, max_points=1000):
-        if(coord_grid is None and grid is not None):
-            coord_grid = make_coord_grid(grid, self.opt['device'], False)
-        elif(coord_grid is None and grid is None):
-            coord_grid = make_coord_grid(self.dataset.data.shape[2:])
+    def sample_grad_grid(self, grid, 
+        output_dim = 0, max_points=1000):
+        
+        coord_grid = make_coord_grid(grid, 
+            self.opt['device'], False)
         
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)       
@@ -247,9 +246,10 @@ class ImplicitModel(nn.Module):
         for start in range(0, coord_grid.shape[0], max_points):
             vals = self.net(
                 coord_grid[start:min(start+max_points, coord_grid.shape[0])])
-            grad = torch.autograd.grad(vals, 
+            grad = torch.autograd.grad(vals[:,output_dim], 
                 coord_grid, 
-                grad_outputs=torch.ones_like(vals))[0][start:min(start+max_points, coord_grid.shape[0])]
+                grad_outputs=torch.ones_like(vals[:,output_dim])
+                )[0][start:min(start+max_points, coord_grid.shape[0])]
             
             output[start:min(start+max_points, coord_grid.shape[0])] = grad
 

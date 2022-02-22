@@ -44,8 +44,9 @@ def angle_same_loss(x, y):
     return angles
 
 def angle_parallel_loss(x, y):
-    angles = (1 - F.cosine_similarity(x, y)**2).mean()
-    return angles
+    angles = (1 - F.cosine_similarity(x, y)**2)
+    weighted_angles = angles * y.norm(dim=1).detach()
+    return weighted_angles.mean()
 
 def angle_orthogonal_loss(x, y):
     angles = (F.cosine_similarity(x, y)**2).mean()
@@ -90,7 +91,7 @@ def train_loop(model, dataset, loss_func, opt):
         grads_g = torch.autograd.grad(y_estimated[:,1], x, 
                 grad_outputs=torch.ones_like(y_estimated[:,1]),
                 create_graph=True)[0]
-        y_estimated = torch.cross(grads_f, grads_g, dim=1)
+        y_estimated = torch.cat([grads_f, grads_g], dim=1)
     elif(opt['streamfunction']):
         vector_potential, x = model.forward_w_grad(x)
         y_estimated = torch.zeros_like(x)
@@ -156,11 +157,8 @@ def train_loop(model, dataset, loss_func, opt):
         y_estimated = model(x)
     
     if(opt['dual_streamfunction']):
-        #loss = angle_orthogonal_loss(grads_f, y)
-        #loss += angle_orthogonal_loss(grads_g, y)
-        #loss = l1(y_estimated, y)
-        loss = angle_same_loss(y_estimated, y)
-        #loss += angle_orthogonal_loss(grads_f, grads_g)
+        loss = angle_parallel_loss(y[:,0:3], y_estimated[:,0:3]) + \
+            angle_parallel_loss(y[:,3:], y_estimated[:,3:])
     else:
         loss = loss_func(y, y_estimated)
     loss.backward()

@@ -19,6 +19,7 @@ class Dataset(torch.utils.data.Dataset):
         self.opt = opt
         self.min_ = None
         self.max_ = None
+        self.mean_ = None
 
         folder_to_load = os.path.join(data_folder, self.opt['signal_file_name'])
 
@@ -27,15 +28,30 @@ class Dataset(torch.utils.data.Dataset):
         f = h5py.File(folder_to_load, 'r')
         d = torch.tensor(np.array(f.get('data'))).unsqueeze(0).to(self.opt['data_device'])
         f.close()
+        d /= (d.norm(dim=1) + 1e-8)
         if(opt['normal']):
+            print("calculating normal direction")
             d = normal(d)
-        elif(opt['binormal']):
+        elif(opt['binormal']):           
+            print("calculating binormal direction")
             d = binormal(d)
+        elif(opt['dual_streamfunction']):
+            print("Calculating B and N")
+            self.b = binormal(d)
+            self.n = normal(d, b=self.b)
+            self.b /= (d.norm(dim=1) + 1e-8)
+            self.n /= (d.norm(dim=1) + 1e-8)
+
         d /= (d.norm(dim=1) + 1e-8)
         self.data = d
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))
-        print("Min/max: %0.04f, %0.04f" % (self.min(), self.max()))
+        print("Min/mean/max: %0.04f, %0.04f, %0.04f" % \
+            (self.min(), self.mean(), self.max()))
+        print("Min/mean/max mag: %0.04f, %0.04f, %0.04f" % \
+            (self.data.norm(dim=1).min(), 
+            self.data.norm(dim=1).mean(), 
+            self.data.norm(dim=1).max()))
 
     def min(self):
         if self.min_ is not None:
@@ -43,6 +59,12 @@ class Dataset(torch.utils.data.Dataset):
         else:
             self.min_ = self.data[~self.data.isnan()].min()
             return self.min_
+    def mean(self):
+        if self.mean_ is not None:
+            return self.mean_
+        else:
+            self.mean_ = self.data[~self.data.isnan()].mean()
+            return self.mean_
     def max(self):
         if self.max_ is not None:
             return self.max_
@@ -85,8 +107,16 @@ class Dataset(torch.utils.data.Dataset):
                 device=self.data.device) - 0.5) * 2
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
-            y = F.grid_sample(self.data, 
-                x, mode='bilinear', align_corners=False)
+            
+            if(self.opt['dual_streamfunction']):
+                y_n = F.grid_sample(self.n, 
+                    x, mode='bilinear', align_corners=False)
+                y_b = F.grid_sample(self.b, 
+                    x, mode='bilinear', align_corners=False)
+                y = torch.cat([y_n, y_b], dim=1)
+            else:
+                y = F.grid_sample(self.data, 
+                    x, mode='bilinear', align_corners=False)
         else:
             x_dims = []
             if(n_points >= self.total_points()):
@@ -109,8 +139,15 @@ class Dataset(torch.utils.data.Dataset):
                 x = self.index_grid[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
-            y = F.grid_sample(self.data, 
-                x, mode='nearest', align_corners=False)
+            if(self.opt['dual_streamfunction']):
+                y_n = F.grid_sample(self.n, 
+                    x, mode='nearest', align_corners=False)
+                y_b = F.grid_sample(self.b, 
+                    x, mode='nearest', align_corners=False)
+                y = torch.cat([y_n, y_b], dim=1)
+            else:
+                y = F.grid_sample(self.data, 
+                    x, mode='nearest', align_corners=False)
                 
         x = x.squeeze()
         y = y.squeeze()

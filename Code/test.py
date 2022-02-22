@@ -3,7 +3,7 @@ import argparse
 from datasets import Dataset
 import datetime
 from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
-    tensor_to_h5, create_folder
+    tensor_to_h5, create_folder, normal, binormal
 from models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
@@ -43,7 +43,10 @@ if __name__ == '__main__':
     parser.add_argument('--cdf_cross',default=None,type=str2bool)
     parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
+    parser.add_argument('--dual_streamfunction',default=None,type=str2bool)
     parser.add_argument('--seeding_curve',default=None,type=str2bool)
+    parser.add_argument('--cai_method',default=None,type=str2bool)
+
     parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
 
@@ -350,6 +353,8 @@ if __name__ == '__main__':
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
+
+        
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
             #range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
@@ -387,6 +392,7 @@ if __name__ == '__main__':
 
         p = PSNR(y, y_estimated,
             range=dataset.max()-dataset.min()).item()
+    
     if(args['uncertainty'] is not None):
         grid = list(dataset.data.shape[2:])
         model.train(True)
@@ -434,7 +440,31 @@ if __name__ == '__main__':
             reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
-        
+        folder_to_load = os.path.join(data_folder, 
+            opt['signal_file_name'])
+        f = h5py.File(folder_to_load, 'r')
+        d = torch.tensor(
+            np.array(f.get('data'))
+            ).unsqueeze(0).to(opt['data_device'])
+        f.close()
+        d /= (d.norm(dim=1) + 1e-8)
+
+        cos_dist = F.cosine_similarity(d,
+            reconstructed_volume, dim=1)
+        print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            cos_dist.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.title("Cosine similarity between network gradient and vector field")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.show()
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
             #range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
@@ -442,8 +472,57 @@ if __name__ == '__main__':
         create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume.detach(), 
             os.path.join(output_folder, opt['save_name'], "grad_reconstructed.cdf"))
-        #tensor_to_cdf(dataset.data.cpu().numpy(), 
-        #    os.path.join(output_folder, opt['save_name']+"_original.cdf"))
+     
+    if(args['dual_streamfunction'] is not None):
+        grid = list(dataset.data.shape[2:])
+        print("Sampling grid")
+        with torch.no_grad():
+            y_estimated = model.sample_grid(grid)
+
+        print("Sampling grad 1")
+        grads_f = model.sample_grad_grid(grid, output_dim=0)
+        print("Sampling grad 2")
+        grads_g = model.sample_grad_grid(grid, output_dim=1)
+        
+        grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
+        grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
+
+        cos_dist_n = F.cosine_similarity(dataset.n,
+            grads_f, dim=1)
+        cos_dist_b = F.cosine_similarity(dataset.b,
+            grads_g, dim=1)
+
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            cos_dist_n.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.title("Cosine similarity f gradient and N")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.show()
+
+        counts, bins = np.histogram(
+            cos_dist_b.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.title("Cosine similarity g gradient and B")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.show()
+        
+        y_estimated = y_estimated.permute(3, 0, 1, 2).unsqueeze(0)
+        tensor_to_cdf(y_estimated.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "dual_streamfunction.nc"))
+     
 
     if(args['seeding_curve'] is not None):
         n = np.array(netCDF4.Dataset(os.path.join(output_folder, 
@@ -482,7 +561,42 @@ if __name__ == '__main__':
         scalar_potential = torch.zeros_like(dataset.data[2:]).unsqueeze(0)
         print(scalar_potential.shape)
 
-        
+    if(args['cai_method'] is not None):
+        v = dataset.data
+        b = binormal(v, normalize=False)
+        n = normal(v, b=b, normalize=False)
+        print(f"{b.min()}, {b.mean()}, {b.max()}")
+        print(f"{n.min()}, {n.mean()}, {n.max()}")
+        c = torch.zeros([1, 1, v.shape[2], v.shape[3], v.shape[4]],
+            device=v.device, dtype=v.dtype)
+
+        v_norm = v.norm(dim=1).unsqueeze(1)
+        n_norm = n.norm(dim=1).unsqueeze(1)
+
+        def PP(i, j, k):
+            if(i == 0 and j == 0 and k == 0):
+                return (0, 0, 0)
+            elif(i == 0, j == 0):
+                return (0, 0, k-1)
+            elif(i == 0):
+                return (0, j-1, k)
+            else:
+                return (i-1, j, k)
+        deltap = 1/v.shape[2]
+        for k in range(v.shape[2]):
+            for j in range(v.shape[3]):
+                for i in range(v.shape[4]):
+                    print(f"{k},{j},{i}")
+                    pp_i, pp_j, pp_k = PP(i, j, k)
+                    v_spot = v[:,:,pp_k,pp_j,pp_i]
+                    n_spot = n[:,:,pp_k,pp_j,pp_i]
+                    fprimepp = v_spot.norm(dim=1)
+                    fprimeprimepp = n_spot.norm(dim=1)
+                    fp = c[:,:,pp_k, pp_j, pp_i] + \
+                        (deltap * fprimepp) + \
+                            (0.5*(deltap**2) * fprimeprimepp)
+                    c[:,:,k,j,i] = fp
+        tensor_to_cdf(c, "cai_test.nc")
 
     writer.close()
         

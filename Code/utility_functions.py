@@ -385,7 +385,7 @@ def solution_to_cdf(data, location, channel_names = ['data']):
         d[channel_names[i]][:] = data[i]
     d.close()
 
-def normal(vf, b=None):
+def normal(vf, b=None, normalize=True):
     # vf: [1, 3, d, h, w]
     # jac: [1, 3, 3, d, h, w]
     
@@ -397,15 +397,16 @@ def normal(vf, b=None):
     n = n.squeeze().permute(1,0).reshape(
         vf.shape[1], vf.shape[2],
         vf.shape[3], vf.shape[4]).unsqueeze(0)
-    n /= (n.norm(dim=1) + 1e-8)
+    if(normalize):
+        n /= (n.norm(dim=1) + 1e-8)
     return n
 
     
-def binormal(vf, jac=None):
+def binormal(vf, jac=None, normalize=True):
     # vf: [1, 3, d, h, w]
     # jac: [1, 3, 3, d, h, w]
     if jac is None:
-        jac = jacobian(vf)
+        jac = jacobian(vf, normalize=normalize)
 
     Jt = torch.bmm(jac[0].permute(2, 3, 4, 0, 1).flatten(0, 2), 
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
@@ -414,10 +415,11 @@ def binormal(vf, jac=None):
     b = b.squeeze().permute(1,0).reshape(
         vf.shape[1], vf.shape[2],
         vf.shape[3], vf.shape[4]).unsqueeze(0)
-    b /= (b.norm(dim=1) + 1e-8)
+    if(normalize):
+        b /= (b.norm(dim=1) + 1e-8)
     return b
 
-def jacobian(data):
+def jacobian(data, normalize=True):
     # Takes [b, c, d, h, w]
     # returns [b]
     jac = []
@@ -428,7 +430,8 @@ def jacobian(data):
             grads.append(g)
         jac.append(torch.cat(grads, dim=1))
     jac = torch.cat(jac, dim=0).unsqueeze(0)
-    jac /= (data.norm(dim=1) + 1e-8)
+    if(normalize):
+        jac /= (data.norm(dim=1) + 1e-8)
     return jac
 
 def spatial_gradient(data, channel, dimension):
