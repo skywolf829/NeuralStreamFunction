@@ -157,8 +157,8 @@ def train_loop(model, dataset, loss_func, opt):
         y_estimated = model(x)
     
     if(opt['dual_streamfunction']):
-        loss = angle_parallel_loss(y[:,0:3], y_estimated[:,0:3]) + \
-            angle_parallel_loss(y[:,3:], y_estimated[:,3:])
+        loss = loss_func(y[:,0:3], y_estimated[:,0:3]) + \
+            loss_func(y[:,3:], y_estimated[:,3:])
     else:
         loss = loss_func(y, y_estimated)
     loss.backward()
