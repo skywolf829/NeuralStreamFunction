@@ -3,7 +3,7 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name isabel_dualstreamfunction \
+--save_name test \
 --normal false \
 --n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 100000 \
