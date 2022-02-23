@@ -7,6 +7,8 @@ from math import pi, sin, atan, cos, tan
 import skimage
 from torch import tensor
 from utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
+import h5py
+
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -468,5 +470,4 @@ if __name__ == '__main__':
     #genereate_synthetic_vf1()
     #generate_synthetic_vf2_binormal()
     #generate_synthetic_vf3()
-    
     quit()
