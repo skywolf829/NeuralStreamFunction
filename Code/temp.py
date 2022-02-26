@@ -466,15 +466,15 @@ def isabel_from_bin():
     tensor_to_cdf(uvw, "isabel.nc")
 
 def plume_data_reading():
-    u = np.fromfile('F:/Visualization Data/Plume/15plume3d421.ru',
+    u = np.fromfile('F:/Visualization Data/Plume/15plume3d435.ru',
                     dtype=np.float32)
-    v = np.fromfile('F:/Visualization Data/Plume/15plume3d421.rv',
+    v = np.fromfile('F:/Visualization Data/Plume/15plume3d435.rv',
                     dtype=np.float32)
-    w = np.fromfile('F:/Visualization Data/Plume/15plume3d421.rw',
+    w = np.fromfile('F:/Visualization Data/Plume/15plume3d435.rw',
                     dtype=np.float32)
-    u = torch.tensor(u).reshape(2048, 504, 504)
-    v = torch.tensor(v).reshape(2048, 504, 504)
-    w = torch.tensor(w).reshape(2048, 504, 504)
+    u = torch.tensor(u).reshape(1024, 252, 252)
+    v = torch.tensor(v).reshape(1024, 252, 252)
+    w = torch.tensor(w).reshape(1024, 252, 252)
     uvw = torch.stack([u, v, w]).unsqueeze(0)
     tensor_to_h5(uvw, "plume.h5")
     
@@ -495,5 +495,5 @@ if __name__ == '__main__':
     #genereate_synthetic_vf1()
     #generate_synthetic_vf2_binormal()
     #generate_synthetic_vf3()
-    nek_data_reading()
+    plume_data_reading()
     quit()
