@@ -28,10 +28,14 @@ class Dataset(torch.utils.data.Dataset):
         f = h5py.File(folder_to_load, 'r')
         d = torch.tensor(np.array(f.get('data'))).unsqueeze(0).to(self.opt['data_device'])
         f.close()
-        d /= (d.norm(dim=1) + 1e-8)
+        if(opt['norm_per_voxel']):
+            d /= (d.norm(dim=1) + 1e-8)
+        elif(opt['norm']):
+            d /= (d.norm(dim=1).max() + 1e-8)
+            
         if(opt['normal']):
             print("calculating normal direction")
-            d = normal(d)
+            d = normal(d, normalize=opt['norm'])
         elif(opt['binormal']):           
             print("calculating binormal direction")
             d = binormal(d)
@@ -39,10 +43,13 @@ class Dataset(torch.utils.data.Dataset):
             print("Calculating B and N")
             self.b = binormal(d)
             self.n = normal(d, b=self.b)
-            self.b /= (d.norm(dim=1) + 1e-8)
-            self.n /= (d.norm(dim=1) + 1e-8)
+            if(opt['norm_per_voxel']):
+                self.b /= (self.b.norm(dim=1) + 1e-8)
+                self.n /= (self.n.norm(dim=1) + 1e-8)
 
-        d /= (d.norm(dim=1) + 1e-8)
+        if(opt['norm_per_voxel']):
+            d /= (d.norm(dim=1) + 1e-8)
+            
         self.data = d
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
         print("Data size: " + str(self.data.shape))

@@ -465,9 +465,35 @@ def isabel_from_bin():
     tensor_to_h5(uvw, "isabel.h5")
     tensor_to_cdf(uvw, "isabel.nc")
 
+def plume_data_reading():
+    u = np.fromfile('F:/Visualization Data/Plume/15plume3d421.ru',
+                    dtype=np.float32)
+    v = np.fromfile('F:/Visualization Data/Plume/15plume3d421.rv',
+                    dtype=np.float32)
+    w = np.fromfile('F:/Visualization Data/Plume/15plume3d421.rw',
+                    dtype=np.float32)
+    u = torch.tensor(u).reshape(2048, 504, 504)
+    v = torch.tensor(v).reshape(2048, 504, 504)
+    w = torch.tensor(w).reshape(2048, 504, 504)
+    uvw = torch.stack([u, v, w]).unsqueeze(0)
+    tensor_to_h5(uvw, "plume.h5")
+    
+def nek_data_reading():
+    uvw = np.fromfile('F:/Visualization Data/nek/nek.vec',
+                    dtype='<f')
+    print(uvw[0:3].astype(int))
+    print(uvw[-3:].astype(int))
+    uvw = uvw[:-3]
+    uvw = torch.tensor(uvw).reshape(512, 512, 512, 3)
+    
+    uvw = uvw.permute(3, 0, 1, 2).unsqueeze(0)
+    print(uvw.shape)
+    tensor_to_cdf(uvw, "nek500.cdf")
+
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
     #generate_synthetic_vf2_binormal()
     #generate_synthetic_vf3()
+    nek_data_reading()
     quit()

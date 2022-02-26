@@ -21,6 +21,8 @@ class Options():
         opt['dropout']                 = False
         opt['dropout_p']               = 0.2
         opt['interpolate']             = False
+        opt['norm']                  = False
+        opt['norm_per_voxel']             = False
         opt["signal_file_name"]        = "cat.h5"
         opt["activation"]              = "sine"
         opt["save_name"]               = "cat"   

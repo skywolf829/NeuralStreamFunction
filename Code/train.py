@@ -40,36 +40,47 @@ def l1_occupancy(gt, y):
     return o_loss + vf_loss
 
 def angle_same_loss(x, y):
-    angles = (1 - F.cosine_similarity(x, y)).mean()
-    return angles
+    angles = (1 - F.cosine_similarity(x, y))
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
+    return weighted_angles.mean()
 
 def angle_parallel_loss(x, y):
     angles = (1 - F.cosine_similarity(x, y)**2)
-    weighted_angles = angles * y.norm(dim=1).detach()
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
     return weighted_angles.mean()
 
 def angle_orthogonal_loss(x, y):
-    angles = (F.cosine_similarity(x, y)**2).mean()
-    return angles
+    angles = (F.cosine_similarity(x, y)**2)
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
+    return weighted_angles.mean()
 
 def magangle_orthogonal_loss(x, y):
     mags = F.mse_loss(torch.norm(x,dim=1), torch.norm(y,dim=1))
-    angles = (F.cosine_similarity(x, y)**2).mean()
-    return 0.9*mags + 0.1*angles
+    angles = (F.cosine_similarity(x, y)**2)
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
+    return 0.9*mags + 0.1*weighted_angles.mean()
 
 def magangle_parallel_loss(x, y):
     x_norm = torch.norm(x,dim=1)
     y_norm = torch.norm(y,dim=1)
     mags = F.mse_loss(x_norm, y_norm)
-    angles = (1 - F.cosine_similarity(x, y)**2).mean()
-    return 0.9*mags + 0.1*angles
+    angles = (1 - F.cosine_similarity(x, y)**2)
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
+    return 0.9*mags + 0.1*weighted_angles.mean()
 
 def magangle_same_loss(x, y):
     x_norm = torch.norm(x,dim=1)
     y_norm = torch.norm(y,dim=1)
     mags = F.mse_loss(x_norm, y_norm)
-    angles = (1 - F.cosine_similarity(x, y)).mean()
-    return 0.9*mags + 0.1*angles
+    angles = (1 - F.cosine_similarity(x, y))
+    mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
+    weighted_angles = angles * mask
+    return 0.9*mags + 0.1*weighted_angles.mean()
 
 def train_loop(model, dataset, loss_func, opt):
     model.zero_grad()
@@ -174,7 +185,7 @@ def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):
         print("Iteration %i/%i, loss: %0.06f" % \
                 (iteration, opt['iterations'], loss.item()))
         
-        if 'same' in opt['loss'] or "l1" in opt['loss']:
+        if 'same' in opt['loss'] or "l1" in opt['loss'] or 'mse' in opt['loss']:
             p = PSNR(y, y_estimated, range=y.max()-y.min())
             print(f"PSNR: {p : 0.02f}")
 
@@ -357,6 +368,8 @@ if __name__ == '__main__':
     parser.add_argument('--signal_file_name',default=None,type=str)
     parser.add_argument('--activation',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
+    parser.add_argument('--norm_per_voxel',default=None,type=str2bool)
+    parser.add_argument('--norm',default=None,type=str2bool)    
     parser.add_argument('--n_layers',default=None,type=int)
     parser.add_argument('--nodes_per_layer',default=None,type=int)    
     parser.add_argument('--loss',default=None,type=str)

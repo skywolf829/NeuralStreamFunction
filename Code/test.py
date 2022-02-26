@@ -353,8 +353,6 @@ if __name__ == '__main__':
         else:
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
-
-        
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
             #range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
@@ -447,11 +445,16 @@ if __name__ == '__main__':
             np.array(f.get('data'))
             ).unsqueeze(0).to(opt['data_device'])
         f.close()
-        d /= (d.norm(dim=1) + 1e-8)
+        if(opt['norm']):
+            d /= (d.norm(dim=1) + 1e-8)
+        elif(opt['norm_per_voxel']):
+            d /= (d.norm(dim=1).max() + 1e-8)
 
         cos_dist = F.cosine_similarity(d,
             reconstructed_volume, dim=1)
         print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
+        print(f"Avg/std err - {(cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
+
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
         counts, bins = np.histogram(
@@ -471,7 +474,9 @@ if __name__ == '__main__':
         #print("Reconstructed PSNR/SSIM: %0.03f/%0.05f" % (p_ss_interp, s_ss_interp))
         create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume.detach(), 
-            os.path.join(output_folder, opt['save_name'], "grad_reconstructed.cdf"))
+           os.path.join(output_folder, opt['save_name'], "grad_reconstructed.nc"))
+        tensor_to_cdf(cos_dist.detach().unsqueeze(0), 
+            os.path.join(output_folder, opt['save_name'], "cos_dist.nc"))
      
     if(args['dual_streamfunction'] is not None):
         grid = list(dataset.data.shape[2:])
@@ -519,11 +524,11 @@ if __name__ == '__main__':
         plt.show()
         
         y_estimated = y_estimated.permute(3, 0, 1, 2).unsqueeze(0)
+        create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(y_estimated.detach(), 
             os.path.join(output_folder, opt['save_name'], 
             "dual_streamfunction.nc"))
      
-
     if(args['seeding_curve'] is not None):
         n = np.array(netCDF4.Dataset(os.path.join(output_folder, 
             "synth1_normal", "reconstructed.cdf"), 'r')['a'])
