@@ -2,8 +2,8 @@
 cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_orthogonal_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3_orthogonal_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -17,8 +17,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:0 --data_device cuda:0 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_parallel_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_parallel_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -32,8 +32,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:1 --data_device cuda:1 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_same_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_same_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -47,8 +47,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:2 --data_device cuda:2 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_eq_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_eq_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -62,8 +62,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:3 --data_device cuda:3 &
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_parallel_dsf_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_parallel_dsf_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -77,8 +77,8 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --device cuda:4 --data_device cuda:4 &
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_same_dsf_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_same_dsf_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -92,8 +92,8 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --device cuda:5 --data_device cuda:5 &
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
---signal_file_name tornado3d.h5 \
---save_name tornado_eq_dsf_lft \
+--signal_file_name synthetic_VF3.h5 \
+--save_name synthetic3.h5_eq_dsf_lft \
 --n_layers 6 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
 --iterations 10000 \
