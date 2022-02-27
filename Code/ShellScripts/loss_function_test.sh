@@ -112,7 +112,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --n_layers 6 --nodes_per_layer 256 \
 --points_per_iteration 200000 \
 --iterations 10000 \
---fit_gradient false \
+--fit_gradient true \
 --dual_streamfunction false \
 --normal true \
 --norm false \
