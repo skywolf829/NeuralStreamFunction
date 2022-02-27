@@ -64,19 +64,19 @@ class Dataset(torch.utils.data.Dataset):
         if self.min_ is not None:
             return self.min_
         else:
-            self.min_ = self.data[~self.data.isnan()].min()
+            self.min_ = self.data.min()
             return self.min_
     def mean(self):
         if self.mean_ is not None:
             return self.mean_
         else:
-            self.mean_ = self.data[~self.data.isnan()].mean()
+            self.mean_ = self.data.mean()
             return self.mean_
     def max(self):
         if self.max_ is not None:
             return self.max_
         else:
-            self.max_ = self.data[~self.data.isnan()].max()
+            self.max_ = self.data.max()
             return self.max_
 
     def get_2D_slice(self):

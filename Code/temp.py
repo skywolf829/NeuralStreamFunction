@@ -74,7 +74,7 @@ def generate_synthetic_vf1(resolution = 128):
     channel_names = ['u', 'v', 'w']
 
     tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
-        "synthetic_VF1.cdf", channel_names)
+        "synthetic_VF1.cdf", channel_names) 
 
 def generate_synthetic_vf2(resolution = 128, a=1):
 
