@@ -107,7 +107,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:6 --data_device cuda:6 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name tornado.h5 \
+--signal_file_name tornado3d.h5 \
 --save_name network_size_study_tornado_xl \
 --n_layers 8 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
