@@ -94,8 +94,8 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name plume.h5 \
 --save_name plume_parallel_xl \
---n_layers 10 --nodes_per_layer 1024 \
---points_per_iteration 200000 \
+--n_layers 8 --nodes_per_layer 1024 \
+--points_per_iteration 100000 \
 --iterations 10000 \
 --fit_gradient false \
 --dual_streamfunction true \
@@ -109,8 +109,8 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name plume.h5 \
 --save_name plume_same_xl \
---n_layers 10 --nodes_per_layer 1024 \
---points_per_iteration 200000 \
+--n_layers 8 --nodes_per_layer 1024 \
+--points_per_iteration 100000 \
 --iterations 10000 \
 --fit_gradient false \
 --dual_streamfunction true \

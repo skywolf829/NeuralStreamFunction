@@ -94,7 +94,7 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name tornado_same_xl \
---n_layers 10 --nodes_per_layer 1024 \
+--n_layers 8 --nodes_per_layer 1024 \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --fit_gradient false \
@@ -109,7 +109,7 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name tornado_parallel_xl \
---n_layers 10 --nodes_per_layer 1024 \
+--n_layers 8 --nodes_per_layer 1024 \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --fit_gradient false \
