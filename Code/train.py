@@ -353,6 +353,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_dims',default=None,type=int)
     parser.add_argument('--n_outputs',default=None,type=int)
     parser.add_argument('--activation_function',default=None,type=str)
+    parser.add_argument('--residual',default=None,type=str2bool)
     parser.add_argument('--periodic',default=None,type=str2bool)
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)

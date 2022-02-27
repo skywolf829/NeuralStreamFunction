@@ -8,6 +8,7 @@ class Options():
         opt["n_dims"]                  = 2             
         opt['n_outputs']               = 3
         opt['activation_function']     = "sine"      
+        opt['residual']     = False     
 
         opt['normal']               = False
         opt['binormal']             = False
