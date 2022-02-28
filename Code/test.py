@@ -479,6 +479,40 @@ if __name__ == '__main__':
         tensor_to_cdf(cos_dist.detach().unsqueeze(0), 
             os.path.join(output_folder, opt['save_name'], "cos_dist.nc"))
      
+    if(args['explicit_recon'] is not None):
+        grid = list(dataset.data.shape[2:])
+        
+        print("Sampling grad 1")
+        grads_f = model.sample_grad_grid(grid, output_dim=0)
+        print("Sampling grad 2")
+        grads_g = model.sample_grad_grid(grid, output_dim=1)
+        
+        grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
+        grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
+        
+        recon = torch.cross(grads_f, grads_g, 1)
+        err = F.cosine_similarity(recon, dataset.data)
+        
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            err.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts)
+        plt.title("Cos. sim. between V and network cross product")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.show()
+        
+        create_folder(output_folder, opt['save_name'])
+        tensor_to_cdf(recon.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "dual_streamfunction.nc"))
+
+     
     if(args['dual_streamfunction'] is not None):
         grid = list(dataset.data.shape[2:])
         print("Sampling grid")
