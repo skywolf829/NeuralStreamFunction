@@ -3,8 +3,9 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name network_size_study_isabel_sm \
---n_layers 4 --nodes_per_layer 128 \
+--save_name network_size_study_isabel_sm_residual \
+--n_layers 2 --nodes_per_layer 128 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -18,8 +19,9 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
---save_name network_size_study_tornado_sm \
---n_layers 4 --nodes_per_layer 128 \
+--save_name network_size_study_tornado_sm_residual \
+--n_layers 2 --nodes_per_layer 128 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -33,8 +35,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name network_size_study_isabel_md \
---n_layers 6 --nodes_per_layer 256 \
+--save_name network_size_study_isabel_md_residual \
+--n_layers 3 --nodes_per_layer 256 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -48,8 +51,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
---save_name network_size_study_tornado_md \
---n_layers 6 --nodes_per_layer 256 \
+--save_name network_size_study_tornado_md_residual \
+--n_layers 3 --nodes_per_layer 256 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -63,8 +67,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name network_size_study_isabel_lg \
---n_layers 6 --nodes_per_layer 512 \
+--save_name network_size_study_isabel_lg_residual \
+--n_layers 3 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -78,8 +83,9 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
---save_name network_size_study_tornado_lg \
---n_layers 6 --nodes_per_layer 512 \
+--save_name network_size_study_tornado_lg_residual \
+--n_layers 3 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -93,8 +99,9 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name network_size_study_isabel_xl \
---n_layers 8 --nodes_per_layer 512 \
+--save_name network_size_study_isabel_xl_residual \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -108,9 +115,10 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
---save_name network_size_study_tornado_xl \
---n_layers 8 --nodes_per_layer 512 \
+--save_name network_size_study_tornado_xl_residual \
+--n_layers 4 --nodes_per_layer 512 \
 --points_per_iteration 200000 \
+--residual true \
 --iterations 10000 \
 --fit_gradient true \
 --dual_streamfunction false \
