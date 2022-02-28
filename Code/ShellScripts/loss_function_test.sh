@@ -4,7 +4,7 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name synthetic_VF1.h5 \
 --save_name loss_function_test_synthetic1_orthogonal \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -19,7 +19,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name synthetic_VF1.h5 \
 --save_name loss_function_test_synthetic1_parallel \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -34,7 +34,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name synthetic_VF1.h5 \
 --save_name loss_function_test_synthetic1_same \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -49,7 +49,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name synthetic_VF1.h5 \
 --save_name loss_function_test_synthetic1_eq \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -64,7 +64,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name loss_function_test_tornado_orthogonal \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -79,7 +79,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name loss_function_test_tornado_parallel \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -94,7 +94,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name loss_function_test_tornado_same \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
@@ -109,7 +109,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
 --save_name loss_function_test_tornado_eq \
---n_layers 6 --nodes_per_layer 256 \
+--n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
 --fit_gradient true \
