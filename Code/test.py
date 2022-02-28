@@ -463,10 +463,11 @@ if __name__ == '__main__':
             range=(-1.0, 1.0))
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
-        plt.hist(bins[:-1], bins, weights=counts)
-        plt.title("Cosine similarity between network gradient and vector field")
+        plt.hist(bins[:-1], bins, weights=counts, label=f"Avg error:  {(cos_dist).abs().mean().item() : 0.04f}")
+        #plt.title("Cosine similarity between network gradient and vector field")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
+        plt.legend()
         plt.show()
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
             #range=dataset.max()-dataset.min()).item()
