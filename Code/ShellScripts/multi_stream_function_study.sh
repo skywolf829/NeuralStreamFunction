@@ -33,7 +33,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --log_image false --log_gradient false \
 --device cuda:1 --data_device cuda:1 &
 
-python -u Code/train.py --n_outputs 1 --n_dims 3 \
+python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name synthetic_VF3.h5 \
 --save_name multi_streamfunction_study_synthetic3_dsf_parallel \
 --n_layers 6 --nodes_per_layer 256 \
@@ -81,7 +81,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --log_image false --log_gradient false \
 --device cuda:4 --data_device cuda:4 &
 
-python -u Code/train.py --n_outputs 1 --n_dims 3 \
+python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name synthetic_VF3.h5 \
 --save_name multi_streamfunction_study_synthetic3_dsf_same \
 --n_layers 6 --nodes_per_layer 256 \
@@ -129,7 +129,7 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --log_image false --log_gradient false \
 --device cuda:7 --data_device cuda:7 
 
-python -u Code/train.py --n_outputs 1 --n_dims 3 \
+python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name synthetic_VF3.h5 \
 --save_name multi_streamfunction_study_synthetic3_dsf_eq \
 --n_layers 6 --nodes_per_layer 256 \
