@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--dual_streamfunction',default=None,type=str2bool)
     parser.add_argument('--seeding_curve',default=None,type=str2bool)
     parser.add_argument('--cai_method',default=None,type=str2bool)
+    parser.add_argument('--explicit_recon',default=None,type=str2bool)
 
     parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
@@ -490,7 +491,7 @@ if __name__ == '__main__':
         grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
         
-        recon = torch.cross(grads_f, grads_g, 1)
+        recon = torch.cross(grads_f, grads_g, dim=1)
         err = F.cosine_similarity(recon, dataset.data)
         
         import matplotlib.pyplot as plt

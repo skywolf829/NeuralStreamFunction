@@ -412,6 +412,8 @@ def binormal(vf, jac=None, normalize=True):
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
     b = torch.cross(Jt,
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
+    #b = torch.cross(vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2),
+    #    Jt)
     b = b.squeeze().permute(1,0).reshape(
         vf.shape[1], vf.shape[2],
         vf.shape[3], vf.shape[4]).unsqueeze(0)

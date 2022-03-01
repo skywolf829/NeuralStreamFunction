@@ -78,47 +78,37 @@ def generate_synthetic_vf1(resolution = 128):
 
 def generate_synthetic_vf2(resolution = 128, a=1):
 
-    # [channels, u, v, w]
-    vf = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
-
-    # max vf mag = 6.78233, divide all components by that
-    i = 0
-    start = -2.5
+    start = - 2.5
     end = 2.5
-    center = (end+start)/2
-    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):  
-        j = 0
-        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
-            k = 0
-            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
-                y1 = y-center
-                x1 = x-center
-                r = (x1**2 + y1**2)**0.5
-                theta = atan(y1/x1)
-                u = (a**2)/(r**2) * cos(2*theta) - 1
-                v = (a**2)/(r**2) * sin(2*theta)
-                w = 0
+    
+    zyx = torch.meshgrid(
+        [torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution)],
+        indexing='ij'
+    )
+    zyx = torch.stack(zyx).type(torch.float32)
+    x = zyx[2].clone()
+    y = zyx[1].clone()
+    z = zyx[0].clone()
+    r = (x**2 + y**2)**0.5
+    theta = torch.atan(y/x)
 
-                vf[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
-                k += 1
-                print("%f %f %f" % (x, y, z))
-            j += 1
-        i += 1
-    print(vf.max())
-    print(vf.min())
-    print(vf.mean())
-    print(np.linalg.norm(vf, axis=0).max())
-    vf /= np.linalg.norm(vf, axis=0).max()
-    print(vf.max())
-    print(vf.min())
-    print(vf.mean())
-    h = h5py.File("synthetic_VF2.h5", 'w')
-    h['data'] = vf
-    h.close()
-    channel_names = ['u', 'v', 'w']
-
+    u = torch.cos(2*theta) / r**2 - 1
+    v = torch.sin(2*theta) / r**2
+    w = torch.zeros_like(u)
+    
+    vf = torch.stack([u, v, w], dim=0)
+    b = binormal(vf.unsqueeze(0))
+    n = normal(vf.unsqueeze(0))
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "synthetic_VF2.cdf", channel_names)
+        "synthetic_VF2.nc")
+    tensor_to_cdf(n, 
+        "synthetic_VF2_N.nc")
+    tensor_to_cdf(b, 
+        "synthetic_VF2_B.nc")
+    tensor_to_h5(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
+        "synthetic_VF2.h5")
 
 def generate_synthetic_vf2_jacobian(resolution = 128, a=1):
 
@@ -493,7 +483,7 @@ def nek_data_reading():
 if __name__ == '__main__':
     # u*iHat + v*jHat + w*kHat
     #genereate_synthetic_vf1()
-    #generate_synthetic_vf2_binormal()
+    generate_synthetic_vf2_binormal(resolution=128)
     #generate_synthetic_vf3()
-    plume_data_reading()
+    #plume_data_reading()
     quit()
