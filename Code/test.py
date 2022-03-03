@@ -451,7 +451,7 @@ if __name__ == '__main__':
         elif(opt['norm_per_voxel']):
             d /= (d.norm(dim=1).max() + 1e-8)
 
-        cos_dist = F.cosine_similarity(d,
+        cos_dist = F.cosine_similarity(dataset.data,#,
             reconstructed_volume, dim=1)
         print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
         print(f"Avg/std err - {(cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
@@ -464,7 +464,8 @@ if __name__ == '__main__':
             range=(-1.0, 1.0))
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
-        plt.hist(bins[:-1], bins, weights=counts, label=f"Avg error:  {(cos_dist).abs().mean().item() : 0.04f}")
+        plt.hist(bins[:-1], bins, weights=counts, 
+                label=f"Avg error:  {(1-cos_dist.abs()).abs().mean().item() : 0.04f}")
         #plt.title("Cosine similarity between network gradient and vector field")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
@@ -484,9 +485,11 @@ if __name__ == '__main__':
         grid = list(dataset.data.shape[2:])
         
         print("Sampling grad 1")
-        grads_f = model.sample_grad_grid(grid, output_dim=0)
+        grads_f = model.sample_grad_grid(grid, output_dim=0, 
+                                        max_points=10000)
         print("Sampling grad 2")
-        grads_g = model.sample_grad_grid(grid, output_dim=1)
+        grads_g = model.sample_grad_grid(grid, output_dim=1, 
+                                        max_points=10000)
         
         grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
@@ -509,9 +512,14 @@ if __name__ == '__main__':
         plt.show()
         
         create_folder(output_folder, opt['save_name'])
+        #recon /= recon.norm(dim=1)
         tensor_to_cdf(recon.detach(), 
             os.path.join(output_folder, opt['save_name'], 
             "dual_streamfunction.nc"))
+        
+        tensor_to_cdf(err.unsqueeze(0).detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "cross_product_cos_dist.nc"))
 
      
     if(args['dual_streamfunction'] is not None):
@@ -521,9 +529,11 @@ if __name__ == '__main__':
             y_estimated = model.sample_grid(grid)
 
         print("Sampling grad 1")
-        grads_f = model.sample_grad_grid(grid, output_dim=0)
+        grads_f = model.sample_grad_grid(grid, output_dim=0,
+                                        max_points=10000)
         print("Sampling grad 2")
-        grads_g = model.sample_grad_grid(grid, output_dim=1)
+        grads_g = model.sample_grad_grid(grid, output_dim=1,
+                                        max_points=10000)
         
         grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
@@ -541,10 +551,12 @@ if __name__ == '__main__':
             range=(-1.0, 1.0))
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
-        plt.hist(bins[:-1], bins, weights=counts)
+        plt.hist(bins[:-1], bins, weights=counts,                 
+            label=f"Avg error:  {(1-cos_dist_n.abs()).abs().mean().item() : 0.04f}")
         plt.title("Cosine similarity f gradient and N")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
+        plt.legend()
         plt.show()
 
         counts, bins = np.histogram(
@@ -553,10 +565,12 @@ if __name__ == '__main__':
             range=(-1.0, 1.0))
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
-        plt.hist(bins[:-1], bins, weights=counts)
+        plt.hist(bins[:-1], bins, weights=counts,
+            label=f"Avg error:  {(1-cos_dist_b.abs()).abs().mean().item() : 0.04f}")
         plt.title("Cosine similarity g gradient and B")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
+        plt.legend()
         plt.show()
         
         y_estimated = y_estimated.permute(3, 0, 1, 2).unsqueeze(0)

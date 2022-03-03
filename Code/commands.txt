@@ -1,0 +1,22 @@
+For building FTK with netCDF, CUDA, MPI, and VTK.
+
+First, add the following to CMakeLists.txt:
+set (ENV{CUDACXX} nvcc)
+set (CMAKE_CUDA_COMPILER /usr/local/cuda-11.4/bin/nvcc)
+
+Then, run this command:
+sudo CC=mpicc CXX=mpicxx cmake .. -DFTK_USE_NETCDF=ON -DFTK_USE_VTK=ON -DVTK_DIR="~/vtk/bin" -DFTK_USE_MPI=ON -DFTK_USE_CUDA=ON
+
+followed by these:
+sudo make
+sudo make install
+
+=======================================================================
+
+To run FTK for streamline extraction:
+sudo ./ftk -f cl --input ~/synthetic1_set3.vti --var a,b --output set3.vtp
+
+Can add:
+-a cuda
+at the end for cuda acceleration, which is currently buggy.
+
