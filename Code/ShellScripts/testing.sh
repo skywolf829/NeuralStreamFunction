@@ -4,7 +4,7 @@ cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name plume.h5 \
 --save_name explicit_vector_reconstruction_plume_test \
---n_layers 8 --nodes_per_layer 300 \
+--n_layers 8 --nodes_per_layer 384 \
 --residual true \
 --points_per_iteration 200000 \
 --iterations 10000 \

@@ -451,7 +451,7 @@ if __name__ == '__main__':
         elif(opt['norm_per_voxel']):
             d /= (d.norm(dim=1).max() + 1e-8)
 
-        cos_dist = F.cosine_similarity(dataset.data,#,
+        cos_dist = F.cosine_similarity(d,#dataset.data,#,
             reconstructed_volume, dim=1)
         print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
         print(f"Avg/std err - {(cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
@@ -465,7 +465,7 @@ if __name__ == '__main__':
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
         plt.hist(bins[:-1], bins, weights=counts, 
-                label=f"Avg error:  {(1-cos_dist.abs()).abs().mean().item() : 0.04f}")
+                label=f"Avg error:  {(cos_dist.abs()).abs().mean().item() : 0.04f}")
         #plt.title("Cosine similarity between network gradient and vector field")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
@@ -505,10 +505,12 @@ if __name__ == '__main__':
             range=(-1.0, 1.0))
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
-        plt.hist(bins[:-1], bins, weights=counts)
+        plt.hist(bins[:-1], bins, weights=counts,
+                label=f"Avg error:  {(1-err.abs()).abs().mean().item() : 0.04f}")
         plt.title("Cos. sim. between V and network cross product")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
+        plt.legend()
         plt.show()
         
         create_folder(output_folder, opt['save_name'])
@@ -521,7 +523,6 @@ if __name__ == '__main__':
             os.path.join(output_folder, opt['save_name'], 
             "cross_product_cos_dist.nc"))
 
-     
     if(args['dual_streamfunction'] is not None):
         grid = list(dataset.data.shape[2:])
         print("Sampling grid")
