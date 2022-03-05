@@ -5,31 +5,29 @@ class Options():
     def get_default():
         opt = {}
         # Input info
-        opt["n_dims"]                  = 2             
-        opt['n_outputs']               = 3
+        opt["n_dims"]                  = 3             
+        opt['n_outputs']               = 2
         opt['activation_function']     = "sine"      
         opt['residual']     = False     
 
         opt['normal']               = False
         opt['binormal']             = False
         opt['fit_gradient']            = False       
-        opt['dual_streamfunction']     = False    
-        opt['helmholtz_hodge_decomposition'] = False
-        opt['streamfunction']          = False
-        opt['periodic']                = False   
+        opt['gradient_direction']      = "V"   # V, B, or N
+        opt['dual_stream_function']     = "any" #None, any, or N
+        
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6
         opt['dropout']                 = False
         opt['dropout_p']               = 0.2
+        
         opt['interpolate']             = False
-        opt['norm']                  = False
-        opt['norm_per_voxel']             = False
-        opt["signal_file_name"]        = "cat.h5"
+        opt["signal_file_name"]        = "tornado3d.h5"
         opt["activation"]              = "sine"
-        opt["save_name"]               = "cat"   
+        opt["save_name"]               = "tornado"   
         opt["n_layers"]                = 4       
         opt["nodes_per_layer"]         = 128
-        opt["loss"]                    = 'l1'
+        opt["loss"]                    = 'angle_same'
 
         opt["train_distributed"]       = False
         opt["device"]                  = "cuda:0"
@@ -39,7 +37,7 @@ class Options():
         opt["ranking"]                 = 0
 
         opt["iterations"]              = 10000
-        opt["points_per_iteration"]    = 262144     
+        opt["points_per_iteration"]    = 200000   
         opt["lr"]                      = 5e-5 
         opt["beta_1"]                  = 0.9
         opt["beta_2"]                  = 0.999
@@ -49,10 +47,6 @@ class Options():
         opt['log_every']               = 5
         opt['log_image']               = False
         opt['log_gradient']            = False
-
-        opt['pruning']                 = None
-        opt['quantization']            = None
-        opt['coding']                  = None
 
         return opt
 

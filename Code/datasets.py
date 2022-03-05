@@ -20,7 +20,8 @@ class Dataset(torch.utils.data.Dataset):
         self.min_ = None
         self.max_ = None
         self.mean_ = None
-
+        self.full_coord_grid = None
+        
         folder_to_load = os.path.join(data_folder, self.opt['signal_file_name'])
 
         print("Initializing dataset - reading %s" % folder_to_load)
@@ -28,27 +29,17 @@ class Dataset(torch.utils.data.Dataset):
         f = h5py.File(folder_to_load, 'r')
         d = torch.tensor(np.array(f.get('data'))).unsqueeze(0).to(self.opt['data_device'])
         f.close()
-        if(opt['norm_per_voxel']):
-            d /= (d.norm(dim=1) + 1e-8)
-        elif(opt['norm']):
-            d /= (d.norm(dim=1).max() + 1e-8)
+        d /= (d.norm(dim=1).max() + 1e-8)
             
-        if(opt['normal']):
+        if(opt['fit_gradient'] and opt['gradient_direction'] == "N"):
             print("calculating normal direction")
-            d = normal(d, normalize=opt['norm'])
-        elif(opt['binormal']):           
+            d = normal(d, normalize=True)
+        elif(opt['fit_gradient'] and opt['gradient_direction'] == "B"):           
             print("calculating binormal direction")
-            d = binormal(d)
-        elif(opt['dual_streamfunction']):
-            print("Calculating B and N")
-            self.b = binormal(d)
-            self.n = normal(d, b=self.b)
-            if(opt['norm_per_voxel']):
-                self.b /= (self.b.norm(dim=1) + 1e-8)
-                self.n /= (self.n.norm(dim=1) + 1e-8)
-
-        if(opt['norm_per_voxel']):
-            d /= (d.norm(dim=1) + 1e-8)
+            d = binormal(d, normalize=True)
+        elif(opt['dual_stream_function'] == "N"):
+            print("Calculating N")
+            self.n = normal(d, normalize=True)
             
         self.data = d
         self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
@@ -108,6 +99,12 @@ class Dataset(torch.utils.data.Dataset):
             t *= self.data.shape[i]
         return t
 
+    def get_full_coord_grid(self):
+        if self.full_coord_grid is None:
+            self.full_coord_grid = make_coord_grid(self.data.shape[2:], 
+                    self.opt['data_device'], flatten=True).unsqueeze(0)
+        return self.full_coord_grid
+
     def get_random_points(self, n_points):        
         if(self.opt['interpolate']):
             x = (torch.rand([1, n_points, len(self.data.shape[2:])], 
@@ -115,43 +112,31 @@ class Dataset(torch.utils.data.Dataset):
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             
-            if(self.opt['dual_streamfunction']):
+            if(self.opt['dual_stream_function'] == "N"):
                 y_n = F.grid_sample(self.n, 
                     x, mode='bilinear', align_corners=False)
-                y_b = F.grid_sample(self.b, 
+                y = F.grid_sample(self.data, 
                     x, mode='bilinear', align_corners=False)
-                y = torch.cat([y_n, y_b], dim=1)
             else:
                 y = F.grid_sample(self.data, 
                     x, mode='bilinear', align_corners=False)
         else:
             x_dims = []
             if(n_points >= self.total_points()):
-                x = make_coord_grid(self.data.shape[2:], 
-                    self.opt['data_device'], flatten=True).unsqueeze(0)
+                x = self.get_full_coord_grid()
             else:
                 samples = torch.rand(self.index_grid.shape[0], 
                     dtype=torch.float32, device=self.opt['data_device']) < \
                         n_points / self.index_grid.shape[0]
-                
-                #for i in range(len(self.data.shape[2:])):
-                #    x = torch.randint(0, self.data.shape[2+i], [1, n_points, 1], 
-                #        dtype=torch.float32, device=self.opt['data_device'])
-                #    x += 0.5
-                #    x *= (2 / (self.data.shape[2+i]+1))
-                #    x -= 1
-                #    x_dims.append(x)
-                #x = torch.cat(x_dims, -1)
-
                 x = self.index_grid[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
-            if(self.opt['dual_streamfunction']):
+            if(self.opt['dual_stream_function'] == "N"):
                 y_n = F.grid_sample(self.n, 
                     x, mode='nearest', align_corners=False)
-                y_b = F.grid_sample(self.b, 
+                y = F.grid_sample(self.data, 
                     x, mode='nearest', align_corners=False)
-                y = torch.cat([y_n, y_b], dim=1)
+                y = torch.cat([y, y_n], dim=1)
             else:
                 y = F.grid_sample(self.data, 
                     x, mode='nearest', align_corners=False)

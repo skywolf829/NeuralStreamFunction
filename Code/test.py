@@ -39,7 +39,8 @@ if __name__ == '__main__':
     parser.add_argument('--normal_field',default=None,type=str2bool)
     parser.add_argument('--implicit_jacobian',default=None,type=str2bool)
     parser.add_argument('--jacobian_discrete',default=None,type=str2bool)
-    parser.add_argument('--cdf',default=None,type=str2bool)
+    parser.add_argument('--cdf',default=None,type=str2bool)    
+    parser.add_argument('--uvw',default=None,type=str2bool)
     parser.add_argument('--cdf_cross',default=None,type=str2bool)
     parser.add_argument('--uncertainty',default=None,type=str2bool)
     parser.add_argument('--grad_cdf',default=None,type=str2bool)
@@ -345,6 +346,47 @@ if __name__ == '__main__':
         tensor_to_h5(reconstructed_nvf, 
             os.path.join(output_folder, opt['save_name']+"_normal_discrete.h5"))
 
+    if(args['uvw'] is not None):
+        grid = list(dataset.data.shape[2:])
+        with torch.no_grad():
+            reconstructed_volume = model.sample_grid(grid)
+        if(len(grid) == 3):
+            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
+        
+        p_ss_interp = PSNR(dataset.data, reconstructed_volume,
+            range=dataset.max()-dataset.min()).item()
+        #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
+        #s_ss_interp = 1.0
+        print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \
+            (opt['save_name'], p_ss_interp, 0))
+        cos_dist = F.cosine_similarity(dataset.data,#,
+            reconstructed_volume, dim=1)
+        print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
+        print(f"Avg/std err - {(cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
+
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            cos_dist.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts, 
+                label=f"Avg error:  {(1-cos_dist.abs()).abs().mean().item() : 0.04f}")
+        #plt.title("Cosine similarity between network gradient and vector field")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.legend()
+        plt.show()
+        create_folder(output_folder, opt['save_name'])
+        tensor_to_cdf(reconstructed_volume, 
+            os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
+        tensor_to_cdf(dataset.data, 
+            os.path.join(output_folder, opt['save_name'], "original.cdf"))
+
     if(args['cdf'] is not None):
         grid = list(dataset.data.shape[2:])
         with torch.no_grad():
@@ -355,7 +397,7 @@ if __name__ == '__main__':
             reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
         #p_ss_interp = PSNR(dataset.data, reconstructed_volume,
-            #range=dataset.max()-dataset.min()).item()
+        #    range=dataset.max()-dataset.min()).item()
         #s_ss_interp = ssim3D(dataset.data, reconstructed_volume).item()
         #s_ss_interp = 1.0
         #print("Model %s - Reconstructed PSNR/SSIM: %0.03f/%0.05f" % \

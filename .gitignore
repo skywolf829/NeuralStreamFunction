@@ -136,6 +136,7 @@ dmypy.json
 /tensorboard
 /Data
 /ForVisualization
+/App
 *.npy
 *.png
 *.gif

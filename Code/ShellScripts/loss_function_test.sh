@@ -2,8 +2,8 @@
 cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF1.h5 \
---save_name loss_function_test_synthetic1_orthogonal \
+--signal_file_name vortices.h5 \
+--save_name loss_function_test_vortices_orthogonal \
 --n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -17,8 +17,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:0 --data_device cuda:0 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF1.h5 \
---save_name loss_function_test_synthetic1_parallel \
+--signal_file_name vortices.h5 \
+--save_name loss_function_test_vortices_parallel \
 --n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -32,8 +32,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:1 --data_device cuda:1 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF1.h5 \
---save_name loss_function_test_synthetic1_same \
+--signal_file_name vortices.h5 \
+--save_name loss_function_test_vortices_same \
 --n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \
@@ -47,8 +47,8 @@ python -u Code/train.py --n_outputs 1 --n_dims 3 \
 --device cuda:2 --data_device cuda:2 &
 
 python -u Code/train.py --n_outputs 1 --n_dims 3 \
---signal_file_name synthetic_VF1.h5 \
---save_name loss_function_test_synthetic1_eq \
+--signal_file_name vortices.h5 \
+--save_name loss_function_test_vortices_eq \
 --n_layers 4 --nodes_per_layer 128 \
 --points_per_iteration 200000 \
 --iterations 10000 \

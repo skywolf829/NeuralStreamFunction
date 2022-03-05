@@ -3,14 +3,11 @@ import torch
 import torch.autograd
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.nn.utils.spectral_norm as spectral_norm
 import os
 from math import pi
 from options import *
 from utility_functions import create_folder, make_coord_grid
-import math
 import numpy as np
-from nn_compression.coding import Codec
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -22,23 +19,10 @@ def save_model(model,opt):
     folder = create_folder(save_folder, opt["save_name"])
     path_to_save = os.path.join(save_folder, folder)
     
-    if(opt['coding'] != None):
-        print("coding")
-        rule = []
-        for name, param in model.named_parameters():
-            print(name, param.size())
-            rule.append((name, 'huffman', 0, 0, 4))
-        codec = Codec(rule=rule)
-        encoded_model = codec.encode(model=model)
-        torch.save({'state_dict': encoded_model.state_dict()}, 
-            os.path.join(path_to_save, "model.ckpt.tar"),
-            pickle_protocol=4
-        )
-    else:
-        torch.save({'state_dict': model.state_dict()}, 
-            os.path.join(path_to_save, "model.ckpt.tar"),
-            pickle_protocol=4
-        )
+    torch.save({'state_dict': model.state_dict()}, 
+        os.path.join(path_to_save, "model.ckpt.tar"),
+        pickle_protocol=4
+    )
     save_options(opt, path_to_save)
 
 def load_model(opt, device):
@@ -48,10 +32,7 @@ def load_model(opt, device):
     ckpt = torch.load(os.path.join(path_to_load, 'model.ckpt.tar'), 
         map_location = device)
     
-    if(opt['coding'] != None):
-        model = Codec.decode(model=model, state_dict=ckpt['state_dict'])
-    else:
-        model.load_state_dict(ckpt['state_dict'])
+    model.load_state_dict(ckpt['state_dict'])
 
     return model
 
@@ -175,9 +156,6 @@ class ImplicitModel(nn.Module):
         
         self.opt = opt
         self.net = []
-        if(self.opt['periodic']):
-            self.factor =  torch.tensor(pi/2, dtype=torch.float32, 
-                device = opt['device'])
         if(self.opt['dropout']):
             self.dropout = nn.Dropout(self.opt['dropout_p'])
 
@@ -222,27 +200,17 @@ class ImplicitModel(nn.Module):
         
         self.net = nn.Sequential(*self.net)
     
-    def forward(self, coords):        
-        if(self.opt['periodic']):
-            #coords = torch.sin(coords * self.factor)
-            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
+    def forward(self, coords):     
         output = self.net(coords)
         return output
 
     def forward_w_grad(self, coords):
         coords = coords.requires_grad_(True)
-        if(self.opt['periodic']):
-            #coords = torch.sin(coords * self.factor)
-            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
         output = self.net(coords)
         return output, coords
     
     def forward_maxpoints(self, coords, max_points=100000):
         print(coords.shape)
-        if(self.opt['periodic']):
-            #coords = torch.sin(coords * self.factor)
-            coords = -self.factor * torch.arctan(1/(torch.tan(self.factor * (coords-1))))
-            
         output_shape = list(coords.shape)
         output_shape[-1] = self.opt['n_outputs']
         output = torch.empty(output_shape, 
