@@ -137,6 +137,7 @@ dmypy.json
 /Data
 /ForVisualization
 /App
+/Code/ShellScripts/Old
 *.npy
 *.png
 *.gif
