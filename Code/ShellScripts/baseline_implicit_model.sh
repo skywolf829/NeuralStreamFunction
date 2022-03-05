@@ -1,5 +1,5 @@
 #!/bin/sh
-cd /lus/theta-fs0/projects/DL4VIS/ImplicitStreamFunction
+cd /lus/theta-fs0/projects/DL4VIS/NeuralDualStreamFunction
 
 python -u Code/train.py --n_outputs 3 --n_dims 3 \
 --signal_file_name vortices.h5 \
