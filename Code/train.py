@@ -48,7 +48,7 @@ def train_loop(model, dataset, opt):
         if(opt['dual_stream_function'] == "N"):
             y_estimated = torch.cross(grads_f.detach(), grads_g, dim=1)
             loss = loss_func(grads_f, y[:,3:]) + \
-                loss_func(y[:,0:3], y_estimated)
+                angle_same_loss(y[:,0:3], y_estimated)
         else:
             y_estimated = torch.cross(grads_f, grads_g, dim=1)
             loss = loss_func(y, y_estimated)
@@ -101,29 +101,6 @@ def log_grad_image(model, grid_to_sample, writer, iteration):
                 "_wrt_inpudim_"+str(input_index), 
                 grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
                 iteration, dataformats='HWC')
-
-def get_loss_func(opt):
-    if(opt['loss'] == 'l1'):
-        loss_func = l1
-    elif(opt['loss'] == "perpendicular"):
-        loss_func = angle_orthogonal_loss
-    elif(opt['loss'] == 'l1occupancy'):
-        loss_func = l1_occupancy
-    elif(opt['loss'] == 'magangle_same'):
-        loss_func = magangle_same_loss    
-    elif(opt['loss'] == 'magangle_parallel'):
-        loss_func = magangle_parallel_loss   
-    elif(opt['loss'] == 'magangle_orthogonal'):
-        loss_func = magangle_orthogonal_loss        
-    elif(opt['loss'] == 'angle_same'):
-        loss_func = angle_same_loss 
-    elif(opt['loss'] == 'angle_parallel'):
-        loss_func = angle_parallel_loss
-    elif(opt['loss'] == 'angle_orthogonal'):
-        loss_func = angle_orthogonal_loss
-    elif(opt['loss'] == 'mse'):
-        loss_func = mse
-    return loss_func
 
 def logging(writer, iteration, y, y_estimated, loss):
     if(iteration % opt['save_every'] == 0):

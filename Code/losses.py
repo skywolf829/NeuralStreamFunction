@@ -58,3 +58,26 @@ def magangle_same_loss(x, y):
     mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
     weighted_angles = angles * mask
     return 0.9*mags + 0.1*weighted_angles.mean()
+
+def get_loss_func(opt):
+    if(opt['loss'] == 'l1'):
+        loss_func = l1
+    elif(opt['loss'] == "perpendicular"):
+        loss_func = angle_orthogonal_loss
+    elif(opt['loss'] == 'l1occupancy'):
+        loss_func = l1_occupancy
+    elif(opt['loss'] == 'magangle_same'):
+        loss_func = magangle_same_loss    
+    elif(opt['loss'] == 'magangle_parallel'):
+        loss_func = magangle_parallel_loss   
+    elif(opt['loss'] == 'magangle_orthogonal'):
+        loss_func = magangle_orthogonal_loss        
+    elif(opt['loss'] == 'angle_same'):
+        loss_func = angle_same_loss 
+    elif(opt['loss'] == 'angle_parallel'):
+        loss_func = angle_parallel_loss
+    elif(opt['loss'] == 'angle_orthogonal'):
+        loss_func = angle_orthogonal_loss
+    elif(opt['loss'] == 'mse'):
+        loss_func = mse
+    return loss_func
