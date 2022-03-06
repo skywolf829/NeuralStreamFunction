@@ -14,7 +14,7 @@ class Options():
         opt['binormal']             = False
         opt['fit_gradient']            = False       
         opt['gradient_direction']      = "V"   # V, B, or N
-        opt['dual_stream_function']     = "any" #None, any, N_parallel, N_direction
+        opt['dual_stream_function']     = None #None, any, N_parallel, N_direction
         
         opt['use_positional_encoding'] = False
         opt['num_positional_encoding_terms'] = 6

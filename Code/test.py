@@ -364,7 +364,7 @@ if __name__ == '__main__':
         cos_dist = F.cosine_similarity(dataset.data,#,
             reconstructed_volume, dim=1)
         print(f"Cosine dist stats - min/mean/max {cos_dist.min().item() : 0.04f}/{cos_dist.mean().item() : 0.04f}/{cos_dist.max().item() : 0.04f}")
-        print(f"Avg/std err - {(cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
+        print(f"Avg/std err - {(1-cos_dist).abs().mean().item() : 0.04f}/{cos_dist.std().item() : 0.04f}")
 
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
