@@ -37,7 +37,8 @@ class Dataset(torch.utils.data.Dataset):
         elif(opt['fit_gradient'] and opt['gradient_direction'] == "B"):           
             print("calculating binormal direction")
             d = binormal(d, normalize=True)
-        elif(opt['dual_stream_function'] == "N"):
+        elif(opt['dual_stream_function'] == "N_parallel" or \
+            opt['dual_stream_function'] == "N_direction"):
             print("Calculating N")
             self.n = normal(d, normalize=True)
             
@@ -112,7 +113,8 @@ class Dataset(torch.utils.data.Dataset):
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             
-            if(self.opt['dual_stream_function'] == "N"):
+            if(self.opt['dual_stream_function'] == "N_parallel" or \
+                self.opt['dual_stream_function'] == "N_direction"):
                 y_n = F.grid_sample(self.n, 
                     x, mode='bilinear', align_corners=False)
                 y = F.grid_sample(self.data, 
@@ -131,7 +133,8 @@ class Dataset(torch.utils.data.Dataset):
                 x = self.index_grid[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
-            if(self.opt['dual_stream_function'] == "N"):
+            if(self.opt['dual_stream_function'] == "N_parallel" or \
+                self.opt['dual_stream_function'] == "N_direction"):
                 y_n = F.grid_sample(self.n, 
                     x, mode='nearest', align_corners=False)
                 y = F.grid_sample(self.data, 

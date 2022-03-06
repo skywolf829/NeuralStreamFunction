@@ -177,7 +177,6 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function any \
---norm_per_voxel false \
 --loss angle_same --lr 5e-5 \
 --log_image false --log_gradient false \
 --device cuda:6 --data_device cuda:6 &
