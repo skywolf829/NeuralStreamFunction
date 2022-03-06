@@ -48,7 +48,7 @@ def train_loop(model, dataset, opt):
         if(opt['dual_stream_function'] == "N_parallel"):
             y_estimated = torch.cross(grads_f.detach(), grads_g, dim=1)
             loss = loss_func(grads_f, y[:,3:]) + \
-                angle_parallel_loss(y[:,0:3], y_estimated)
+                angle_same_loss(y[:,0:3], y_estimated)
         elif(opt['dual_stream_function'] == "N_direction"):
             y_estimated = torch.cross(grads_f.detach(), grads_g, dim=1)
             loss = loss_func(grads_f, y[:,3:]) + \
