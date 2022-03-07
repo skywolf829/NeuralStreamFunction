@@ -128,8 +128,8 @@ def generate_ABC_flow(resolution = 128,
     print(abc.max())
     print(abc.min())
     print(abc.mean())
-    print(np.linalg.norm(abc, axis=0).max())
-    abc /= np.linalg.norm(abc, axis=0).max()
+    print(np.linalg.norm(abc, axis=1).max())
+    abc /= np.linalg.norm(abc, axis=1).max()
     
     channel_names = ['u', 'v', 'w']
     tensor_to_cdf(abc.type(torch.float32), 
