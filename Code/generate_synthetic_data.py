@@ -103,38 +103,38 @@ def generate_flow_past_cylinder(resolution = 128, a=1):
     tensor_to_h5(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
         "flow_past_cylinder.h5")
 
-def generate_ABC_flow(resolution = 128, A=np.sqrt(3), B=np.sqrt(2), C=1):
-    # [channels, u, v, w]
-    a = np.zeros([3, resolution, resolution, resolution], dtype=np.float32)
-
-    # max vf mag = 6.78233, divide all components by that
-    i = 0
+def generate_ABC_flow(resolution = 128, 
+                      A=np.sqrt(3), B=np.sqrt(2), C=1):
+    
     start = 0
     end = 2*np.pi
-    for x in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):        
-        j = 0
-        for y in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)): 
-            k = 0
-            for z in np.arange(start, end + (end-start) / resolution, (end-start) / (resolution-1)):
-                u = A*np.sin(z) + C*np.cos(y)
-                v = B*np.sin(x) + A*np.cos(z)
-                w = C*np.sin(y) + B*np.cos(x)
-                a[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
-                #print("%0.02f %0.02f %0.02f" % (x, y, z))
-                #print("%i %i %i" % (i, j, k))
-                k += 1
-            j += 1
-        i += 1
-    print(a.max())
-    print(a.min())
-    print(a.mean())
-    print(np.linalg.norm(a, axis=0).max())
-    a /= np.linalg.norm(a, axis=0).max()
+    
+    zyx = torch.meshgrid(
+        [torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution)],
+        indexing='ij'
+    )
+    zyx = torch.stack(zyx).type(torch.float32)
+    x = zyx[2].clone()
+    y = zyx[1].clone()
+    z = zyx[0].clone()
+    
+    u = A*torch.sin(z) + C*torch.cos(y)
+    v = B*torch.sin(x) + A*torch.cos(z)
+    w = C*torch.sin(y) + B*torch.cos(x)
+    
+    abc = torch.stack([u,v,w], dim=0).unsqueeze(0)
+    print(abc.max())
+    print(abc.min())
+    print(abc.mean())
+    print(np.linalg.norm(abc, axis=0).max())
+    abc /= np.linalg.norm(abc, axis=0).max()
     
     channel_names = ['u', 'v', 'w']
-    tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
+    tensor_to_cdf(abc.type(torch.float32), 
         "ABC_flow.h5", channel_names)
-    tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
+    tensor_to_cdf(abc.type(torch.float32), 
         "ABC_flow.nc", channel_names)
 
 def isabel_from_bin():
@@ -175,4 +175,5 @@ def plume_data_reading():
     tensor_to_h5(uvw, "plume.h5")
     
 if __name__ == '__main__':
+    generate_ABC_flow()
     quit()
