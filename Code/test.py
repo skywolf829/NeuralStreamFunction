@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import argparse
+from turtle import forward
 from datasets import Dataset
 import datetime
 from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
@@ -48,6 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--seeding_curve',default=None,type=str2bool)
     parser.add_argument('--cai_method',default=None,type=str2bool)
     parser.add_argument('--explicit_recon',default=None,type=str2bool)
+    parser.add_argument('--explicit_recon_uncertainty',default=None,type=str2bool)
 
     parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
@@ -564,6 +566,86 @@ if __name__ == '__main__':
         tensor_to_cdf(err.unsqueeze(0).detach(), 
             os.path.join(output_folder, opt['save_name'], 
             "cross_product_cos_dist.nc"))
+
+    if(args['explicit_recon_uncertainty'] is not None):
+        grid = list(dataset.data.shape[2:])
+        
+        model.train(False)
+        forward_passes = []
+        n_passes = 10
+        
+        for i in range(1):
+            print("Sampling grad 1")
+            grads_f = model.sample_grad_grid(grid, output_dim=0, 
+                                            max_points=10000)
+            print("Sampling grad 2")
+            grads_g = model.sample_grad_grid(grid, output_dim=1, 
+                                            max_points=10000)
+            
+            grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
+            grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
+            
+            recon = torch.cross(grads_f, grads_g, dim=1)
+            forward_passes.append(recon)
+        forward_passes = torch.cat(forward_passes)
+        forward_passes = forward_passes.to("cpu")
+        v = torch.var(forward_passes, dim=0, keepdim=True).to(opt['device'])
+        recon = torch.mean(forward_passes, dim=0, keepdim=True).to(opt['device'])
+        del forward_passes  
+        
+        err = F.cosine_similarity(recon, dataset.data)
+        
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            err.flatten().detach().cpu().numpy(), 
+            bins=100,
+            range=(-1.0, 1.0))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts,
+                label=f"Avg error:  {(1-err.abs()).abs().mean().item() : 0.04f}")
+        plt.title("Cos. sim. between V and network cross product")
+        plt.ylabel("Proportion")
+        plt.xlabel("Cosine similarity")
+        plt.legend()
+        plt.show()
+        
+        model.train(True)
+        fgs = []
+        for i in range(n_passes):
+            print("Sampling grid")
+            with torch.no_grad():
+                fg = model.sample_grid(grid)  
+                fgs.append(fg)
+        fgs = torch.stack(fgs)
+        fgs = fgs.to("cpu")
+        fg_v = torch.var(fgs, dim=0).to(opt['device'])
+        fg = torch.mean(fgs, dim=0).to(opt['device'])
+        del fgs  
+        
+        print(fg_v.shape)
+        print(fg.shape)
+        fg_v = fg_v.permute(3, 0, 1, 2).unsqueeze(0).sum(dim=1, keepdim=True)
+        fg = fg.permute(3, 0, 1, 2).unsqueeze(0)
+        print(fg_v.shape)
+        print(fg.shape)
+        create_folder(output_folder, opt['save_name'])
+        
+        tensor_to_cdf(recon.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "dual_streamfunction.nc"))
+        
+        tensor_to_cdf(err.unsqueeze(0).detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "cross_product_cos_dist.nc"))
+        
+        tensor_to_cdf(fg.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "reconstructed.nc"))
+        tensor_to_cdf(fg_v.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "variance.nc"))
 
     if(args['dual_streamfunction'] is not None):
         grid = list(dataset.data.shape[2:])
