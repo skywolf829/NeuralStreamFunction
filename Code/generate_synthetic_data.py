@@ -125,11 +125,12 @@ def generate_ABC_flow(resolution = 128,
     w = C*torch.sin(y) + B*torch.cos(x)
     
     abc = torch.stack([u,v,w], dim=0).unsqueeze(0)
+    print(abc.shape)
     print(abc.max())
     print(abc.min())
     print(abc.mean())
-    print(np.linalg.norm(abc, axis=1).max())
-    abc /= np.linalg.norm(abc, axis=1).max()
+    print(abc.norm(dim=1).max())
+    abc /= abc.norm(dim=1).max()
     
     channel_names = ['u', 'v', 'w']
     tensor_to_cdf(abc.type(torch.float32), 
