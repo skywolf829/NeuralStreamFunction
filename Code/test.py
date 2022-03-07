@@ -705,37 +705,52 @@ if __name__ == '__main__':
             "dual_streamfunction.nc"))
      
     if(args['seeding_curve'] is not None):
-        n = np.array(netCDF4.Dataset(os.path.join(output_folder, 
-            "synth1_normal", "reconstructed.cdf"), 'r')['a'])
-        b = np.array(netCDF4.Dataset(os.path.join(output_folder, 
-            "synth1_binormal", "reconstructed.cdf"), 'r')['a'])
-
-        n = torch.tensor(n).to('cuda:0').unsqueeze(0).unsqueeze(0)
-        b = torch.tensor(b).to('cuda:0').unsqueeze(0).unsqueeze(0)
+        grid = list(dataset.data.shape[2:])
+        with torch.no_grad():
+            reconstructed_volume = model.sample_grid(grid)
+        if(len(grid) == 3):
+            reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
+        else:
+            reconstructed_volume = reconstructed_volume.permute(2, 0, 1).unsqueeze(0)
         
-        n_output = n[0, 0, 0:64, 0, 127]
-        b_output = b[0, 0, 0:64, 0, 127]
-        A = torch.ones([n_output.shape[0], 5], device="cuda:0")
-        B = torch.ones([n_output.shape[0], 1], device="cuda:0")
-
-        A[:,0] = n_output*n_output
-        A[:,1] = n_output*b_output
-        A[:,2] = b_output*b_output
-        A[:,3] = n_output
-        A[:,4] = b_output
+        f = reconstructed_volume[:,0:1]
+        g = reconstructed_volume[:,1:2]
+        
+        f_output = f[0, 0, :, 80, 0]
+        g_output = g[0, 0, :, 80, 0]
+        
+        B = torch.ones([f_output.shape[0], 1], device="cuda:0")
+        
+        higher_order = True
+        
+        if(higher_order):
+            A = torch.ones([f_output.shape[0], 5], device="cuda:0")
+            A[:,0] = f_output*f_output
+            A[:,1] = f_output*g_output
+            A[:,2] = g_output*g_output
+            A[:,3] = f_output
+            A[:,4] = g_output
+        else:
+            A = torch.ones([f_output.shape[0], 2], device="cuda:0")
+            A[:,0] = f_output
+            A[:,1] = g_output
 
         solution = torch.linalg.lstsq(A, B)
         
-        print(f"{solution.solution[0,0] : 0.04f}*(n^2) + " + \
-            f"{solution.solution[1,0] : 0.04f}*(n*b) + " + \
-            f"{solution.solution[2,0] : 0.04f}*(b^2) + " + \
-            f"{solution.solution[3,0] : 0.04f}*n + " + \
-            f"{solution.solution[4,0] : 0.04f}*b")
-
+        if(higher_order):
+            print(f"{solution.solution[0,0] : 0.04f}*(a^2) + " + \
+                f"{solution.solution[1,0] : 0.04f}*(a*b) + " + \
+                f"{solution.solution[2,0] : 0.04f}*(b^2) + " + \
+                f"{solution.solution[3,0] : 0.04f}*a + " + \
+                f"{solution.solution[4,0] : 0.04f}*b -1")
+        else:
+            print(f"{solution.solution[0,0] : 0.04f}*a + " + \
+                f"{solution.solution[1,0] : 0.04f}*b -1")
+            
         print("Residuals: ")
         print(solution.residuals)
-        t1 = torch.cat([n, b], dim=1)
-        tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b'])
+        #t1 = torch.cat([n, b], dim=1)
+        #tensor_to_cdf(t1, os.path.join(output_folder, "synth1_N_B.cdf"), ['n', 'b'])
 
     if(args['decompose'] is not None):
         scalar_potential = torch.zeros_like(dataset.data[2:]).unsqueeze(0)

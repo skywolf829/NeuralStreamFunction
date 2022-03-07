@@ -3,8 +3,9 @@ cd /lus/theta-fs0/projects/DL4VIS/NeuralDualStreamFunction
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name vortices.h5 \
---save_name N_direction_dual_stream_function_vortices \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_vortices_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
@@ -14,8 +15,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name flow_past_cylinder.h5 \
---save_name N_direction_dual_stream_function_flow_past_cylinder \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_flow_past_cylinder_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
@@ -25,8 +27,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name ABC_flow.h5 \
---save_name N_direction_dual_stream_function_ABC_flow \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_ABC_flow_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
@@ -36,8 +39,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name tornado3d.h5 \
---save_name N_direction_dual_stream_function_tornado3d \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_tornado_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
@@ -47,8 +51,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name isabel.h5 \
---save_name N_direction_dual_stream_function_isabel \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_isabel_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
@@ -58,8 +63,9 @@ python -u Code/train.py --n_outputs 2 --n_dims 3 \
 
 python -u Code/train.py --n_outputs 2 --n_dims 3 \
 --signal_file_name plume.h5 \
---save_name N_direction_dual_stream_function_plume \
---n_layers 4 --nodes_per_layer 128 \
+--save_name N_direction_dual_stream_function_plume_xl_res \
+--n_layers 4 --nodes_per_layer 512 \
+--residual true \
 --points_per_iteration 100000 \
 --iterations 10000 \
 --dual_stream_function N_direction \
