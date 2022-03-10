@@ -174,7 +174,119 @@ def plume_data_reading():
     w = torch.tensor(w).reshape(1024, 252, 252)
     uvw = torch.stack([u, v, w]).unsqueeze(0)
     tensor_to_h5(uvw, "plume.h5")
+   
+def generate_vortices_seed_points():    
+    seeds = torch.rand([100, 3])*2-1
+    seeds *= 64
+    seeds += 64
+    import csv
+    with open('vortices_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+        
+def generate_cylinder_seed_points():    
+    seeds = torch.rand([100, 3])*2-1
+    seeds *= 64
+    seeds += 64
+    import csv
+    with open('cylinder_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+
+def generate_ABC_flow_seed_points():    
+    seeds = torch.rand([100, 3])*2-1
+    seeds *= 16
+    seeds[:,0] += 32
+    seeds[:,1] += 64
+    seeds[:,2] += 64
+    import csv
+    with open('ABC_flow_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+            
+def generate_tornado_seed_points():    
+    seeds = torch.rand([100, 3])*2-1
+    seeds[:,0] *= 16
+    seeds[:,0] += 32
+    seeds[:,1] *= 16
+    seeds[:,1] += 32
+    seeds[:,2] *= 64
+    seeds[:,2] += 64
+    import csv
+    with open('tornado_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+   
+def generate_isabel_seed_points():    
+    seeds = torch.rand([200, 3])*2-1
+    seeds[:100,0] *= 50
+    seeds[:100,0] += 350
+    seeds[:100,1] *= 50
+    seeds[:100,1] += 350
+    seeds[:100,2] *= 50
+    seeds[:100,2] += 50
     
+    seeds[100:,0] *= 80
+    seeds[100:,0] += 100
+    seeds[100:,1] *= 80
+    seeds[100:,1] += 100
+    seeds[100:,2] *= 50
+    seeds[100:,2] += 0
+
+    import csv
+    with open('isabel_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+    
+def generate_plume_seed_points():    
+    seeds = torch.rand([200, 3])*2-1
+    seeds[:50,0] *= 20
+    seeds[:50,0] += 125
+    seeds[:50,1] *= 20
+    seeds[:50,1] += 125
+    seeds[:50,2] *= 20
+    seeds[:50,2] += 511
+    
+    seeds[50:100,0] *= 128
+    seeds[50:100,0] += 128
+    seeds[50:100,1] *= 128
+    seeds[50:100,1] += 128
+    seeds[50:100,2] *= 10
+    seeds[50:100,2] += 790
+    
+    seeds[100:,0] *= 128
+    seeds[100:,0] += 128
+    seeds[100:,1] *= 128
+    seeds[100:,1] += 128
+    seeds[100:,2] *= 50
+    seeds[100:,2] += 236
+
+    import csv
+    with open('plume_seeds.csv', 'w', newline='') as csvfile:
+        w = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for i in range(seeds.shape[0]):
+            w.writerow(seeds[i].numpy())
+      
+def generate_seed_files():
+    generate_vortices_seed_points()
+    generate_cylinder_seed_points()
+    generate_ABC_flow_seed_points()
+    generate_tornado_seed_points()
+    generate_isabel_seed_points()
+    generate_plume_seed_points()      
+                       
 if __name__ == '__main__':
-    generate_ABC_flow()
+    torch.manual_seed(0)
+    generate_seed_files()
     quit()
