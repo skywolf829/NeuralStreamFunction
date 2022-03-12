@@ -9,7 +9,8 @@ class Options():
         opt['n_outputs']               = 2
         opt['activation_function']     = "sine"      
         opt['residual']     = False     
-
+        opt['growing_training'] = False
+        
         opt['normal']               = False
         opt['binormal']             = False
         opt['fit_gradient']            = False       

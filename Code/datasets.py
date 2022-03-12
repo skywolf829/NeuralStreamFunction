@@ -43,7 +43,11 @@ class Dataset(torch.utils.data.Dataset):
             self.n = normal(d, normalize=True)
             
         self.data = d
-        self.index_grid = make_coord_grid(self.data.shape[2:], self.opt['data_device'])
+        self.index_grid = make_coord_grid(
+            self.data.shape[2:], 
+            self.opt['data_device'],
+            flatten=True)
+        self.index_mags = self.index_grid.norm(dim=1)
         print("Data size: " + str(self.data.shape))
         print("Min/mean/max: %0.04f, %0.04f, %0.04f" % \
             (self.min(), self.mean(), self.max()))
@@ -123,14 +127,19 @@ class Dataset(torch.utils.data.Dataset):
                 y = F.grid_sample(self.data, 
                     x, mode='bilinear', align_corners=False)
         else:
-            x_dims = []
-            if(n_points >= self.total_points()):
-                x = self.get_full_coord_grid()
+            possible_spots = self.index_grid
+            if(self.opt['growing_training']):
+                mag = 0.1 + (3**0.5)*(self.opt['iteration_number']  / (self.opt['iterations']/2))
+
+                possible_spots = possible_spots[self.index_mags < mag]
+            
+            if(n_points >= possible_spots.shape[0]):
+                x = possible_spots.clone().unsqueeze_(0)
             else:
-                samples = torch.rand(self.index_grid.shape[0], 
+                samples = torch.rand(possible_spots.shape[0], 
                     dtype=torch.float32, device=self.opt['data_device']) < \
-                        n_points / self.index_grid.shape[0]
-                x = self.index_grid[samples].clone().unsqueeze_(0)
+                        n_points / possible_spots.shape[0]
+                x = possible_spots[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             if(self.opt['dual_stream_function'] == "N_parallel" or \

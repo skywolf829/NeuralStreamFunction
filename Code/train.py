@@ -156,7 +156,7 @@ def train_implicit_model(rank, model, dataset, opt):
     model.train(True)
 
     for iteration in range(0, opt['iterations']):
-        
+        opt['iteration_number'] = iteration
         x, y, y_estimated, loss = train_loop(model, dataset, opt)
         loss.backward()
         optimizer.step()
@@ -177,6 +177,8 @@ if __name__ == '__main__':
     parser.add_argument('--n_outputs',default=None,type=int)
     parser.add_argument('--activation_function',default=None,type=str)
     parser.add_argument('--residual',default=None,type=str2bool)
+    parser.add_argument('--growing_training',default=None,type=str2bool)
+    
     parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int)
     parser.add_argument('--dropout',default=None,type=str2bool)
