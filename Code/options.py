@@ -24,7 +24,6 @@ class Options():
         
         opt['interpolate']             = False
         opt["signal_file_name"]        = "tornado3d.h5"
-        opt["activation"]              = "sine"
         opt["save_name"]               = "tornado"   
         opt["n_layers"]                = 4       
         opt["nodes_per_layer"]         = 128

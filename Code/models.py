@@ -159,11 +159,11 @@ class ImplicitModel(nn.Module):
         if(self.opt['dropout']):
             self.dropout = nn.Dropout(self.opt['dropout_p'])
 
-        if(self.opt['activation'] == "sine"):
+        if(self.opt['activation_function'] == "sine"):
             self.net.append(SineLayer(opt['n_dims'], 
                 opt['nodes_per_layer'], 
                 is_first=True, omega_0=30))
-        elif(self.opt['activation'] == "lrelu"):
+        elif(self.opt['activation_function'] == "lrelu"):
             self.net.append(LReLULayer(opt['n_dims'], 
                 opt['nodes_per_layer'], 
                 is_first=True))
@@ -172,7 +172,7 @@ class ImplicitModel(nn.Module):
 
         i = 0
         while i < opt['n_layers']:
-            if(self.opt['activation'] == "sine"):
+            if(self.opt['activation_function'] == "sine"):
                 if(self.opt['residual']):
                     self.net.append(ResidualSineLayer(opt['nodes_per_layer'], 
                                       ave_first=i>0,
@@ -182,8 +182,8 @@ class ImplicitModel(nn.Module):
                     self.net.append(SineLayer(opt['nodes_per_layer'], 
                                               opt['nodes_per_layer'], 
                                       is_first=False, omega_0=30))
-            elif(self.opt['activation'] == "lrelu"):
-                self.net.append(LReLULayer(opt['n_dims'], 
+            elif(self.opt['activation_function'] == "lrelu"):
+                self.net.append(LReLULayer(opt['nodes_per_layer'], 
                     opt['nodes_per_layer'], 
                     is_first=False))
             if(self.opt['dropout'] and i < opt['n_layers'] - 1):

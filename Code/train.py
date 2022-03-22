@@ -190,7 +190,6 @@ if __name__ == '__main__':
     parser.add_argument('--dual_stream_function',default=None,type=str)
     
     parser.add_argument('--signal_file_name',default=None,type=str)
-    parser.add_argument('--activation',default=None,type=str)
     parser.add_argument('--save_name',default=None,type=str)
     
     parser.add_argument('--n_layers',default=None,type=int)

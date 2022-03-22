@@ -239,7 +239,7 @@ def generate_isabel_seed_points():
     seeds[100:,1] *= 80
     seeds[100:,1] += 100
     seeds[100:,2] *= 50
-    seeds[100:,2] += 0
+    seeds[100:,2] += 50
 
     import csv
     with open('isabel_seeds.csv', 'w', newline='') as csvfile:

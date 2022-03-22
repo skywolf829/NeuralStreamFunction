@@ -20,7 +20,13 @@ from options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
 import numpy as np
-
+from vtk import vtkXMLPolyDataReader
+from vtkmodules.util import numpy_support
+from vtkmodules.util.numpy_support import vtk_to_numpy
+from utility_functions import cdf_to_tensor
+from pandas import read_csv
+import vtk
+from utility_functions import get_vtr
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -50,6 +56,8 @@ if __name__ == '__main__':
     parser.add_argument('--cai_method',default=None,type=str2bool)
     parser.add_argument('--explicit_recon',default=None,type=str2bool)
     parser.add_argument('--explicit_recon_uncertainty',default=None,type=str2bool)
+    parser.add_argument('--hausdorff_distance',default=None,type=str2bool)
+    parser.add_argument('--streamlines',default=None,type=str2bool)
 
     parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
@@ -66,25 +74,27 @@ if __name__ == '__main__':
     if(args['load_from'] is None):
         print("Must load a model")
         quit()
-         
-    opt = load_options(os.path.join(save_folder, args["load_from"]))
-    opt["device"] = args["device"]
-    opt['data_device'] = args['device']
-    opt["save_name"] = args["load_from"]
-    for k in args.keys():
-        if args[k] is not None:
-            opt[k] = args[k]
-    dataset = Dataset(opt)
-    model = load_model(opt, opt['device'])
-    model = model.to(opt['device'])
+    
+    if(args['hausdorff_distance'] is None and
+       args['streamlines'] is None):     
+        opt = load_options(os.path.join(save_folder, args["load_from"]))
+        opt["device"] = args["device"]
+        opt['data_device'] = args['device']
+        opt["save_name"] = args["load_from"]
+        for k in args.keys():
+            if args[k] is not None:
+                opt[k] = args[k]
+        dataset = Dataset(opt)
+        model = load_model(opt, opt['device'])
+        model = model.to(opt['device'])
 
-    model.eval()
+        model.eval()
 
     #print(dataset.data.min())
     #print(dataset.data.mean())
     #print(dataset.data.max())
 
-    writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
+    #writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
 
     if(args['supersample_psnr'] is not None):
         original_volume = h5py.File(os.path.join(data_folder, args['supersample_psnr']), 'r')['data']
@@ -406,9 +416,10 @@ if __name__ == '__main__':
         #    (opt['save_name'], p_ss_interp, s_ss_interp))
         create_folder(output_folder, opt['save_name'])
         tensor_to_cdf(reconstructed_volume, 
-            os.path.join(output_folder, opt['save_name'], "reconstructed.cdf"))
-        tensor_to_cdf(dataset.data, 
-            os.path.join(output_folder, opt['save_name'], "original.cdf"))
+            os.path.join(output_folder, 
+                         opt['save_name'], "reconstructed.nc"))
+        #tensor_to_cdf(dataset.data, 
+        #    os.path.join(output_folder, opt['save_name'], "original.nc"))
 
     if(args['cdf_cross'] is not None):
         x = make_coord_grid(dataset.data.shape[2:], 
@@ -539,7 +550,11 @@ if __name__ == '__main__':
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
         
         recon = torch.cross(grads_f, grads_g, dim=1)
-        err = F.cosine_similarity(recon, dataset.data)
+        recon /= (recon.norm(dim=1) + 1e-8)
+        
+        d = dataset.data
+        d /= (d.norm(dim=1) + 1e-8)
+        err = F.cosine_similarity(recon, d)
         
         import matplotlib.pyplot as plt
         plt.style.use('ggplot')
@@ -550,7 +565,7 @@ if __name__ == '__main__':
         counts = np.array(counts).astype(np.float32)
         counts /= counts.sum()
         plt.hist(bins[:-1], bins, weights=counts,
-                label=f"Avg error:  {(1-err.abs()).abs().mean().item() : 0.04f}")
+                label=f"Avg error:  {(1-err.abs()).abs().mean().item() : 0.06f}")
         plt.title("Cos. sim. between V and network cross product")
         plt.ylabel("Proportion")
         plt.xlabel("Cosine similarity")
@@ -566,7 +581,10 @@ if __name__ == '__main__':
         tensor_to_cdf(err.unsqueeze(0).detach(), 
             os.path.join(output_folder, opt['save_name'], 
             "cross_product_cos_dist.nc"))
-
+        tensor_to_cdf(d.detach(), 
+            os.path.join(output_folder, opt['save_name'], 
+            "original.nc"))
+        
     if(args['explicit_recon_uncertainty'] is not None):
         grid = list(dataset.data.shape[2:])
         
@@ -793,7 +811,340 @@ if __name__ == '__main__':
                     c[:,:,k,j,i] = fp
         tensor_to_cdf(c, "cai_test.nc")
 
-    writer.close()
+    if(args['hausdorff_distance'] is not None):
+        from vtk import vtkXMLPolyDataReader
+        from vtkmodules.util.numpy_support import vtk_to_numpy
+        reader = vtkXMLPolyDataReader()
+        reader.SetFileName(os.path.join(
+            output_folder,
+            args['load_from'],
+            'original_streamlines.vtp'
+        ))
+        reader.Update()
+        original_polyData = reader.GetOutput()
+        original_points = original_polyData.GetPoints()
+        original_cells = original_polyData.GetCellData()
+        
+        print(original_polyData.GetNumberOfCells())
+        
+        reader = vtkXMLPolyDataReader()
+        reader.SetFileName(os.path.join(
+            output_folder,
+            args['load_from'],
+            'reconstructed_streamlines.vtp'
+        ))
+        reader.Update()
+        reconstructed_polyData = reader.GetOutput()
+        reconstructed_points = reconstructed_polyData.GetPoints()
+        #array = points.GetData()        
+        reconstructed_cells = reconstructed_polyData.GetCellData()
+        
+        print(reconstructed_polyData.GetNumberOfCells())
+        
+        IDs = vtk_to_numpy(original_cells.GetArray("SeedIds")).copy()
+        IDs_reconstructed = vtk_to_numpy(reconstructed_cells.GetArray("SeedIds")).copy()
+        print(IDs)
+        print(IDs_reconstructed)
+        from utility_functions import directed_hausdorff_nb
+        
+        
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=[4,4])
+        ax = fig.add_subplot(111, projection='3d')
+        
+        d_max = 0
+        i_max = 0
+        
+        distances = []
+        for i in range(original_polyData.GetNumberOfCells()):
+            id = IDs[i]
+            
+            cell_original = original_polyData.GetCell(i)
+            #print(cell_original)
+            cell_reconstructed = reconstructed_polyData.GetCell(i)
+            
+            original_p = vtk_to_numpy(
+                cell_original.GetPoints().GetData()).copy()
+            reconstructed_p = vtk_to_numpy(
+                cell_reconstructed.GetPoints().GetData()).copy()
+            
+            #print(original_p[0])
+            #print(reconstructed_p[0])   
+            #d = directed_hausdorff_nb(reconstructed_p, original_p)
+            d1 = directed_hausdorff_nb(reconstructed_p, original_p)
+            d2 = directed_hausdorff_nb(original_p, reconstructed_p)
+            d = max(d1, d2)
+            #print(f"{k}: original_p: {original_p.shape}, reconstructed_p: {reconstructed_p.shape}, dist {d : 0.05f}")
+            distances.append(d)
+            
+            #ax.plot(reconstructed_p[:,0], reconstructed_p[:,1], reconstructed_p[:,2], color="blue")            
+            #ax.plot(original_p[:,0], original_p[:,1], original_p[:,2], color="red")
+            if(d > d_max):
+                d_max = d
+                i_max = i
+        
+        
+        print(i_max)
+        cell_original = original_polyData.GetCell(i_max)
+        cell_reconstructed = reconstructed_polyData.GetCell(i_max)
+        
+        original_p = vtk_to_numpy(
+            cell_original.GetPoints().GetData()).copy()
+        reconstructed_p = vtk_to_numpy(
+            cell_reconstructed.GetPoints().GetData()).copy()
+        
+        ax.plot(reconstructed_p[:,0], reconstructed_p[:,1], reconstructed_p[:,2], color="blue", label="reconstructed")            
+        ax.plot(original_p[:,0], original_p[:,1], original_p[:,2], color="red", label="ground truth")
+        ax.legend()
+        plt.show()
+         
+         
+        distances = np.array(distances)
+        print(f"min/median/mean/average {distances.min() : 0.04f}/{np.median(distances) : 0.04f}/{distances.mean() : 0.04f}/{distances.max():0.04f}")
+        
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            distances, 
+            bins=100,
+            range=(0.0, distances.max()))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts,
+                label=f"min/median/mean/average {distances.min() : 0.02f}/{np.median(distances) : 0.02f}/{distances.mean() : 0.02f}/{distances.max():0.02f}")
+        plt.title("Hausdorff Distances Btwn. Streamlines")
+        plt.ylabel("Proportion")
+        plt.xlabel("Hausdorff Distance")
+        plt.legend()
+        plt.show()
+        
+    if(args['streamlines'] is not None):
+        
+        og = cdf_to_tensor(
+            os.path.join(
+                output_folder,
+                args['load_from'],
+                "original.nc"
+            ),
+            ['a','b','c']
+        )[0].permute(1,2,3,0).numpy()
+        
+        reconstructed = cdf_to_tensor(
+            os.path.join(
+                output_folder,
+                args['load_from'],
+                "dual_streamfunction.nc"
+            ),
+            ['a','b','c']
+        )[0].permute(1,2,3,0).numpy()
+        
+        if('vortices' in args['load_from']):
+            seed_file = os.path.join(
+                data_folder,
+                "vortices_seeds.csv"
+            )
+        elif('cylinder' in args['load_from']):
+            seed_file = os.path.join(
+                data_folder,
+                "cylinder_seeds.csv"
+            )
+        elif('ABC' in args['load_from']):
+                seed_file = os.path.join(
+                data_folder,
+                "ABC_flow_seeds.csv"
+            )
+        elif('tornado' in args['load_from']):
+                seed_file = os.path.join(
+                data_folder,
+                "tornado_seeds.csv"
+            )
+        elif('isabel' in args['load_from']):
+                seed_file = os.path.join(
+                data_folder,
+                "isabel_seeds.csv"
+            )
+        elif('plume' in args['load_from']):
+                seed_file = os.path.join(
+                data_folder,
+                "plume_seeds.csv"
+            )
+        
+        
+        seed_points = read_csv(seed_file, header=None).to_numpy()
+        print(seed_points.shape)
+        
+        seeds = vtk.vtkPoints()
+        seeds.SetData(numpy_support.numpy_to_vtk(seed_points.copy()))
+        
+        seeds_dataset = vtk.vtkPointSet()
+        seeds_dataset.SetPoints(seeds)
+        
+        print(og.shape)
+        print(reconstructed.shape)
+        #og = np.transpose(og, (0, 2, 1, 3))
+        #reconstructed = np.transpose(reconstructed, (0, 2, 1, 3))
+        #og = np.flip(og, axis=-1)
+        #reconstructed = np.flip(reconstructed, axis=-1)
+        og_vtk_data = get_vtr(
+            og.shape[:-1], 
+            np.linspace(0, og.shape[2]-1, og.shape[2], dtype=np.float32), 
+            np.linspace(0, og.shape[1]-1, og.shape[1], dtype=np.float32),
+            np.linspace(0, og.shape[0]-1, og.shape[0], dtype=np.float32),
+            vector_fields={'velocity': og.reshape(-1, 3)}
+            )
+        reconstructed_vtk_data = get_vtr(
+            reconstructed.shape[:-1], 
+            np.linspace(0, reconstructed.shape[2]-1, reconstructed.shape[2], dtype=np.float32), 
+            np.linspace(0, reconstructed.shape[1]-1, reconstructed.shape[1], dtype=np.float32),
+            np.linspace(0, reconstructed.shape[0]-1, reconstructed.shape[0], dtype=np.float32),
+            vector_fields={'velocity': reconstructed.reshape(-1, 3)}
+            )
+        # set active vector for vtkStreamTracer
+        og_vtk_data.GetPointData().SetActiveVectors('velocity')
+        reconstructed_vtk_data.GetPointData().SetActiveVectors('velocity')
+        
+        # RungeKutta45 parameters
+        init_steplen = 0.5
+        tem_speed = 1e-12
+        max_error = 1e-06
+        min_intsteplen = 0.1
+        max_intsteplen = 1
+        max_steps = 10000
+        max_length = 500+500+100
+
+        gt_st = vtk.vtkStreamTracer()
+        reconstructed_st = vtk.vtkStreamTracer()
+
+        gt_st.SetInputData(og_vtk_data)
+        gt_st.SetSourceData(seeds_dataset)
+        reconstructed_st.SetInputData(reconstructed_vtk_data)
+        reconstructed_st.SetSourceData(seeds_dataset)
+
+        # integrator parameters
+        gt_integrator = vtk.vtkRungeKutta45()
+        gt_st.SetIntegrator(gt_integrator)
+        gt_st.SetIntegrationDirectionToBoth()
+        gt_st.SetMaximumError(max_error)
+        gt_st.SetIntegrationStepUnit(gt_st.CELL_LENGTH_UNIT)
+        gt_st.SetInitialIntegrationStep(init_steplen)
+        gt_st.SetMinimumIntegrationStep(min_intsteplen)
+        gt_st.SetMaximumIntegrationStep(max_intsteplen)
+        gt_st.SetMaximumNumberOfSteps(max_steps)
+        gt_st.SetMaximumPropagation(max_length)
+        gt_st.SetTerminalSpeed(tem_speed)
+        
+        reconstructed_integrator = vtk.vtkRungeKutta45()
+        reconstructed_st.SetIntegrator(reconstructed_integrator)
+        reconstructed_st.SetIntegrationDirectionToBoth()
+        reconstructed_st.SetMaximumError(max_error)
+        reconstructed_st.SetIntegrationStepUnit(reconstructed_st.CELL_LENGTH_UNIT)
+        reconstructed_st.SetInitialIntegrationStep(init_steplen)
+        reconstructed_st.SetMinimumIntegrationStep(min_intsteplen)
+        reconstructed_st.SetMaximumIntegrationStep(max_intsteplen)
+        reconstructed_st.SetMaximumNumberOfSteps(max_steps)
+        reconstructed_st.SetMaximumPropagation(max_length)
+        reconstructed_st.SetTerminalSpeed(tem_speed)
+
+        gt_st.Update()
+        reconstructed_st.Update()
+
+        og_streamlines = gt_st.GetOutput()
+        reconstructed_streamlines = reconstructed_st.GetOutput()
+        print(og_streamlines.GetNumberOfCells())
+        print(reconstructed_streamlines.GetNumberOfCells())
+        
+        
+        
+        #IDs = vtk_to_numpy(original_cells.GetArray("SeedIds")).copy()
+        #IDs_reconstructed = vtk_to_numpy(reconstructed_cells.GetArray("SeedIds")).copy()
+        #print(IDs)
+        #print(IDs_reconstructed)
+        
+        from utility_functions import directed_hausdorff_nb
+        
+        
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=[7,7])
+        ax = fig.add_subplot(111, projection='3d')
+        
+        d_max = 0
+        i_max = 0
+        
+        distances = []
+        for i in range(min(og_streamlines.GetNumberOfCells(), reconstructed_streamlines.GetNumberOfCells())):
+            #id = IDs[i]
+            
+            cell_original = og_streamlines.GetCell(i)
+            #print(cell_original)
+            cell_reconstructed = reconstructed_streamlines.GetCell(i)
+            
+            original_p = vtk_to_numpy(
+                cell_original.GetPoints().GetData()).copy()
+            reconstructed_p = vtk_to_numpy(
+                cell_reconstructed.GetPoints().GetData()).copy()
+            
+            #print(original_p[0])
+            #print(reconstructed_p[0])   
+            d1 = directed_hausdorff_nb(reconstructed_p, original_p)
+            d2 = directed_hausdorff_nb(original_p, reconstructed_p)
+            d = max(d1, d2)
+            #d = directed_hausdorff_nb(original_p, reconstructed_p)
+            print(f"{i}: original_p: {original_p.shape}, reconstructed_p: {reconstructed_p.shape}, dist {d : 0.05f}")
+            distances.append(d)
+            
+            ax.plot(reconstructed_p[:,0], 
+                    reconstructed_p[:,1], 
+                    reconstructed_p[:,2], 
+                    color="blue", alpha=0.2)            
+            ax.plot(original_p[:,0], 
+                    original_p[:,1], 
+                    original_p[:,2], 
+                    color="red", alpha=0.2)
+            if(d > d_max):
+                d_max = d
+                i_max = i
+        
+        print(i_max)
+        cell_original = og_streamlines.GetCell(i_max)
+        cell_reconstructed = reconstructed_streamlines.GetCell(i_max)
+        
+        original_p = vtk_to_numpy(
+            cell_original.GetPoints().GetData()).copy()
+        reconstructed_p = vtk_to_numpy(
+            cell_reconstructed.GetPoints().GetData()).copy()
+        
+        ax.plot(reconstructed_p[:,0], reconstructed_p[:,1], reconstructed_p[:,2], color="blue", label="reconstructed")            
+        ax.plot(original_p[:,0], original_p[:,1], original_p[:,2], color="red", label="ground truth")
+        ax.legend()
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+        plt.show()
+         
+         
+        distances = np.array(distances)
+        print(f"min/median/mean/average {distances.min() : 0.04f}/{np.median(distances) : 0.04f}/{distances.mean() : 0.04f}/{distances.max():0.04f}")
+        
+        import matplotlib.pyplot as plt
+        plt.style.use('ggplot')
+        counts, bins = np.histogram(
+            distances, 
+            bins=100,
+            range=(0.0, distances.max()))
+        counts = np.array(counts).astype(np.float32)
+        counts /= counts.sum()
+        plt.hist(bins[:-1], bins, weights=counts,
+                label=f"min/median/mean/average {distances.min() : 0.02f}/{np.median(distances) : 0.02f}/{distances.mean() : 0.02f}/{distances.max():0.02f}")
+        plt.title("Hausdorff Distances Btwn. Streamlines")
+        plt.ylabel("Proportion")
+        plt.xlabel("Hausdorff Distance")
+        plt.legend()
+        plt.show()
+        
+
+    #writer.close()
         
 
 
