@@ -402,7 +402,13 @@ if __name__ == '__main__':
     if(args['cdf'] is not None):
         grid = list(dataset.data.shape[2:])
         with torch.no_grad():
+            t1 = time.time()
             reconstructed_volume = model.sample_grid(grid)
+            torch.cuda.synchronize()
+            elapsed = time.time() - t1
+            print(f"Computation took {elapsed : 0.05f}")
+            total_num_verts = grid.shape[2]*grid.shape[3]*grid.shape[4]
+            print(f"Per particle time {elapsed/total_num_verts : 0.05f}")
         if(len(grid) == 3):
             reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
         else:
