@@ -58,6 +58,7 @@ if __name__ == '__main__':
     parser.add_argument('--explicit_recon_uncertainty',default=None,type=str2bool)
     parser.add_argument('--hausdorff_distance',default=None,type=str2bool)
     parser.add_argument('--streamlines',default=None,type=str2bool)
+    parser.add_argument('--boxplots',default=None,type=str2bool)
 
     parser.add_argument('--decompose',default=None,type=str2bool)
     parser.add_argument('--device',default="cuda:0",type=str)
@@ -71,12 +72,10 @@ if __name__ == '__main__':
     save_folder = os.path.join(project_folder_path, "SavedModels")
 
 
-    if(args['load_from'] is None):
-        print("Must load a model")
-        quit()
     
     if(args['hausdorff_distance'] is None and
-       args['streamlines'] is None):     
+       args['streamlines'] is None and
+       args['boxplots'] is None):     
         opt = load_options(os.path.join(save_folder, args["load_from"]))
         opt["device"] = args["device"]
         opt['data_device'] = args['device']
@@ -408,7 +407,6 @@ if __name__ == '__main__':
             elapsed = time.time() - t1
             print(f"Computation took {elapsed : 0.05f}")
             total_num_verts = dataset.data.shape[2]*dataset.data.shape[3]*dataset.data.shape[4]
-            print(f"Per particle time {elapsed/total_num_verts}")
         if(len(grid) == 3):
             reconstructed_volume = reconstructed_volume.permute(3, 0, 1, 2).unsqueeze(0)
         else:
@@ -907,6 +905,7 @@ if __name__ == '__main__':
          
          
         distances = np.array(distances)
+        
         print(f"min/median/mean/average {distances.min() : 0.04f}/{np.median(distances) : 0.04f}/{distances.mean() : 0.04f}/{distances.max():0.04f}")
         
         import matplotlib.pyplot as plt
@@ -924,6 +923,11 @@ if __name__ == '__main__':
         plt.xlabel("Hausdorff Distance")
         plt.legend()
         plt.show()
+        
+        plt.boxplot(distances, vert=False)
+        plt.show()
+        
+        np.save("plume.numpy", distances)
         
     if(args['streamlines'] is not None):
         
@@ -1011,11 +1015,11 @@ if __name__ == '__main__':
         reconstructed_vtk_data.GetPointData().SetActiveVectors('velocity')
         
         # RungeKutta45 parameters
-        init_steplen = 0.5
+        init_steplen = 0.01
         tem_speed = 1e-12
         max_error = 1e-06
-        min_intsteplen = 0.1
-        max_intsteplen = 1
+        min_intsteplen = 0.01
+        max_intsteplen = 0.1
         max_steps = 10000
         max_length = 500+500+100
 
@@ -1133,7 +1137,9 @@ if __name__ == '__main__':
         distances = np.array(distances)
         print(f"min/median/mean/average {distances.min() : 0.04f}/{np.median(distances) : 0.04f}/{distances.mean() : 0.04f}/{distances.max():0.04f}")
         
+        
         import matplotlib.pyplot as plt
+        
         plt.style.use('ggplot')
         counts, bins = np.histogram(
             distances, 
@@ -1149,6 +1155,32 @@ if __name__ == '__main__':
         plt.legend()
         plt.show()
         
+        plt.boxplot(distances, vert=False)
+        plt.show()
+        
+        np.save("vortices.numpy", distances)
+        
+    if(args['boxplots'] is not None):
+        abc = np.load(os.path.join(data_folder, "abc.npy")) / ((128**2 + 128**2 + 128**2)**0.5)
+        vortices = np.load(os.path.join(data_folder, "vortices.npy"))/ ((128**2 + 128**2 + 128**2)**0.5)
+        cylinder = np.load(os.path.join(data_folder, "cylinder.npy"))/ ((128**2 + 128**2 + 128**2)**0.5)
+        tornado = np.load(os.path.join(data_folder, "tornado.npy"))/ ((128**2 + 128**2 + 128**2)**0.5)
+        isabel = np.load(os.path.join(data_folder, "isabel.npy"))/ ((500**2 + 500**2 + 100**2)**0.5)
+        plume = np.load(os.path.join(data_folder, "plume.npy"))    / ((1024**2 + 252**2 + 252**2)**0.5)
+        
+        d = [vortices, cylinder, abc, tornado, isabel, plume]
+        
+        from matplotlib import pyplot as plt
+        
+        plt.style.use('ggplot')
+        font = {
+            "font.size": 30
+        }
+        plt.rcParams.update(font)
+        plt.boxplot(d, vert=False, labels=["Vortices", "Cylinder", "ABC", "Tornado", "Isabel", "Plume"])
+        plt.title("Normalized Symmetric Hausdorff Distances")
+        plt.xlabel("Voxel distance")
+        plt.show()
 
     #writer.close()
         
