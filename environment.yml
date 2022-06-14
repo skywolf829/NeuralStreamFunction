@@ -4,9 +4,6 @@ channels:
 dependencies:
   - conda
   - python=3.9
-  - python.app
-  - pytorch
-  - torchvision
   - netcdf4
   - vtk
   - zeep
