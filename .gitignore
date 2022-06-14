@@ -149,3 +149,4 @@ dmypy.json
 *.dat
 nohup.out 
 Code/log.txt
+.DS_Store
