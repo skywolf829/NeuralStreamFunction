@@ -6,7 +6,7 @@ This project uses neural networks to model vector fields for visualization.
 
 We recommend conda for Python package management. To install, run the following:
 ```
-conda env create --channel conda-forge -n NDSF --file environment.yml
+conda env create --file env.yml
 conda activate NDSF
 ```
 
