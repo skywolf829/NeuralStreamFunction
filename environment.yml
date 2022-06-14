@@ -1,0 +1,21 @@
+name: base
+channels:
+  - defaults
+dependencies:
+  - conda
+  - python=3.9
+  - python.app
+  - pytorch
+  - torchvision
+  - netcdf4
+  - vtk
+  - zeep
+  - opencv
+  - flask
+  - imageio
+  - h5py
+  - scikit-image
+  - pandas
+  - numba
+  - matplotlib
+prefix: /Users/sky/miniconda3
