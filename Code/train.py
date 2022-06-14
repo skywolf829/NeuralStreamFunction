@@ -1,9 +1,9 @@
 from __future__ import absolute_import, division, print_function
 import argparse
-from datasets import Dataset
+from Datasets.datasets import Dataset
 import datetime
-from utility_functions import str2bool, PSNR
-from models import load_model, save_model, ImplicitModel
+from Other.utility_functions import str2bool, PSNR
+from Models.models import load_model, save_model, ImplicitModel
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -11,10 +11,10 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import time
 import os
-from options import *
+from Models.options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
-from losses import *
+from Models.losses import *
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")

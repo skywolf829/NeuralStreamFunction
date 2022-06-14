@@ -1,11 +1,11 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 from turtle import forward
-from datasets import Dataset
+from Datasets.datasets import Dataset
 import datetime
-from utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
-    tensor_to_h5, create_folder, normal, binormal
-from models import load_model, save_model, ImplicitModel
+from Other.utility_functions import str2bool, PSNR, make_coord_grid, tensor_to_cdf, ssim3D, \
+    tensor_to_h5, create_folder, normal, binormal, cdf_to_tensor, get_vtr
+from Models.models import load_model, save_model, ImplicitModel
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -16,17 +16,15 @@ import time
 import os
 import h5py
 import netCDF4
-from options import *
+from Models.options import *
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
 import numpy as np
 from vtk import vtkXMLPolyDataReader
 from vtkmodules.util import numpy_support
 from vtkmodules.util.numpy_support import vtk_to_numpy
-from utility_functions import cdf_to_tensor
 from pandas import read_csv
 import vtk
-from utility_functions import get_vtr
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")

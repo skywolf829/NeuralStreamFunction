@@ -10,8 +10,8 @@ conda env create --file env.yml
 conda activate NDSF
 ```
 
-Creating the environment will take a while. It took our windows machine roughly 1 hour to create the environment.
-Next, navigate to https://pytorch.org/get-started/locally/ and follow instructions to install pytorch.
+Creating the environment will take a while. 
+Once thats finished and the environment has been activated, navigate to https://pytorch.org/get-started/locally/ and follow instructions to install pytorch on your machine.
 
 For instance:
 ```

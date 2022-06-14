@@ -11,8 +11,6 @@ data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
-
-
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, opt):
         
