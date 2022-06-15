@@ -6,12 +6,12 @@ from netCDF4 import Dataset
 from math import pi, sin, atan, cos, tan
 import skimage
 from torch import tensor
-from utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
+from Other.utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
 import h5py
 
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
-project_folder_path = os.path.join(project_folder_path, "..")
+project_folder_path = os.path.join(project_folder_path, "..", "..")
 data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")

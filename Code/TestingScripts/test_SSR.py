@@ -2,20 +2,19 @@ import sys
 import os.path
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from models import load_models
-from options import  load_options
-from utility_functions import  str2bool, AvgPool3D, AvgPool2D
+from Models.models import load_models
+from Models.options import  load_options
 import os
 import argparse
 import time
 from math import log2
-from datasets import TestingDataset
+from Datasets.datasets import TestingDataset
 import torch
 import torch.nn.functional as F
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import copy
-from utility_functions import ssim, ssim3D, ssim3D_distributed, save_obj, load_obj
+from Other.utility_functions import ssim, ssim3D, ssim3D_distributed, save_obj, load_obj, str2bool, AvgPool3D, AvgPool2D
 
 
 def mse_func(GT, x, device):

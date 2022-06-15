@@ -7,6 +7,9 @@ def l1(x, y):
 def mse(x, y):
     return F.mse_loss(x, y)
 
+def l1_loss(network_output, target):
+    return l1(network_output, target['data'])
+
 def l1_occupancy(gt, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
@@ -164,9 +167,9 @@ def hhd_loss(network_output, target):
 
 def get_loss_func(opt):    
     if(opt['training_mode'] == "inr"):
-        return l1
+        return l1_loss
     elif(opt['training_mode'] == "uvw"):
-        return l1
+        return l1_loss
     elif(opt['training_mode'] == "uvwf_any"):
         return uvwf_any_loss
     elif(opt['training_mode'] == "uvwf_parallel"):

@@ -3,7 +3,7 @@ import argparse
 from Datasets.datasets import Dataset
 import datetime
 from Other.utility_functions import str2bool
-from Models.models import load_model
+from Models.models import load_model, create_model, save_model
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -55,18 +55,8 @@ def log_grad_image(model, grid_to_sample, writer, iteration):
                 iteration, dataformats='HWC')
 
 def logging(writer, iteration, loss):
-    if(iteration % opt['save_every'] == 0):
-        model.save()
-
     if(iteration % 5 == 0):
-        log_to_writer(iteration, loss, writer, dataset, opt)
-    
-    if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
-        grid_to_sample = dataset.data.shape[2:]
-        if(opt['log_image']):
-            log_image(model, dataset, grid_to_sample, writer, iteration)
-        if(opt['log_gradient']):
-            log_grad_image(model, grid_to_sample, writer, iteration)
+        log_to_writer(iteration, loss, writer, opt)
                     
 def train(rank, model, dataset, opt):
     print("Training on device " + str(rank))
@@ -125,7 +115,7 @@ def train(rank, model, dataset, opt):
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
 
-    model.save()
+    save_model(model, opt)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains an implicit model on data.')
@@ -134,7 +124,7 @@ if __name__ == '__main__':
         help='Number of dimensions in the data')
     parser.add_argument('--n_outputs',default=None,type=int,
         help='Number of output channels for the data (ex. 1 for scalar field, 3 for image or vector field)')
-    parser.add_argument('--model_architecture',default=None,type=str,
+    parser.add_argument('--model',default=None,type=str,
         help='The model architecture used for training')
     parser.add_argument('--training_mode',default=None,type=str,
         help='Training mode chooses the loss function for the model, as ' + \
@@ -209,9 +199,8 @@ if __name__ == '__main__':
             if args[k] is not None:
                 opt[k] = args[k]
 
-        # Determine scales    
         dataset = Dataset(opt)
-        model = ImplicitModel(opt)
+        model = create_model(opt)
     else:        
         opt = load_options(os.path.join(save_folder, args["load_from"]))
         opt["device"] = args["device"]
@@ -238,6 +227,6 @@ if __name__ == '__main__':
                 dataset,opt)
         
     opt['iteration_number'] = 0
-    model.save()
+    save_model(model, opt)
     
 

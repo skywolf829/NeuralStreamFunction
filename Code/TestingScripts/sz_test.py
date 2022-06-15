@@ -9,7 +9,7 @@ import argparse
 import h5py
 import time
 import torch
-from utility_functions import *
+from Other.utility_functions import *
 
 
 if __name__ == '__main__':

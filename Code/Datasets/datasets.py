@@ -1,12 +1,12 @@
 import os
 import torch
-import h5py
+import netCDF4 as nc
 from Other.utility_functions import make_coord_grid, normal, binormal
 import torch.nn.functional as F
 import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
-project_folder_path = os.path.join(project_folder_path, "..")
+project_folder_path = os.path.join(project_folder_path, "..", "..")
 data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
@@ -19,28 +19,25 @@ class Dataset(torch.utils.data.Dataset):
         self.max_ = None
         self.mean_ = None
         self.full_coord_grid = None
-        
-        folder_to_load = os.path.join(data_folder, self.opt['signal_file_name'])
+        folder_to_load = os.path.join(data_folder, self.opt['data'])
 
-        print("Initializing dataset - reading %s" % folder_to_load)
+        print(f"Initializing dataset - reading {folder_to_load}")
         
-        f = h5py.File(folder_to_load, 'r')
-        d = torch.tensor(np.array(f.get('data'))).unsqueeze(0).to(self.opt['data_device'])
-        f.close()
+        f = nc.Dataset(folder_to_load)
+        channels = []
+        for a in f.variables:
+            d = np.array(f[a])
+            channels.append(d)
+        d = np.stack(channels)
+        d = torch.tensor(d).unsqueeze(0)
+        d = d.to(opt['data_device'])   
         d /= (d.norm(dim=1).max() + 1e-8)
-            
-        if(opt['fit_gradient'] and opt['gradient_direction'] == "N"):
-            print("calculating normal direction")
-            d = normal(d, normalize=True)
-        elif(opt['fit_gradient'] and opt['gradient_direction'] == "B"):           
-            print("calculating binormal direction")
-            d = binormal(d, normalize=True)
-        elif(opt['dual_stream_function'] == "N_parallel" or \
-            opt['dual_stream_function'] == "N_direction"):
-            print("Calculating N")
-            self.n = normal(d, normalize=True)
-            
         self.data = d
+            
+        if("direction" in opt['training_mode'] or "parallel" in opt['training_mode']):
+            n = normal(d, normalize=True)
+            print(n.shape)
+            self.normal = n
         self.index_grid = make_coord_grid(
             self.data.shape[2:], 
             self.opt['data_device'],
@@ -109,52 +106,43 @@ class Dataset(torch.utils.data.Dataset):
         return self.full_coord_grid
 
     def get_random_points(self, n_points):        
-        if(self.opt['interpolate']):
-            x = (torch.rand([1, n_points, len(self.data.shape[2:])], 
-                device=self.data.device) - 0.5) * 2
-            for _ in range(len(self.data.shape[2:])-1):
-                x = x.unsqueeze(-2)
-            
-            if(self.opt['dual_stream_function'] == "N_parallel" or \
-                self.opt['dual_stream_function'] == "N_direction"):
-                y_n = F.grid_sample(self.n, 
-                    x, mode='bilinear', align_corners=False)
-                y = F.grid_sample(self.data, 
-                    x, mode='bilinear', align_corners=False)
-            else:
-                y = F.grid_sample(self.data, 
-                    x, mode='bilinear', align_corners=False)
-        else:
-            possible_spots = self.index_grid
-            if(self.opt['growing_training']):
-                mag = 0.1 + (3**0.5)*(self.opt['iteration_number']  / (self.opt['iterations']/2))
+        possible_spots = self.index_grid
 
-                possible_spots = possible_spots[self.index_mags < mag]
-            
-            if(n_points >= possible_spots.shape[0]):
-                x = possible_spots.clone().unsqueeze_(0)
-            else:
-                samples = torch.rand(possible_spots.shape[0], 
-                    dtype=torch.float32, device=self.opt['data_device']) < \
-                        n_points / possible_spots.shape[0]
-                x = possible_spots[samples].clone().unsqueeze_(0)
-            for _ in range(len(self.data.shape[2:])-1):
-                x = x.unsqueeze(-2)
-            if(self.opt['dual_stream_function'] == "N_parallel" or \
-                self.opt['dual_stream_function'] == "N_direction"):
-                y_n = F.grid_sample(self.n, 
-                    x, mode='nearest', align_corners=False)
-                y = F.grid_sample(self.data, 
-                    x, mode='nearest', align_corners=False)
-                y = torch.cat([y, y_n], dim=1)
-            else:
-                y = F.grid_sample(self.data, 
-                    x, mode='nearest', align_corners=False)
+        if(n_points >= possible_spots.shape[0]):
+            x = possible_spots.clone().unsqueeze_(0)
+        else:
+            samples = torch.randperm(possible_spots.shape[0], 
+                dtype=torch.long, device="cpu")[:n_points].to(self.opt['device'])
+            # Change above to not use CPU when not on MPS
+            # Verify that the bottom two lines do the same thing
+            x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
+            #x = possible_spots[samples].clone().unsqueeze_(0)
+        for _ in range(len(self.data.shape[2:])-1):
+            x = x.unsqueeze(-2)
+        
+
+        y = F.grid_sample(self.data, 
+            x, mode='nearest', align_corners=False)
+        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
+            y_n = F.grid_sample(self.normal, 
+                x, mode='nearest', align_corners=False)
                 
         x = x.squeeze()
         y = y.squeeze()
-        if(len(y.shape) == 1):
-            y = y.unsqueeze(0)        
-        y = y.permute(1,0)
 
-        return x, y
+        if(len(y.shape) == 1):
+            y = y.unsqueeze(0)      
+            y_n = y_n.unsqueeze(0)  
+
+        y = y.permute(1,0)
+        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
+            y_n = y_n.permute(1,0)
+
+        to_return = {
+            "inputs": x,
+            "data": y
+        }
+        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
+            to_return["normal"] = y_n
+        
+        return to_return

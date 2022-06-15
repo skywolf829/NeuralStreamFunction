@@ -292,13 +292,14 @@ def make_coord_grid(shape, device, flatten=True):
         right = 1.0
         seq = left + r + (2 * r) * \
             torch.arange(0, n, 
-            device=device, 
+            device="cpu", 
             dtype=torch.float32).float()
         coord_seqs.append(seq)
-    ret = torch.stack(torch.meshgrid(*coord_seqs, indexing="ij"), dim=-1)
+    ret = torch.meshgrid(*coord_seqs, indexing="ij")
+    ret = torch.stack(ret, dim=-1)
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
-    return ret.flip(-1)
+    return ret.flip(-1).to(device)
 
 def save_obj(obj,location):
     with open(location, 'wb') as f:
@@ -461,7 +462,6 @@ def binormal(vf, jac=None, normalize=True):
     # jac: [1, 3, 3, d, h, w]
     if jac is None:
         jac = jacobian(vf, normalize=normalize)
-
     Jt = torch.bmm(jac[0].permute(2, 3, 4, 0, 1).flatten(0, 2), 
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
     b = torch.cross(Jt,
@@ -477,9 +477,9 @@ def binormal(vf, jac=None, normalize=True):
 
 def jacobian(data, normalize=True):
     # Takes [b, c, d, h, w]
-    # returns [b]
     jac = []
     for i in range(data.shape[1]):
+        print(i)
         grads = []
         for j in range(len(data.shape)-2):
             g = spatial_gradient(data, i, j)

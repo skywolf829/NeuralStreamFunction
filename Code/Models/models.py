@@ -8,9 +8,11 @@ from math import pi
 from Models.options import *
 from Other.utility_functions import create_folder
 import numpy as np
+from Models.siren import SIREN
+from Models.fSRN import fSRN
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
-project_folder_path = os.path.join(project_folder_path, "..")
+project_folder_path = os.path.join(project_folder_path, "..", "..")
 data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
@@ -27,7 +29,7 @@ def save_model(model,opt):
 
 def load_model(opt, device):
     path_to_load = os.path.join(save_folder, opt["save_name"])
-    model = ImplicitModel(opt)
+    model = create_model(opt)
 
     ckpt = torch.load(os.path.join(path_to_load, 'model.ckpt.tar'), 
         map_location = device)
@@ -35,6 +37,15 @@ def load_model(opt, device):
     model.load_state_dict(ckpt['state_dict'])
 
     return model
+
+def create_model(opt):
+    if(opt['model'] == "siren"):
+        return SIREN(opt)
+    elif(opt['model'] == 'fSRN'):
+        return fSRN(opt)
+    else:
+        print(f"Model {opt['model']} does not exist.")
+        quit()
 
 class PositionalEncoding(nn.Module):
     def __init__(self, opt):
@@ -64,63 +75,6 @@ class PositionalEncoding(nn.Module):
             locations[..., 4::6] = torch.cos(locations[..., 4::6])
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
-    
-class SineLayer(nn.Module):
-    def __init__(self, in_features, out_features, bias=True,
-                 is_first=False, omega_0=30):
-        super().__init__()
-        self.omega_0 = omega_0
-        self.is_first = is_first
-        
-        self.in_features = in_features
-        self.linear = nn.Linear(in_features, out_features, 
-            bias=bias)
-        
-        self.init_weights()
-    
-    def init_weights(self):
-        with torch.no_grad():
-            if self.is_first:
-                self.linear.weight.uniform_(-1 / self.in_features, 
-                                             1 / self.in_features)      
-            else:
-                self.linear.weight.uniform_(-np.sqrt(6 / self.in_features) / self.omega_0, 
-                                             np.sqrt(6 / self.in_features) / self.omega_0)
-        
-    def forward(self, input):
-        return torch.sin(self.omega_0 * self.linear(input))
-    
-    def forward_with_intermediate(self, input): 
-        # For visualization of activation distributions
-        intermediate = self.omega_0 * self.linear(input)
-        return torch.sin(intermediate), intermediate
-
-class ResidualSineLayer(nn.Module):
-    def __init__(self, features, bias=True, ave_first=False, ave_second=False, omega_0=30):
-        super().__init__()
-        self.omega_0 = omega_0
-
-        self.features = features
-        self.linear_1 = nn.Linear(features, features, bias=bias)
-        self.linear_2 = nn.Linear(features, features, bias=bias)
-
-        self.weight_1 = .5 if ave_first else 1
-        self.weight_2 = .5 if ave_second else 1
-
-        self.init_weights()
-  
-
-    def init_weights(self):
-        with torch.no_grad():
-            self.linear_1.weight.uniform_(-np.sqrt(6 / self.features) / self.omega_0, 
-                                           np.sqrt(6 / self.features) / self.omega_0)
-            self.linear_2.weight.uniform_(-np.sqrt(6 / self.features) / self.omega_0, 
-                                           np.sqrt(6 / self.features) / self.omega_0)
-
-    def forward(self, input):
-        sine_1 = torch.sin(self.omega_0 * self.linear_1(self.weight_1*input))
-        sine_2 = torch.sin(self.omega_0 * self.linear_2(sine_1))
-        return self.weight_2*(input+sine_2)
     
 class LReLULayer(nn.Module):
     def __init__(self, in_features, out_features, bias=True,

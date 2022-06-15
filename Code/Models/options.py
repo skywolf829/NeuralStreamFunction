@@ -8,10 +8,10 @@ class Options():
         # For descriptions of all variables, see train.py
         opt['n_dims']                               = 3       
         opt['n_outputs']                            = 2
-        opt['model_architecture']                   = 'siren'
+        opt['model']                                = 'siren'
         opt['training_mode']                        = 'inr'                
 
-        opt['data']                                 = 'tornado3d.h5'
+        opt['data']                                 = 'tornado.h5'
         opt['save_name']                            = 'tornado'
         opt['n_layers']                             = 4       
         opt['nodes_per_layer']                      = 128
