@@ -1,7 +1,7 @@
 import os
 import torch
 import h5py
-from utility_functions import make_coord_grid, normal, binormal
+from Other.utility_functions import make_coord_grid, normal, binormal
 import torch.nn.functional as F
 import numpy as np
 

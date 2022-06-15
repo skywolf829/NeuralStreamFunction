@@ -2,8 +2,8 @@ from __future__ import absolute_import, division, print_function
 import argparse
 from Datasets.datasets import Dataset
 import datetime
-from Other.utility_functions import str2bool, PSNR
-from Models.models import load_model, save_model, ImplicitModel
+from Other.utility_functions import str2bool
+from Models.models import load_model
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -22,61 +22,9 @@ data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
-def train_loop(model, dataset, opt):
-    model.zero_grad()
-    x, y = dataset.get_random_points(opt['points_per_iteration'])
-    x = x.to(opt['device'])
-    y = y.to(opt['device'])
-    loss_func = get_loss_func(opt)
-    
-    if(opt['fit_gradient']):
-        y_estimated, x = model.forward_w_grad(x)
-        y_estimated = torch.autograd.grad(y_estimated, x, 
-                grad_outputs=torch.ones_like(y_estimated),
-                create_graph=True)[0]        
-        loss = loss_func(y, y_estimated)
-        
-    elif(opt['dual_stream_function'] is not None):
-        y_estimated, x = model.forward_w_grad(x)
-        grads_f = torch.autograd.grad(y_estimated[:,0], x, 
-                grad_outputs=torch.ones_like(y_estimated[:,0]),
-                create_graph=True)[0]
-        grads_g = torch.autograd.grad(y_estimated[:,1], x, 
-                grad_outputs=torch.ones_like(y_estimated[:,1]),
-                create_graph=True)[0]
-        
-        if(opt['dual_stream_function'] == "N_parallel"):
-            y_estimated = torch.cross(grads_f.detach(), grads_g, dim=1)
-            loss = angle_parallel_loss(grads_f, y[:,3:]) + \
-                loss_func(y[:,0:3], y_estimated)
-        elif(opt['dual_stream_function'] == "N_direction"):
-            y_estimated = torch.cross(grads_f.detach(), grads_g, dim=1)
-            loss = angle_same_loss(grads_f, y[:,3:]) + \
-                loss_func(y[:,0:3], y_estimated)
-        else:
-            y_estimated = torch.cross(grads_f, grads_g, dim=1)
-            loss = loss_func(y, y_estimated)
-        
-    else:
-        y_estimated = model(x)
-        loss = loss_func(y, y_estimated)
-
-    return x, y, y_estimated, loss
-
-def log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt):
-    with torch.no_grad():
-        #p_vf = PSNR(y_estimated.detach(), y.detach(), 
-        #    dataset.max()-dataset.min())
-        #writer.add_scalar('PSNR', p_vf.item(), iteration)
-        #writer.add_scalar('loss', loss.item(), iteration)
-        
-        if "magangle_same" in opt['loss'] or "l1" in opt['loss'] or 'mse' in opt['loss']:
-            p = PSNR(y, y_estimated, range=y.max()-y.min())
-            writer.add_scalar('PSNR', p, iteration)
-            print(f"Iteration {iteration}/{opt['iterations']}, loss: {loss.item() : 0.05f}, PSNR: {p : 0.02f}")
-        else:            
-            print(f"Iteration {iteration}/{opt['iterations']}, loss: {loss.item() : 0.05f}")
-
+def log_to_writer(iteration, loss, writer, opt):
+    with torch.no_grad():        
+        print(f"Iteration {iteration}/{opt['iterations']}, loss: {loss.item() : 0.05f}")
         writer.add_scalar('Loss', loss.item(), iteration)
         GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
@@ -106,12 +54,12 @@ def log_grad_image(model, grid_to_sample, writer, iteration):
                 grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
                 iteration, dataformats='HWC')
 
-def logging(writer, iteration, y, y_estimated, loss):
+def logging(writer, iteration, loss):
     if(iteration % opt['save_every'] == 0):
-        save_model(model, opt)
+        model.save()
 
     if(iteration % 5 == 0):
-        log_to_writer(iteration, y, y_estimated, loss, writer, dataset, opt)
+        log_to_writer(iteration, loss, writer, dataset, opt)
     
     if(iteration % 100 == 0 and (opt['log_image'] or opt['log_gradient'])):
         grid_to_sample = dataset.data.shape[2:]
@@ -120,7 +68,7 @@ def logging(writer, iteration, y, y_estimated, loss):
         if(opt['log_gradient']):
             log_grad_image(model, grid_to_sample, writer, iteration)
                     
-def train_implicit_model(rank, model, dataset, opt):
+def train(rank, model, dataset, opt):
     print("Training on device " + str(rank))
     if(opt['train_distributed']):        
         print("Initializing process group.")
@@ -155,64 +103,90 @@ def train_implicit_model(rank, model, dataset, opt):
     
     model.train(True)
 
+    loss_func = get_loss_func(opt)
+
     for iteration in range(0, opt['iterations']):
         opt['iteration_number'] = iteration
-        x, y, y_estimated, loss = train_loop(model, dataset, opt)
+
+        model.zero_grad()
+        data = dataset.get_random_points(opt['points_per_iteration'])
+        x = data['inputs'].to(opt['device'])
+
+        model_output = model(x)
+        loss = loss_func(model_output, data)
+
         loss.backward()
         optimizer.step()
         scheduler.step()
         
         if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
-            logging(writer, iteration, y, y_estimated, loss)
+            logging(writer, iteration, loss)
     
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
 
-    save_model(model, opt)
+    model.save()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Train on an input that is 2D')
+    parser = argparse.ArgumentParser(description='Trains an implicit model on data.')
 
-    parser.add_argument('--n_dims',default=None,type=int)
-    parser.add_argument('--n_outputs',default=None,type=int)
-    parser.add_argument('--activation_function',default=None,type=str)
-    parser.add_argument('--residual',default=None,type=str2bool)
-    parser.add_argument('--growing_training',default=None,type=str2bool)
+    parser.add_argument('--n_dims',default=None,type=int,
+        help='Number of dimensions in the data')
+    parser.add_argument('--n_outputs',default=None,type=int,
+        help='Number of output channels for the data (ex. 1 for scalar field, 3 for image or vector field)')
+    parser.add_argument('--model_architecture',default=None,type=str,
+        help='The model architecture used for training')
+    parser.add_argument('--training_mode',default=None,type=str,
+        help='Training mode chooses the loss function for the model, as ' + \
+        'well as assumes what each output from the model means.'
+    )
+    parser.add_argument('--device',default=None, type=str,
+        help='Which device to train on')
+    parser.add_argument('--data_device',default=None,type=str,
+        help='Which device to keep the data on')
     
-    parser.add_argument('--use_positional_encoding',default=None,type=str2bool)
-    parser.add_argument('--num_positional_encoding_terms',default=None,type=int)
-    parser.add_argument('--dropout',default=None,type=str2bool)
-    parser.add_argument('--dropout_p',default=None,type=float)
-    parser.add_argument('--interpolate',default=None,type=str2bool)  
-      
-    parser.add_argument('--gradient_direction',default=None,type=str)    
-    parser.add_argument('--fit_gradient',default=None,type=str2bool)
-    parser.add_argument('--dual_stream_function',default=None,type=str)
+    parser.add_argument('--data',default=None,type=str,
+        help='Data file name')
+    parser.add_argument('--save_name',default=None,type=str,
+        help='Save name for the model')
     
-    parser.add_argument('--signal_file_name',default=None,type=str)
-    parser.add_argument('--save_name',default=None,type=str)
+    parser.add_argument('--n_layers',default=None,type=int,
+        help='Number of layers in the model')
+    parser.add_argument('--nodes_per_layer',default=None,type=int,
+        help='Nodes per layer in the model')    
     
-    parser.add_argument('--n_layers',default=None,type=int)
-    parser.add_argument('--nodes_per_layer',default=None,type=int)    
-    
-    parser.add_argument('--loss',default=None,type=str)
-    parser.add_argument('--train_distributed',default=None,type=str2bool)
-    parser.add_argument('--device',default=None, type=str)
-    parser.add_argument('--data_device',default=None,type=str)
-    parser.add_argument('--gpus_per_node',default=None, type=int)
-    parser.add_argument('--num_nodes',default=None, type=int)
-    parser.add_argument('--ranking',default=None, type=int)
-    parser.add_argument('--iterations',default=None, type=int)
-    parser.add_argument('--points_per_iteration',default=None, type=int)
-    parser.add_argument('--lr',default=None, type=float)
-    parser.add_argument('--beta_1',default=None, type=float)
-    parser.add_argument('--beta_2',default=None, type=float)
-    parser.add_argument('--iteration_number',default=None, type=int)
-    parser.add_argument('--save_every',default=None, type=int)
-    parser.add_argument('--log_every',default=None, type=int)
-    parser.add_argument('--load_from',default=None, type=str)
-    parser.add_argument('--log_image',default=None, type=str2bool)
-    parser.add_argument('--log_gradient',default=None, type=str2bool)
+    parser.add_argument('--train_distributed',default=None,type=str2bool,
+        help='Train on multiple GPUs')
+    parser.add_argument('--gpus_per_node',default=None, type=int,
+        help='GPUs per node when training distributed')
+    parser.add_argument('--num_nodes',default=None, type=int,
+        help='Number of nodes')
+    parser.add_argument('--ranking',default=None, type=int,
+        help='Not used.')
+
+    parser.add_argument('--iterations',default=None, type=int,
+        help='Number of iterations to train')
+    parser.add_argument('--points_per_iteration',default=None, type=int,
+        help='Number of points to sample per training loop update')
+    parser.add_argument('--lr',default=None, type=float,
+        help='Learning rate for the adam optimizer')
+    parser.add_argument('--beta_1',default=None, type=float,
+        help='Beta1 for the adam optimizer')
+    parser.add_argument('--beta_2',default=None, type=float,
+        help='Beta2 for the adam optimizer')
+
+    parser.add_argument('--iteration_number',default=None, type=int,
+        help="Not used.")
+    parser.add_argument('--save_every',default=None, type=int,
+        help='How often to save the model')
+    parser.add_argument('--log_every',default=None, type=int,
+        help='How often to log the loss')
+    parser.add_argument('--load_from',default=None, type=str,
+        help='Model to load to start training from')
+    parser.add_argument('--log_image',default=None, type=str2bool,
+        help='Whether or not to log an image. Slows down training.')
+    parser.add_argument('--log_gradient',default=None, type=str2bool,
+        help='Whether or not to log the gradient of the output. Slows down training.')
 
 
     args = vars(parser.parse_args())
@@ -251,21 +225,19 @@ if __name__ == '__main__':
     now = datetime.datetime.now()
     start_time = time.time()
     
-        
-
        
     if(opt['train_distributed']):
         os.environ['MASTER_ADDR'] = '127.0.0.1'              
         os.environ['MASTER_PORT'] = '29500' 
-        mp.spawn(train_implicit_model,
+        mp.spawn(train,
             args=(model, dataset, opt),
             nprocs=opt['gpus_per_node'],
             join=True)
     else:
-        train_implicit_model(opt['device'], model, 
+        train(opt['device'], model, 
                 dataset,opt)
         
     opt['iteration_number'] = 0
-
-        
+    model.save()
+    
 

@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 from math import pi
-from options import *
-from utility_functions import create_folder
+from Models.options import *
+from Other.utility_functions import create_folder
 import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -65,7 +65,7 @@ class PositionalEncoding(nn.Module):
             locations[..., 5::6] = torch.cos(locations[..., 5::6])
         return locations
     
-class SineLayer(nn.Module):  
+class SineLayer(nn.Module):
     def __init__(self, in_features, out_features, bias=True,
                  is_first=False, omega_0=30):
         super().__init__()
@@ -122,7 +122,7 @@ class ResidualSineLayer(nn.Module):
         sine_2 = torch.sin(self.omega_0 * self.linear_2(sine_1))
         return self.weight_2*(input+sine_2)
     
-class LReLULayer(nn.Module):  
+class LReLULayer(nn.Module):
     def __init__(self, in_features, out_features, bias=True,
                  is_first=False):
         super().__init__()
