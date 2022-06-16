@@ -1,0 +1,122 @@
+{
+    "tornado_uvw": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "uvw",
+        "n_dims": 3,
+        "n_outputs": 3,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_uvw"
+    },
+    "tornado_uvwf_any": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "uvwf_any",
+        "n_dims": 3,
+        "n_outputs": 4,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_uvwf_any"
+    },
+    "tornado_uvwf_parallel": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "uvwf_parallel",
+        "n_dims": 3,
+        "n_outputs": 4,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_uvwf_parallel"
+    },
+    "tornado_uvwf_direction": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "uvwf_direction",
+        "n_dims": 3,
+        "n_outputs": 4,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_uvwf_direction"
+    },
+    "tornado_dsf_any": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsf_any",
+        "n_dims": 3,
+        "n_outputs": 2,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsf_any"
+    },
+    "tornado_dsf_parallel": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsf_parallel",
+        "n_dims": 3,
+        "n_outputs": 2,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsf_parallel"
+    },
+    "tornado_dsf_direction": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsf_direction",
+        "n_dims": 3,
+        "n_outputs": 2,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsf_direction"
+    },
+    "tornado_dsfm_any": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsfm_any",
+        "n_dims": 3,
+        "n_outputs": 3,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsfm_any"
+    },
+    "tornado_dsfm_parallel": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsfm_parallel",
+        "n_dims": 3,
+        "n_outputs": 3,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsfm_parallel"
+    },
+    "tornado_dsfm_direction": {
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "dsfm_direction",
+        "n_dims": 3,
+        "n_outputs": 3,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_dsfm_direction"
+    }
+}
