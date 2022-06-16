@@ -309,6 +309,13 @@ def load_obj(location):
     with open(location, 'rb') as f:
         return pickle.load(f)
 
+def create_path(path):
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except OSError:
+            print(f"Creation of the directory {path} failed")
+    
 def create_folder(start_path, folder_name):
     f_name = folder_name
     full_path = os.path.join(start_path, f_name)
@@ -320,11 +327,6 @@ def create_folder(start_path, folder_name):
     else:
         #print_to_log_and_console("%s already exists, overwriting save " % (f_name))
         full_path = os.path.join(start_path, f_name)
-    if not os.path.exists(full_path):
-        try:
-            os.makedirs(full_path)
-        except OSError:
-            print("Creation of the directory %s failed" % full_path)
     return f_name
 
 def tensor_to_cdf(t, location, channel_names=None):

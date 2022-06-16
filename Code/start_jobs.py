@@ -5,6 +5,7 @@ import json
 import time
 import subprocess
 import shlex
+from Other.utility_functions import create_path
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -25,7 +26,7 @@ def build_commands(settings_path):
             command = command + "--" + str(var_name) + " "
             command = command + str(data[run_name][var_name]) + " "
         commands.append(command)        
-        log_locations.append(os.path.join(save_folder, data[run_name]["save_name"]), "log.txt")
+        log_locations.append(os.path.join(save_folder, data[run_name]["save_name"], "log.txt"))
     f.close()
     return command_names, commands, log_locations
 
@@ -81,6 +82,7 @@ if __name__ == '__main__':
             c = c + "--device " + str(g) + " --data_device " + str(g)
             c_split = shlex.split(c)
             # Logging location
+            create_path(log_location[:-7])
             output_path = open(log_location,'w+')
             # Start the job
             print(f"Starting job {c_name} on device {g}")
