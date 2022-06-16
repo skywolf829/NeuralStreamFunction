@@ -7,7 +7,7 @@
         "n_outputs": 3,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvw"
     },
@@ -19,7 +19,7 @@
         "n_outputs": 4,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_any"
     },
@@ -31,7 +31,7 @@
         "n_outputs": 4,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_parallel"
     },
@@ -43,7 +43,7 @@
         "n_outputs": 4,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_direction"
     },
@@ -55,7 +55,7 @@
         "n_outputs": 2,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_any"
     },
@@ -67,7 +67,7 @@
         "n_outputs": 2,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_parallel"
     },
@@ -79,7 +79,7 @@
         "n_outputs": 2,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_direction"
     },
@@ -91,7 +91,7 @@
         "n_outputs": 3,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_any"
     },
@@ -103,7 +103,7 @@
         "n_outputs": 3,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_parallel"
     },
@@ -115,7 +115,7 @@
         "n_outputs": 3,
         "n_layers": 4,
         "nodes_per_layer": 256,
-        "iterations": 10,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_direction"
     }
