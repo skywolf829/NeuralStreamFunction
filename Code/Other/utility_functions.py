@@ -10,8 +10,6 @@ from netCDF4 import Dataset
 import pickle
 import h5py
 import numba as nb
-import vtk
-from vtkmodules.util import numpy_support  
   
 def reset_grads(model,require_grad):
     for p in model.parameters():
@@ -377,7 +375,9 @@ def tensor_to_h5(t, location):
 # x,y,z coordiantes either numpy / vtk array 
 def get_vtr(dims, xCoords, yCoords, zCoords, 
             scalar_fields={}, vector_fields={}):
-  
+    
+    import vtk
+    from vtkmodules.util import numpy_support  
     assert type(xCoords) == type(yCoords) and type(yCoords) == type(zCoords)
     assert isinstance(xCoords, np.ndarray) or isinstance(xCoords, vtk.vtkDataArray)
 
