@@ -292,14 +292,14 @@ def make_coord_grid(shape, device, flatten=True):
         right = 1.0
         seq = left + r + (2 * r) * \
             torch.arange(0, n, 
-            device="cpu", 
+            device=device, 
             dtype=torch.float32).float()
         coord_seqs.append(seq)
     ret = torch.meshgrid(*coord_seqs, indexing="ij")
     ret = torch.stack(ret, dim=-1)
     if(flatten):
         ret = ret.view(-1, ret.shape[-1])
-    return ret.flip(-1).to(device)
+    return ret.flip(-1)
 
 def save_obj(obj,location):
     with open(location, 'wb') as f:
@@ -479,7 +479,6 @@ def jacobian(data, normalize=True):
     # Takes [b, c, d, h, w]
     jac = []
     for i in range(data.shape[1]):
-        print(i)
         grads = []
         for j in range(len(data.shape)-2):
             g = spatial_gradient(data, i, j)
@@ -493,7 +492,6 @@ def jacobian(data, normalize=True):
 def spatial_gradient(data, channel, dimension):
     # takes the gradient along dimension in channel
     # expects data to be [b, c, d, h, w]
-
     data_padded = F.pad(data[:,channel:channel+1], 
         [1, 1, 1, 1, 1, 1],
         mode = "replicate")

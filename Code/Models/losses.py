@@ -67,7 +67,7 @@ def uvwf_any_loss(network_output, target):
     grads_f = torch.autograd.grad(network_output[:,-1], target['inputs'], 
         grad_outputs=torch.ones_like(network_output[:,-1]),
         create_graph=True)[0]
-    f_err = angle_orthogonal_loss(grads_f, target)
+    f_err = angle_orthogonal_loss(grads_f, target['data'])
     return l1_err + f_err
 
 def uvwf_parallel_loss(network_output, target):
@@ -130,9 +130,7 @@ def dsfm_any_loss(network_output, target):
         create_graph=True)[0]
     dsf = torch.cross(grads_f, grads_g, dim=1)
     angle_err = angle_same_loss(dsf, target['data'])
-    dsf = torch.cross(grads_f.detach(), grads_g, dim=1)
-    dsf = dsf * network_output[:,-1]
-    l1_err = l1(dsf, target['data'])
+    l1_err = l1(network_output[:,-1], torch.norm(target['data'], dim=-1))
     return angle_err + l1_err
 
 def dsfm_parallel_loss(network_output, target):
@@ -144,9 +142,9 @@ def dsfm_parallel_loss(network_output, target):
         create_graph=True)[0]
     normal_err = angle_parallel_loss(grads_f, target['normal'])
     dsf = torch.cross(grads_f.detach(), grads_g, dim=1)
-    dsf = dsf * network_output[:,-1]
-    l1_err = l1(dsf, target['data'])
-    return normal_err + l1_err
+    angle_err = angle_same_loss(dsf, target['data'])    
+    l1_err = l1(network_output[:,-1], torch.norm(target['data'], dim=-1))
+    return normal_err + angle_err + l1_err
 
 def dsfm_direction_loss(network_output, target):
     grads_f = torch.autograd.grad(network_output[:,0], target['inputs'], 
@@ -157,9 +155,9 @@ def dsfm_direction_loss(network_output, target):
         create_graph=True)[0]
     normal_err = angle_same_loss(grads_f, target['normal'])
     dsf = torch.cross(grads_f.detach(), grads_g, dim=1)
-    dsf = dsf * network_output[:,-1]
-    l1_err = l1(dsf, target['data'])
-    return normal_err + l1_err
+    angle_err = angle_same_loss(dsf, target['data'])
+    l1_err = l1(network_output[:,-1], torch.norm(target['data'], dim=-1))
+    return normal_err + angle_err + l1_err
 
 def hhd_loss(network_output, target):
     print("Not yet implemented")
@@ -178,15 +176,15 @@ def get_loss_func(opt):
         return uvwf_direction_loss
     elif(opt['training_mode'] == "dsf_any"):
         return dsf_any_loss
-    elif(opt['training_mode'] == "dsf_principle_parallel"):
+    elif(opt['training_mode'] == "dsf_parallel"):
         return dsf_parallel_loss
-    elif(opt['training_mode'] == "dsf_principle_direction"):
+    elif(opt['training_mode'] == "dsf_direction"):
         return dsf_direction_loss
     elif(opt['training_mode'] == "dsfm_any"):
         return dsfm_any_loss
-    elif(opt['training_mode'] == "dsfm_principle_parallel"):
+    elif(opt['training_mode'] == "dsfm_parallel"):
         return dsfm_parallel_loss
-    elif(opt['training_mode'] == "dsfm_principle_direction"):
+    elif(opt['training_mode'] == "dsfm_direction"):
         return dsfm_direction_loss
     elif(opt['training_mode'] == "hhd"):
         return hhd_loss

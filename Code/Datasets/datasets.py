@@ -36,7 +36,6 @@ class Dataset(torch.utils.data.Dataset):
             
         if("direction" in opt['training_mode'] or "parallel" in opt['training_mode']):
             n = normal(d, normalize=True)
-            print(n.shape)
             self.normal = n
         self.index_grid = make_coord_grid(
             self.data.shape[2:], 
@@ -86,7 +85,7 @@ class Dataset(torch.utils.data.Dataset):
             positions[i] -= 0.5
             positions[i] *= 2
         grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1).unsqueeze(0)
-        #print(grid_to_sample.shape)
+
         vals = F.grid_sample(self.data, 
                 grid_to_sample, mode='bilinear', align_corners=False)
         print('dataset sample rect vals shape')
@@ -112,7 +111,7 @@ class Dataset(torch.utils.data.Dataset):
             x = possible_spots.clone().unsqueeze_(0)
         else:
             samples = torch.randperm(possible_spots.shape[0], 
-                dtype=torch.long, device="cpu")[:n_points].to(self.opt['device'])
+                dtype=torch.long, device=self.opt['data_device'])[:n_points]
             # Change above to not use CPU when not on MPS
             # Verify that the bottom two lines do the same thing
             x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
@@ -123,26 +122,30 @@ class Dataset(torch.utils.data.Dataset):
 
         y = F.grid_sample(self.data, 
             x, mode='nearest', align_corners=False)
-        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
+        
+        y = y.squeeze()
+        if(len(y.shape) == 1):
+            y = y.unsqueeze(0)    
+        
+        y = y.permute(1,0)
+            
+        if('parallel' in self.opt['training_mode'] or 
+           'direction' in self.opt['training_mode']):
             y_n = F.grid_sample(self.normal, 
                 x, mode='nearest', align_corners=False)
+            y_n = y_n.squeeze()            
+            if(len(y_n.shape) == 1):
+                y_n = y_n.unsqueeze(0)  
+            y_n = y_n.permute(1,0)
                 
         x = x.squeeze()
-        y = y.squeeze()
-
-        if(len(y.shape) == 1):
-            y = y.unsqueeze(0)      
-            y_n = y_n.unsqueeze(0)  
-
-        y = y.permute(1,0)
-        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
-            y_n = y_n.permute(1,0)
 
         to_return = {
             "inputs": x,
             "data": y
         }
-        if('parallel' in self.opt['training_mode'] or 'direction' in self.opt['training_mode']):
+        if('parallel' in self.opt['training_mode'] or 
+           'direction' in self.opt['training_mode']):
             to_return["normal"] = y_n
         
         return to_return

@@ -100,9 +100,13 @@ def train(rank, model, dataset, opt):
 
         model.zero_grad()
         data = dataset.get_random_points(opt['points_per_iteration'])
-        x = data['inputs'].to(opt['device'])
-
-        model_output = model(x)
+        for k in data.keys():
+            data[k] = data[k].to(opt['device'])
+        if("any" in opt['training_mode'] or "direction" in opt['training_mode']
+           or "parallel" in opt['training_mode'] or opt['training_mode'] == "hhd"):
+            data['inputs'] = data['inputs'].requires_grad_(True)
+            
+        model_output = model(data['inputs'])
         loss = loss_func(model_output, data)
 
         loss.backward()
