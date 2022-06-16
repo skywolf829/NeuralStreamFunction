@@ -7,7 +7,6 @@ import os
 from math import pi
 from Models.options import *
 from Other.utility_functions import create_folder
-import numpy as np
 from Models.siren import SIREN
 from Models.fSRN import fSRN
 

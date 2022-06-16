@@ -6,7 +6,6 @@ from Other.utility_functions import str2bool
 from Models.models import load_model, create_model, save_model
 import torch
 import torch.optim as optim
-import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import time

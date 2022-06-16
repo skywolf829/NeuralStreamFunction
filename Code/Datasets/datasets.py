@@ -1,7 +1,7 @@
 import os
 import torch
 import netCDF4 as nc
-from Other.utility_functions import make_coord_grid, normal, binormal
+from Other.utility_functions import make_coord_grid, normal
 import torch.nn.functional as F
 import numpy as np
 
