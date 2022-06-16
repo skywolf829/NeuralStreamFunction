@@ -48,7 +48,10 @@ if __name__ == '__main__':
     command_names, commands, log_locations = build_commands(settings_path)
 
     if(args['gpus'] == "all"):
-        available_gpus = [torch.cuda.device(i) for i in range(torch.cuda.device_count())]
+        available_gpus = []
+        for i in range(torch.cuda.device_count()):
+            available_gpus.append("cuda:" + str(i))
+            
     else:
         available_gpus = parse_gpus(args['gpus'])
     
