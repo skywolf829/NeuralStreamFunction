@@ -3,5 +3,35 @@
         {        
         "load_from": "tornado_uvw",
         "tests": "reconstruction"
+    }],
+    "tornado_uvwf_any": [ "test.py",
+        {        
+        "load_from": "tornado_uvwf_any",
+        "tests": "reconstruction"
+    }],
+    "tornado_uvwf_parallel": [ "test.py",
+        {        
+        "load_from": "tornado_uvwf_any",
+        "tests": "tornado_uvwf_parallel"
+    }],
+    "tornado_uvwf_direction": [ "test.py",
+        {        
+        "load_from": "tornado_uvwf_direction",
+        "tests": "reconstruction"
+    }],
+    "tornado_dsfm_any": [ "test.py",
+        {        
+        "load_from": "tornado_dsfm_any",
+        "tests": "reconstruction"
+    }],
+    "tornado_dsfm_parallel": [ "test.py",
+        {        
+        "load_from": "tornado_dsfm_parallel",
+        "tests": "reconstruction"
+    }],
+    "tornado_dsfm_direction": [ "test.py",
+        {        
+        "load_from": "tornado_dsfm_direction",
+        "tests": "reconstruction"
     }]
 }

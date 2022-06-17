@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import nc_to_tensor
+from Other.utility_functions import nc_to_tensor, PSNR
 from Models.models import load_model
 from Models.options import *
 from Datasets.datasets import Dataset
@@ -25,16 +25,28 @@ def model_reconstruction(model, dataset, opt):
         with torch.no_grad():
             m = model.sample_grid(grid, max_points=100000)[...,2:3]
             m = m.permute(3, 0, 1, 2).unsqueeze(0)
+        print(grads_f.shape)
+        print(grads_g.shape)
+        print(m.shape)
         result = torch.cross(grads_f, grads_g, dim=1)
+        print(result.shape)
         result /= (result.norm(dim=1) + 1e-8)
+        print(result.shape)
         result *= m
+        print(result.shape)
         
     elif("uvw" in opt['training_mode']):
         with torch.no_grad():
             result = model.sample_grid(grid, max_points = 100000)
+            print(result.shape)
+            result = result[...,0:3]
+            print(result.shape)
             result = result.permute(3, 0, 1, 2).unsqueeze(0)
+            print(result.shape)
             
-    print(result.shape)   
+    result = result.to(opt['data_device'])
+    p = PSNR(result, data.data)
+    print(f"PSNR: {p : 0.02f}")
 
 def perform_tests(model, data, tests, opt):
     if("reconstruction" in tests):
