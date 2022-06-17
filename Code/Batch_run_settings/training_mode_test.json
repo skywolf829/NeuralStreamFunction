@@ -1,5 +1,6 @@
 {
-    "tornado_uvw": {
+    "tornado_uvw": [ "train.py",
+        {        
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "uvw",
@@ -9,9 +10,10 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "save_name": "tornado_uvw"
-    },
-    "tornado_uvwf_any": {
+        "save_name": "tornado_uvw"       
+    }],
+    "tornado_uvwf_any": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "uvwf_any",
@@ -22,8 +24,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_any"
-    },
-    "tornado_uvwf_parallel": {
+    }],
+    "tornado_uvwf_parallel": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "uvwf_parallel",
@@ -34,8 +37,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_parallel"
-    },
-    "tornado_uvwf_direction": {
+    }],
+    "tornado_uvwf_direction": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "uvwf_direction",
@@ -46,8 +50,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvwf_direction"
-    },
-    "tornado_dsf_any": {
+    }],
+    "tornado_dsf_any": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsf_any",
@@ -58,8 +63,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_any"
-    },
-    "tornado_dsf_parallel": {
+    }],
+    "tornado_dsf_parallel": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsf_parallel",
@@ -70,8 +76,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_parallel"
-    },
-    "tornado_dsf_direction": {
+    }],
+    "tornado_dsf_direction": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsf_direction",
@@ -82,8 +89,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsf_direction"
-    },
-    "tornado_dsfm_any": {
+    }],
+    "tornado_dsfm_any": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsfm_any",
@@ -94,8 +102,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_any"
-    },
-    "tornado_dsfm_parallel": {
+    }],
+    "tornado_dsfm_parallel": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsfm_parallel",
@@ -106,8 +115,9 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_parallel"
-    },
-    "tornado_dsfm_direction": {
+    }],
+    "tornado_dsfm_direction": [ "train.py",
+        {
         "model": "fSRN",
         "data": "tornado.nc",
         "training_mode": "dsfm_direction",
@@ -118,5 +128,5 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_dsfm_direction"
-    }
+    }]
 }

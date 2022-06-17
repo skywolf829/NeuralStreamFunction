@@ -21,12 +21,17 @@ def build_commands(settings_path):
     log_locations = []
     for run_name in data.keys():
         command_names.append(run_name)
-        command = "python Code/train.py "
-        for var_name in data[run_name].keys():
+        script_name = data[run_name][0]
+        variables = data[run_name][1]
+        command = "python Code/" + str(script_name) + " "
+        for var_name in variables.keys():
             command = command + "--" + str(var_name) + " "
-            command = command + str(data[run_name][var_name]) + " "
-        commands.append(command)        
-        log_locations.append(os.path.join(save_folder, data[run_name]["save_name"], "log.txt"))
+            command = command + str(variables[var_name]) + " "
+        commands.append(command)
+        if(script_name == "train.py"):
+            log_locations.append(os.path.join(save_folder, variables["save_name"], "log.txt"))
+        elif(script_name == "test.py"):
+            log_locations.append(os.path.join(save_folder,  variables['load_from'], "log.txt"))
     f.close()
     return command_names, commands, log_locations
 
@@ -39,13 +44,13 @@ def parse_gpus(gpus_text):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains models given settings on available gpus')
-    parser.add_argument('--settings_file',default=None,type=str,
+    parser.add_argument('--settings',default=None,type=str,
         help='The settings file with options for each model to train')
     parser.add_argument('--gpus',default="all",type=str,
         help='Which [cuda] GPU(s) to train on, separated with commas. Default: all')
     args = vars(parser.parse_args())
 
-    settings_path = os.path.join(project_folder_path, "Code", "TrainingSettings", args['settings_file'])
+    settings_path = os.path.join(project_folder_path, "Code", "Batch_run_settings", args['settings'])
     command_names, commands, log_locations = build_commands(settings_path)
 
     if(args['gpus'] == "all"):
@@ -83,7 +88,7 @@ if __name__ == '__main__':
             c_split = shlex.split(c)
             # Logging location
             create_path(log_location[:-7])
-            output_path = open(log_location,'w+')
+            output_path = open(log_location,'a+')
             # Start the job
             print(f"Starting job {c_name} on device {g}")
             job = subprocess.Popen(c_split, stdout=output_path, stderr=output_path)

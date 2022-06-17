@@ -1,0 +1,9 @@
+{
+    "tornado_uvw": [ "test.py",
+        {        
+        "load_from": "tornado_uvw",
+        "tests": "tornado.nc",
+        "device": "uvw",
+        "data_device": 3
+    }]
+}

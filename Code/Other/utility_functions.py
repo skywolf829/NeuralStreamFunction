@@ -355,6 +355,17 @@ def tensor_to_cdf(t, location, channel_names=None):
         d[ch][:] = t[0,i].clone().detach().cpu().numpy()
     d.close()
 
+def nc_to_tensor(location):
+    import netCDF4 as nc
+    f = nc.Dataset(location)
+    channels = []
+    for a in f.variables:
+        d = np.array(f[a])
+        channels.append(d)
+    d = np.stack(channels)
+    d = torch.tensor(d).unsqueeze(0)
+    return d
+        
 def cdf_to_tensor(location, channel_names):
     # Assumes t is a tensor with shape (1, c, d, h[, w])
 

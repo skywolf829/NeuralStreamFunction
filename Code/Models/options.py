@@ -11,7 +11,7 @@ class Options():
         opt['model']                                = 'siren'
         opt['training_mode']                        = 'inr'                
 
-        opt['data']                                 = 'tornado.h5'
+        opt['data']                                 = 'tornado.nc'
         opt['save_name']                            = 'tornado'
         opt['n_layers']                             = 4       
         opt['nodes_per_layer']                      = 128

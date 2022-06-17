@@ -1,9 +1,12 @@
 import os
 import torch
+<<<<<<< Updated upstream
 import netCDF4 as nc
 from Other.utility_functions import make_coord_grid, normal
+=======
+from Other.utility_functions import make_coord_grid, normal, nc_to_tensor
+>>>>>>> Stashed changes
 import torch.nn.functional as F
-import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")
@@ -23,14 +26,7 @@ class Dataset(torch.utils.data.Dataset):
 
         print(f"Initializing dataset - reading {folder_to_load}")
         
-        f = nc.Dataset(folder_to_load)
-        channels = []
-        for a in f.variables:
-            d = np.array(f[a])
-            channels.append(d)
-        d = np.stack(channels)
-        d = torch.tensor(d).unsqueeze(0)
-        d = d.to(opt['data_device'])   
+        d = nc_to_tensor(folder_to_load).to(opt['data_device'])
         d /= (d.norm(dim=1).max() + 1e-8)
         self.data = d
             
