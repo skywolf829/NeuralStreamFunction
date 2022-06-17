@@ -97,5 +97,5 @@ if __name__ == '__main__':
             # Otherwise wait
             time.sleep(1.0)
 
-    print("All training has completed.")
+    print("All jobs have completed.")
     quit()

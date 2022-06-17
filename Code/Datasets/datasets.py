@@ -1,11 +1,6 @@
 import os
 import torch
-<<<<<<< Updated upstream
-import netCDF4 as nc
-from Other.utility_functions import make_coord_grid, normal
-=======
 from Other.utility_functions import make_coord_grid, normal, nc_to_tensor
->>>>>>> Stashed changes
 import torch.nn.functional as F
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -97,7 +92,7 @@ class Dataset(torch.utils.data.Dataset):
     def get_full_coord_grid(self):
         if self.full_coord_grid is None:
             self.full_coord_grid = make_coord_grid(self.data.shape[2:], 
-                    self.opt['data_device'], flatten=True).unsqueeze(0)
+                    self.opt['data_device'], flatten=True)
         return self.full_coord_grid
 
     def get_random_points(self, n_points):        

@@ -82,9 +82,8 @@ class fSRN(nn.Module):
         return output
 
 
-    def sample_grid(self, grid):
+    def sample_grid(self, grid, max_points = 100000):
         coord_grid = make_coord_grid(grid, self.opt['device'], False)
-              
         coord_grid_shape = list(coord_grid.shape)
         coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
         vals = self.forward_maxpoints(coord_grid, max_points = 100000)
