@@ -35,31 +35,34 @@ def build_commands(settings_path):
     f.close()
     return command_names, commands, log_locations
 
-def parse_gpus(gpus_text):
-    gpus = gpus_text.split(',')
-    for i in range(len(gpus)):
-        gpus[i] = gpus[i].strip()
-        gpus[i] = "cuda:"+str(gpus[i])
-    return gpus
+def parse_devices(devices_text):
+    devices = devices_text.split(',')
+    for i in range(len(devices)):
+        devices[i] = devices[i].strip()
+        if(devices[i].isnumeric()):
+            devices[i] = "cuda:"+str(devices[i])
+        else:
+            devices[i] = str(devices[i])
+    return devices
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trains models given settings on available gpus')
     parser.add_argument('--settings',default=None,type=str,
         help='The settings file with options for each model to train')
-    parser.add_argument('--gpus',default="all",type=str,
-        help='Which [cuda] GPU(s) to train on, separated with commas. Default: all')
+    parser.add_argument('--devices',default="all",type=str,
+        help='Which [cuda] devices(s) to train on, separated with commas. Default: all, which uses all available CUDA devices')
     args = vars(parser.parse_args())
 
     settings_path = os.path.join(project_folder_path, "Code", "Batch_run_settings", args['settings'])
     command_names, commands, log_locations = build_commands(settings_path)
 
-    if(args['gpus'] == "all"):
-        available_gpus = []
+    if(args['devices'] == "all"):
+        available_devices = []
         for i in range(torch.cuda.device_count()):
-            available_gpus.append("cuda:" + str(i))
+            available_devices.append("cuda:" + str(i))
             
     else:
-        available_gpus = parse_gpus(args['gpus'])
+        available_devices = parse_devices(args['devices'])
     
     jobs_training = []
     while(len(commands) + len(jobs_training) > 0):
@@ -73,17 +76,17 @@ if __name__ == '__main__':
                 jobs_training.pop(i)
                 job_end_time = time.time()
                 print(f"Job {c_name} has finished with exit code {job_code} after {(job_end_time-job_start_time)/60} minutes")
-                # The gpu is freed, added back to available_gpus
-                available_gpus.append(gpu)
+                # The gpu is freed, added back to available_devices
+                available_devices.append(gpu)
             else:
                 i += 1
 
         # Check if any gpus are available for commands in queue
-        if(len(available_gpus) > 0 and len(commands)>0):
+        if(len(available_devices) > 0 and len(commands)>0):
             c = commands.pop(0)
             c_name = command_names.pop(0)
             log_location = log_locations.pop(0)
-            g = available_gpus.pop(0)
+            g = available_devices.pop(0)
             c = c + "--device " + str(g) + " --data_device " + str(g)
             c_split = shlex.split(c)
             # Logging location
