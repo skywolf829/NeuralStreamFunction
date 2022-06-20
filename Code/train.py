@@ -84,6 +84,7 @@ def train(rank, model, dataset, opt):
         step_size=opt['iterations']//3, gamma=0.1)
 
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
+        os.rmdir(os.path.join(project_folder_path, "tensorboard", opt['save_name']))
         writer = SummaryWriter(os.path.join('tensorboard',opt['save_name']))
         gt_img = dataset.get_2D_slice()
         gt_img -= dataset.min()
