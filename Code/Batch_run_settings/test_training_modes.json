@@ -7,31 +7,31 @@
     "tornado_uvwf_any": [ "test.py",
         {        
         "load_from": "tornado_uvwf_any",
-        "tests": "reconstruction"
+        "tests": "reconstruction,streamfunction"
     }],
     "tornado_uvwf_parallel": [ "test.py",
         {        
-        "load_from": "tornado_uvwf_any",
-        "tests": "tornado_uvwf_parallel"
+        "load_from": "tornado_uvwf_parallel",
+        "tests": "reconstruction,streamfunction"
     }],
     "tornado_uvwf_direction": [ "test.py",
         {        
         "load_from": "tornado_uvwf_direction",
-        "tests": "reconstruction"
+        "tests": "reconstruction,streamfunction"
     }],
     "tornado_dsfm_any": [ "test.py",
         {        
         "load_from": "tornado_dsfm_any",
-        "tests": "reconstruction"
+        "tests": "reconstruction,streamfunction"
     }],
     "tornado_dsfm_parallel": [ "test.py",
         {        
         "load_from": "tornado_dsfm_parallel",
-        "tests": "reconstruction"
+        "tests": "reconstruction,streamfunction"
     }],
     "tornado_dsfm_direction": [ "test.py",
         {        
         "load_from": "tornado_dsfm_direction",
-        "tests": "reconstruction"
+        "tests": "reconstruction,streamfunction"
     }]
 }
