@@ -19,6 +19,21 @@
         "load_from": "tornado_uvwf_direction",
         "tests": "reconstruction,streamfunction"
     }],
+    "tornado_dsf_any": [ "test.py",
+        {        
+        "load_from": "tornado_dsf_any",
+        "tests": "streamfunction"
+    }],
+    "tornado_dsf_parallel": [ "test.py",
+        {        
+        "load_from": "tornado_dsf_parallel",
+        "tests": "streamfunction"
+    }],
+    "tornado_dsf_direction": [ "test.py",
+        {        
+        "load_from": "tornado_dsf_direction",
+        "tests": "streamfunction"
+    }],
     "tornado_dsfm_any": [ "test.py",
         {        
         "load_from": "tornado_dsfm_any",

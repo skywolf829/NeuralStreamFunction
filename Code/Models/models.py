@@ -9,6 +9,7 @@ from Models.options import *
 from Other.utility_functions import create_folder
 from Models.siren import SIREN
 from Models.fSRN import fSRN
+from Models.grid import Grid
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")
@@ -42,6 +43,8 @@ def create_model(opt):
         return SIREN(opt)
     elif(opt['model'] == 'fSRN'):
         return fSRN(opt)
+    elif(opt['model'] == 'grid'):
+        return Grid(opt)
     else:
         print(f"Model {opt['model']} does not exist.")
         quit()

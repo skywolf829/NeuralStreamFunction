@@ -16,6 +16,8 @@ class Options():
         opt['n_layers']                             = 4       
         opt['nodes_per_layer']                      = 128
 
+        opt['grid_size']                            = 128
+
         opt['train_distributed']                    = False
         opt['device']                               = 'cuda:0'
         opt['data_device']                          = 'cuda:0'
