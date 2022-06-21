@@ -1,5 +1,5 @@
 {
-    "tornado_grid": [ "train.py",
+    "tornado_grid_any": [ "train.py",
         {        
         "model": "grid",
         "data": "tornado.nc",
@@ -10,5 +10,29 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_grid_f_any"       
+    }],
+    "tornado_grid_parallel": [ "train.py",
+        {        
+        "model": "grid",
+        "data": "tornado.nc",
+        "training_mode": "f_parallel",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "lr": 0.05,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_grid_f_parallel"       
+    }],
+    "tornado_grid_direction": [ "train.py",
+        {        
+        "model": "grid",
+        "data": "tornado.nc",
+        "training_mode": "f_direction",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "lr": 0.05,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "save_name": "tornado_grid_f_direction"       
     }]
 }

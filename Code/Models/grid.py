@@ -133,7 +133,7 @@ class Grid(nn.Module):
         self.grid = nn.Parameter(data=g,requires_grad=True)
 
         with torch.no_grad():
-            self.grid.normal_()
+            self.grid.uniform_(-1, 1)
     
     def forward(self, coords):     
         output = grid_sample_3d(self.grid, coords.unsqueeze(1).unsqueeze(1).unsqueeze(0))
@@ -146,7 +146,6 @@ class Grid(nn.Module):
         return output, coords
     
     def forward_maxpoints(self, coords, max_points=100000):
-        print(coords.shape)
         output_shape = list(coords.shape)
         output_shape[-1] = self.opt['n_outputs']
         output = torch.empty(output_shape, 
@@ -154,7 +153,7 @@ class Grid(nn.Module):
         for start in range(0, coords.shape[0], max_points):
             #print("%i:%i" % (start, min(start+max_points, coords.shape[0])))
             output[start:min(start+max_points, coords.shape[0])] = \
-                self.net(coords[start:min(start+max_points, coords.shape[0])])
+                self(coords[start:min(start+max_points, coords.shape[0])])
         return output
 
 
@@ -178,14 +177,12 @@ class Grid(nn.Module):
 
         output_shape = list(coord_grid.shape)
         output_shape[-1] = self.opt['n_dims']
-        print("Output shape")
-        print(output_shape)
         output = torch.empty(output_shape, 
             dtype=torch.float32, device=self.opt['device'], 
             requires_grad=False)
 
         for start in range(0, coord_grid.shape[0], max_points):
-            vals = self.net(
+            vals = self(
                 coord_grid[start:min(start+max_points, coord_grid.shape[0])])
             grad = torch.autograd.grad(vals[:,output_dim], 
                 coord_grid, 

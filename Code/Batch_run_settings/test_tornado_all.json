@@ -63,5 +63,20 @@
         {        
         "load_from": "tornado_f_direction",
         "tests": "streamfunction"
+    }],
+    "tornado_grid_f_any": [ "test.py",
+        {        
+        "load_from": "tornado_grid_f_any",
+        "tests": "streamfunction"
+    }],
+    "tornado_grid_f_parallel": [ "test.py",
+        {        
+        "load_from": "tornado_grid_f_parallel",
+        "tests": "streamfunction"
+    }],
+    "tornado_grid_f_direction": [ "test.py",
+        {        
+        "load_from": "tornado_grid_f_direction",
+        "tests": "streamfunction"
     }]
 }
