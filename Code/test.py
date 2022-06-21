@@ -46,7 +46,7 @@ def model_reconstruction(model, dataset, opt):
 
 def model_stream_function(model, dataset, opt):
     grid = list(dataset.data.shape[2:])
-    if("dsfm" in opt['training_mode'] or "f_" in opt['training_mode']): 
+    if("dsfm" in opt['training_mode'] or opt['training_mode'].startswith("f_")): 
         with torch.no_grad():
             f = model.sample_grid(grid, max_points=100000)[...,0:1]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
