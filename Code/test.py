@@ -4,6 +4,7 @@ import os
 from Other.utility_functions import PSNR, tensor_to_cdf, create_path
 from Models.models import load_model
 from Models.options import *
+import torch.nn.functional as F
 from Datasets.datasets import Dataset
 import torch
 
@@ -25,27 +26,20 @@ def model_reconstruction(model, dataset, opt):
         with torch.no_grad():
             m = model.sample_grid(grid, max_points=100000)[...,2:3]
             m = m.permute(3, 0, 1, 2).unsqueeze(0)
-        print(grads_f.shape)
-        print(grads_g.shape)
-        print(m.shape)
         result = torch.cross(grads_f, grads_g, dim=1)
-        print(result.shape)
         result /= (result.norm(dim=1) + 1e-8)
-        print(result.shape)
         result *= m
-        print(result.shape)
         
     elif("uvw" in opt['training_mode']):
         with torch.no_grad():
             result = model.sample_grid(grid, max_points = 100000)
-            print(result.shape)
             result = result[...,0:3]
-            print(result.shape)
             result = result.permute(3, 0, 1, 2).unsqueeze(0)
-            print(result.shape)
             
     result = result.to(opt['data_device'])
+
     p = PSNR(result, data.data)
+
     print(f"PSNR: {p : 0.02f}")
     create_path(os.path.join(output_folder, "Reconstruction"))
     tensor_to_cdf(result, os.path.join(output_folder, "Reconstruction", opt['save_name']+".nc"))
@@ -56,15 +50,32 @@ def model_stream_function(model, dataset, opt):
         with torch.no_grad():
             f = model.sample_grid(grid, max_points=100000)[...,0:1]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
+        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=100000)
+        f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points = 100000)[...,3:4]
+            f = model.sample_grid(grid.clone(), max_points = 100000)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-    
+        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=100000)
+        f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
+
+
     f = f.to(opt['data_device'])
+    f_grad = f_grad.to(opt['data_device'])
+    
+    cos_dist = F.cosine_similarity(dataset.data,
+            f_grad, dim=1)
+    angles = torch.acos(cos_dist)*(180/torch.pi)
+    angles = torch.abs(90-angles)
+
+    print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
+    print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
+    print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
+
     create_path(os.path.join(output_folder, "StreamFunction"))
     tensor_to_cdf(f, os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
+
 
 def perform_tests(model, data, tests, opt):
     if("reconstruction" in tests):

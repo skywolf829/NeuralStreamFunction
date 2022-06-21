@@ -64,24 +64,24 @@ def magangle_same_loss(x, y):
 
 def uvwf_any_loss(network_output, target):
     l1_err = l1(network_output[:,0:3], target['data'])
-    grads_f = torch.autograd.grad(network_output[:,-1], target['inputs'], 
-        grad_outputs=torch.ones_like(network_output[:,-1]),
+    grads_f = torch.autograd.grad(network_output[:,3], target['inputs'], 
+        grad_outputs=torch.ones_like(network_output[:,3]),
         create_graph=True)[0]
     f_err = angle_orthogonal_loss(grads_f, target['data'])
     return l1_err + f_err
 
 def uvwf_parallel_loss(network_output, target):
     l1_err = l1(network_output[:,0:3], target['data'])
-    grads_f = torch.autograd.grad(network_output[:,-1], target['inputs'], 
-        grad_outputs=torch.ones_like(network_output[:,-1]),
+    grads_f = torch.autograd.grad(network_output[:,3], target['inputs'], 
+        grad_outputs=torch.ones_like(network_output[:,3]),
         create_graph=True)[0]
     f_err = angle_parallel_loss(grads_f, target['normal'])
     return l1_err + f_err
 
 def uvwf_direction_loss(network_output, target):
     l1_err = l1(network_output[:,0:3], target['data'])
-    grads_f = torch.autograd.grad(network_output[:,-1], target['inputs'], 
-        grad_outputs=torch.ones_like(network_output[:,-1]),
+    grads_f = torch.autograd.grad(network_output[:,3], target['inputs'], 
+        grad_outputs=torch.ones_like(network_output[:,3]),
         create_graph=True)[0]
     f_err = angle_same_loss(grads_f, target['normal'])
     return l1_err + f_err
