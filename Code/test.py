@@ -48,16 +48,16 @@ def model_stream_function(model, dataset, opt):
     grid = list(dataset.data.shape[2:])
     if("dsfm" in opt['training_mode'] or opt['training_mode'].startswith("f_")): 
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points=100000)[...,0:1]
+            f = model.sample_grid(grid, max_points=10000000)[...,0:1]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=100000)
+        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=10000000)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid.clone(), max_points = 100000)[...,3:4]
+            f = model.sample_grid(grid, max_points = 10000000)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=100000)
+        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=10000000)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
 
