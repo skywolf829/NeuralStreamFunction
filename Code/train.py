@@ -150,6 +150,13 @@ if __name__ == '__main__':
         help='Number of layers in the model')
     parser.add_argument('--nodes_per_layer',default=None,type=int,
         help='Nodes per layer in the model')    
+
+    parser.add_argument('--n_features',default=None,type=int,
+        help='Number of features in the feature grid')    
+    parser.add_argument('--num_positional_encoding_terms',default=None,type=int,
+        help='Number of fourier features')
+    parser.add_argument('--grid_size',default=None,type=int,
+        help='Feature grid size, or grid size for direct solving')    
     
     parser.add_argument('--train_distributed',default=None,type=str2bool,
         help='Train on multiple GPUs')

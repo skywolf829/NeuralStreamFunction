@@ -16,6 +16,8 @@ class Options():
         opt['n_layers']                             = 4       
         opt['nodes_per_layer']                      = 128
 
+        opt['n_features']                           = 16
+        opt['num_positional_encoding_terms']        = 6
         opt['grid_size']                            = 128
 
         opt['train_distributed']                    = False
