@@ -24,7 +24,7 @@ def model_reconstruction(model, dataset, opt):
         grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
         with torch.no_grad():
-            m = model.sample_grid(grid, max_points=100000)[...,2:3]
+            m = model.sample_grid(grid, max_points=10000)[...,2:3]
             m = m.permute(3, 0, 1, 2).unsqueeze(0)
         result = torch.cross(grads_f, grads_g, dim=1)
         result /= (result.norm(dim=1) + 1e-8)
@@ -32,7 +32,7 @@ def model_reconstruction(model, dataset, opt):
         
     elif("uvw" in opt['training_mode']):
         with torch.no_grad():
-            result = model.sample_grid(grid, max_points = 100000)
+            result = model.sample_grid(grid, max_points = 10000)
             result = result[...,0:3]
             result = result.permute(3, 0, 1, 2).unsqueeze(0)
             
@@ -48,16 +48,16 @@ def model_stream_function(model, dataset, opt):
     grid = list(dataset.data.shape[2:])
     if("dsfm" in opt['training_mode'] or opt['training_mode'].startswith("f_")): 
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points=10000000)[...,0:1]
+            f = model.sample_grid(grid, max_points=10000)[...,0:1]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=10000000)
+        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=10000)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points = 10000000)[...,3:4]
+            f = model.sample_grid(grid, max_points = 10000)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=10000000)
+        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=10000)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
 

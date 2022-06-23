@@ -11,7 +11,7 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_uvw_featgrid",
-        "n_features": 16,
+        "n_features": 12,
         "grid_size": 32,
         "num_positional_encoding_terms": 6    
     }]

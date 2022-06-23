@@ -1,0 +1,82 @@
+{
+    "isotropic_512^3_uvw": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_uvw",
+        "tests": "reconstruction"
+    }],
+    "isotropic_512^3_uvwf_any": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_uvwf_any",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_uvwf_parallel": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_uvwf_parallel",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_uvwf_direction": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_uvwf_direction",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_dsf_any": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsf_any",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_dsf_parallel": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsf_parallel",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_dsf_direction": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsf_direction",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_dsfm_any": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsfm_any",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_dsfm_parallel": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsfm_parallel",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_dsfm_direction": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_dsfm_direction",
+        "tests": "reconstruction,streamfunction"
+    }],
+    "isotropic_512^3_f_any": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_f_any",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_f_parallel": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_f_parallel",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_f_direction": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_f_direction",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_grid_f_any": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_grid_f_any",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_grid_f_parallel": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_grid_f_parallel",
+        "tests": "streamfunction"
+    }],
+    "isotropic_512^3_grid_f_direction": [ "test.py",
+        {        
+        "load_from": "isotropic_512^3_grid_f_direction",
+        "tests": "streamfunction"
+    }]
+}
