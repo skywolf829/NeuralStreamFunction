@@ -9,7 +9,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_uvw"       
     }],
     "isotropic_512^3_uvwf_any": [ "train.py",
@@ -22,7 +22,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_uvwf_any"
     }],
     "isotropic_512^3_uvwf_parallel": [ "train.py",
@@ -35,7 +35,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_uvwf_parallel"
     }],
     "isotropic_512^3_uvwf_direction": [ "train.py",
@@ -48,7 +48,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_uvwf_direction"
     }],
     "isotropic_512^3_dsf_any": [ "train.py",
@@ -61,7 +61,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsf_any"
     }],
     "isotropic_512^3_dsf_parallel": [ "train.py",
@@ -74,7 +74,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsf_parallel"
     }],
     "isotropic_512^3_dsf_direction": [ "train.py",
@@ -87,7 +87,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsf_direction"
     }],
     "isotropic_512^3_dsfm_any": [ "train.py",
@@ -100,7 +100,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsfm_any"
     }],
     "isotropic_512^3_dsfm_parallel": [ "train.py",
@@ -113,7 +113,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsfm_parallel"
     }],
     "isotropic_512^3_dsfm_direction": [ "train.py",
@@ -126,7 +126,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_dsfm_direction"
     }],
     "isotropic_512^3_f_any": [ "train.py",
@@ -139,7 +139,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_f_any"
     }],
     "isotropic_512^3_f_parallel": [ "train.py",
@@ -152,7 +152,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_f_parallel"
     }],
     "isotropic_512^3_f_direction": [ "train.py",
@@ -165,7 +165,7 @@
         "n_layers": 6,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 100000,
+        "points_per_iteration": 10000,
         "save_name": "isotropic_512^3_f_direction"
     }]
 }
