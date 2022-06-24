@@ -63,20 +63,5 @@
         {        
         "load_from": "isotropic_512^3_f_direction",
         "tests": "streamfunction"
-    }],
-    "isotropic_512^3_grid_f_any": [ "test.py",
-        {        
-        "load_from": "isotropic_512^3_grid_f_any",
-        "tests": "streamfunction"
-    }],
-    "isotropic_512^3_grid_f_parallel": [ "test.py",
-        {        
-        "load_from": "isotropic_512^3_grid_f_parallel",
-        "tests": "streamfunction"
-    }],
-    "isotropic_512^3_grid_f_direction": [ "test.py",
-        {        
-        "load_from": "isotropic_512^3_grid_f_direction",
-        "tests": "streamfunction"
     }]
 }
