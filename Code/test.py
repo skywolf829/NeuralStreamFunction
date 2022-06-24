@@ -69,7 +69,7 @@ def model_stream_function(model, dataset, opt):
     print(f"Maximum cos dist {cos_dist.max().item() : 0.03f} deg.")
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     print(f"Maximum cos dist {cos_dist.max().item() : 0.03f} deg.")
-    angles = torch.acos()*(180/torch.pi)
+    angles = torch.acos(cos_dist)*(180/torch.pi)
     print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
 
