@@ -66,7 +66,9 @@ def model_stream_function(model, dataset, opt):
     
     cos_dist = F.cosine_similarity(dataset.data,
             f_grad, dim=1)
+    print(f"Maximum cos dist {cos_dist.max().item() : 0.03f} deg.")
     angles = torch.acos(cos_dist)*(180/torch.pi)
+    print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
 
     print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
