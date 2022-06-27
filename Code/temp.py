@@ -16,7 +16,7 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 if __name__ == '__main__':
     test_file = "isotropic_1024^3.nc"
     t = time.time()
-    data = Dataset(os.path.join(project_folder_path, test_file))
+    data = Dataset(os.path.join(data_folder, test_file))
     t_1 = time.time()
     print(f"Took {t_1-t : 0.04f} sec. to load dataset as NetCDF")
     t = time.time()
