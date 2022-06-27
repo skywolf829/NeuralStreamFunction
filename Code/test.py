@@ -77,7 +77,7 @@ def model_stream_function(model, dataset, opt):
     print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
 
-    tensor_to_cdf(angles/90, 
+    tensor_to_cdf(angles.unsqueeze(0)/90, 
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
     create_path(os.path.join(output_folder, "StreamFunction"))
