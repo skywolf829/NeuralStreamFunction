@@ -8,14 +8,44 @@ import struct
 import base64
 import time
 import h5py
+import torch
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from Other.utility_functions import toImg
+
+
 client = zeep.Client('http://turbulence.pha.jhu.edu/service/turbulence.asmx?WSDL')
 ArrayOfFloat = client.get_type('ns0:ArrayOfFloat')
 ArrayOfArrayOfFloat = client.get_type('ns0:ArrayOfArrayOfFloat')
 SpatialInterpolation = client.get_type('ns0:SpatialInterpolation')
 TemporalInterpolation = client.get_type('ns0:TemporalInterpolation')
 token="edu.osu.buckeyemail.wurster.18-92fb557b" #replace with your own token
+
+def tensor_to_cdf(t, location, channel_names=None):
+    # Assumes t is a tensor with shape (1, c, d, h[, w])
+    from netCDF4 import Dataset
+    d = Dataset(location, 'w')
+
+    # Setup dimensions
+    d.createDimension('x')
+    d.createDimension('y')
+    dims = ['x', 'y']
+
+    if(len(t.shape) == 5):
+        d.createDimension('z')
+        dims.append('z')
+
+    # ['u', 'v', 'w']
+    if(channel_names is None):
+        ch_default = 'a'
+
+    for i in range(t.shape[1]):
+        if(channel_names is None):
+            ch = ch_default
+            ch_default = chr(ord(ch)+1)
+        else:
+            ch = channel_names[i]
+        d.createVariable(ch, np.float32, dims)
+        d[ch][:] = t[0,i].clone().detach().cpu().numpy()
+    d.close()
 
 def get_frame(x_start, x_end, x_step, 
 y_start, y_end, y_step, 
@@ -102,9 +132,9 @@ ts_skip = 10
 frames = []
 for i in range(startts, endts, ts_skip):
     print("TS %i/%i" % (i, endts))
-    f = get_full_frame_parallel(0, 512, 1,#x
-    0, 512, 1, #y
-    0, 512, 1, #z
+    f = get_full_frame_parallel(0,1024, 1,#x
+    0, 1024, 1, #y
+    0, 1024, 1, #z
     name, i, 
     "u", 3, 
     16)    
@@ -121,9 +151,7 @@ for i in range(startts, endts, ts_skip):
     f = np.transpose(f, (0, 4, 1, 2, 3))[0]
     print(f.shape)
     #frames.append(f)
-    f_h5 = h5py.File(os.path.join(save_folder, "isotropic_coarse_vf_512.h5"), 'w')
-    f_h5.create_dataset("data", data=f)
-    f_h5.close()
+    tensor_to_cdf(torch.tensor(f), os.path.join(save_folder, "isotropic_coarse_vf_1024.nc"))
     print("Finished " + str(i))
     count += 1
 print("finished")
