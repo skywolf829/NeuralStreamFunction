@@ -151,7 +151,7 @@ for i in range(startts, endts, ts_skip):
     f = np.transpose(f, (0, 4, 1, 2, 3))[0]
     print(f.shape)
     #frames.append(f)
-    tensor_to_cdf(torch.tensor(f), "isotropic_coarse_vf_1024.nc")
+    tensor_to_cdf(torch.tensor(f), "vf")
     print("Finished " + str(i))
     count += 1
 print("finished")
