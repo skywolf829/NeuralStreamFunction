@@ -51,6 +51,9 @@ if __name__ == '__main__':
         help='The settings file with options for each model to train')
     parser.add_argument('--devices',default="all",type=str,
         help='Which [cuda] devices(s) to train on, separated with commas. Default: all, which uses all available CUDA devices')
+    parser.add_argument('--data_devices',default="same",type=str,
+        help='Which devices to put the training data on. "same" as model, or "cpu".')
+    
     args = vars(parser.parse_args())
 
     settings_path = os.path.join(project_folder_path, "Code", "Batch_run_settings", args['settings'])
@@ -86,8 +89,12 @@ if __name__ == '__main__':
             c = commands.pop(0)
             c_name = command_names.pop(0)
             log_location = log_locations.pop(0)
-            g = available_devices.pop(0)
-            c = c + "--device " + str(g) + " --data_device " + str(g)
+            g = str(available_devices.pop(0))
+            if(args['data_devices'] == "same"):
+                data_device = str(g)
+            else:
+                data_device = "cpu"
+            c = c + "--device " + g + " --data_device " + data_device
             c_split = shlex.split(c)
             # Logging location
             create_path(log_location[:-7])

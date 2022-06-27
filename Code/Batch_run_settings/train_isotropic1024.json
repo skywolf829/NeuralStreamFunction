@@ -10,7 +10,7 @@
         "nodes_per_layer": 1024,
         "iterations": 20000,
         "points_per_iteration": 10000,
-        "save_name": "isotropic_1024^3_uvw"       
+        "save_name": "isotropic_1024^3_uvw"     
     }],
     "isotropic_1024^3_uvwf_any": [ "train.py",
         {
