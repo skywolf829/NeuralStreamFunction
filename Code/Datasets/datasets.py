@@ -2,6 +2,8 @@ import os
 import torch
 from Other.utility_functions import make_coord_grid, normal, nc_to_tensor
 import torch.nn.functional as F
+import pandas as pd
+import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")
@@ -40,6 +42,18 @@ class Dataset(torch.utils.data.Dataset):
             (self.data.norm(dim=1).min(), 
             self.data.norm(dim=1).mean(), 
             self.data.norm(dim=1).max()))
+        
+        if(opt['seeding_points'] is not None):
+            seeds = pd.read_csv(
+                os.path.join(data_folder, "Seeds", opt['seeding_points']))
+            seeds = np.array(seeds)
+            self.seeds = torch.tensor(seeds, 
+                    device=opt['data_device'], dtype=torch.float32)
+            self.seeds[:,0] /= self.data.shape[2]
+            self.seeds[:,1] /= self.data.shape[3]
+            self.seeds[:,2] /= self.data.shape[4]
+            self.seeds *= 2
+            self.seeds -= 1            
 
     def min(self):
         if self.min_ is not None:
@@ -138,5 +152,7 @@ class Dataset(torch.utils.data.Dataset):
         if('parallel' in self.opt['training_mode'] or 
            'direction' in self.opt['training_mode']):
             to_return["normal"] = y_n
+        if(self.opt['seeding_points'] is not None):
+            to_return["seeds"] = self.seeds
         
         return to_return

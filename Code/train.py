@@ -110,6 +110,9 @@ def train(rank, model, dataset, opt):
             
         model_output = model(data['inputs'])
         loss = loss_func(model_output, data)
+        if(opt['seeding_points'] is not None):
+            model_seed_output = model(data['seeds'])
+            loss = loss + seeding_loss(model_seed_output)
 
         loss.backward()
         optimizer.step()
@@ -143,6 +146,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--data',default=None,type=str,
         help='Data file name')
+    parser.add_argument('--seeding_points',default=None,type=str,
+        help='Seeding points file')
     parser.add_argument('--save_name',default=None,type=str,
         help='Save name for the model')
     

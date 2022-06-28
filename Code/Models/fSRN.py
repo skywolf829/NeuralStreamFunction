@@ -50,7 +50,8 @@ class fSRN(nn.Module):
                 omega_0=30))                 
             i += 1
 
-        final_linear = nn.Linear(opt['nodes_per_layer'], opt['n_outputs'])
+        final_linear = nn.Linear(opt['nodes_per_layer'], 
+                                 opt['n_outputs'], bias=True)
             
         with torch.no_grad():
             final_linear.weight.uniform_(-np.sqrt(6 / opt['nodes_per_layer']) / 30, 
@@ -66,7 +67,7 @@ class fSRN(nn.Module):
 
     def forward_w_grad(self, coords):
         coords = coords.requires_grad_(True)
-        output = self.net(coords)
+        output = self(coords)
         return output, coords
     
     def forward_maxpoints(self, coords, max_points=100000):
@@ -78,7 +79,7 @@ class fSRN(nn.Module):
         for start in range(0, coords.shape[0], max_points):
             #print("%i:%i" % (start, min(start+max_points, coords.shape[0])))
             output[start:min(start+max_points, coords.shape[0])] = \
-                self.net(coords[start:min(start+max_points, coords.shape[0])])
+                self(coords[start:min(start+max_points, coords.shape[0])])
         return output
 
 
@@ -109,7 +110,7 @@ class fSRN(nn.Module):
             requires_grad=False)
 
         for start in range(0, coord_grid.shape[0], max_points):
-            vals = self.net(
+            vals = self(
                 coord_grid[start:min(start+max_points, coord_grid.shape[0])])
             grad = torch.autograd.grad(vals[:,output_dim], 
                 coord_grid, 

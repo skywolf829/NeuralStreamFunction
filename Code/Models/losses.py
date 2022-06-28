@@ -184,6 +184,9 @@ def hhd_loss(network_output, target):
     print("Not yet implemented")
     return 0
 
+def seeding_loss(network_seeds_output):
+    return torch.abs(network_seeds_output).mean()
+
 def get_loss_func(opt):    
     if(opt['training_mode'] == "inr"):
         return l1_loss
