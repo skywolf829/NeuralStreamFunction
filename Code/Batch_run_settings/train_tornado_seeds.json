@@ -11,6 +11,6 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "save_name": "tornado_seeds",
-        "seeding_points": "tornado.csv"       
+        "seeding_points": "tornado_seeds.csv"       
     }]
 }
