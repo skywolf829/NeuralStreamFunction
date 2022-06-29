@@ -53,13 +53,13 @@ def model_stream_function(model, dataset, opt):
     if("dsf" in opt['training_mode'] or opt['training_mode'].startswith("f_")): 
         t_0_ff = time.time()
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points=100000)[...,0:1]
+            f = model.sample_grid(grid, max_points=2097152)[...,0:1]
             t_1_ff = time.time()
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
             GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
         t_0_ff_w_grad = time.time()
-        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=100000)
+        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=2097152)
         t_1_ff_w_grad = time.time()
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
         GBytes_w_grad = (torch.cuda.max_memory_allocated(device=opt['device']) \
@@ -67,9 +67,9 @@ def model_stream_function(model, dataset, opt):
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points = 100000)[...,3:4]
+            f = model.sample_grid(grid, max_points = 2097152)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=100000)
+        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=2097152)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
 
