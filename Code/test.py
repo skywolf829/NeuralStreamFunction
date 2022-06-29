@@ -56,10 +56,14 @@ def model_stream_function(model, dataset, opt):
             f = model.sample_grid(grid, max_points=100000)[...,0:1]
             t_1_ff = time.time()
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
+            GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
         t_0_ff_w_grad = time.time()
         f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=100000)
         t_1_ff_w_grad = time.time()
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
+        GBytes_w_grad = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
@@ -87,7 +91,10 @@ def model_stream_function(model, dataset, opt):
     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
     print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")
+    print(f"Inference with grad took {t_1_ff_w_grad-t_0_ff_w_grad: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff_w_grad-t_0_ff_w_grad)/total_points: 0.09f} sec. per point")
+
     print(f"Maximum memory allocated on {opt['device']} was {GBytes : 0.02f} GB")
+    print(f"Maximum memory allocated w/ grad on {opt['device']} was {GBytes_w_grad : 0.02f} GB")
     tensor_to_cdf(angles.unsqueeze(0)/90, 
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
