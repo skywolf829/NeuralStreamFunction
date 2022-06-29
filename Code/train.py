@@ -22,10 +22,13 @@ data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
-def log_to_writer(iteration, loss, writer, opt):
-    with torch.no_grad():        
-        print(f"Iteration {iteration}/{opt['iterations']}, loss: {loss.item() : 0.05f}")
-        writer.add_scalar('Loss', loss.item(), iteration)
+def log_to_writer(iteration, losses, writer, opt):
+    with torch.no_grad():   
+        print_str = f"Iteration {iteration}/{opt['iterations']}, "
+        for key in losses.keys():    
+            print_str = print_str + str(key) + f": {losses[key].item() : 0.05f} " 
+            writer.add_scalar(str(key), losses[key].item(), iteration)
+        print(print_str)
         GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
         writer.add_scalar('GPU memory (GB)', GBytes, iteration)
@@ -54,9 +57,9 @@ def log_grad_image(model, grid_to_sample, writer, iteration):
                 grad_img[output_index][...,input_index:input_index+1].clamp(0, 1), 
                 iteration, dataformats='HWC')
 
-def logging(writer, iteration, loss):
+def logging(writer, iteration, losses):
     if(iteration % 5 == 0):
-        log_to_writer(iteration, loss, writer, opt)
+        log_to_writer(iteration, losses, writer, opt)
                     
 def train(rank, model, dataset, opt):
     print("Training on device " + str(rank))
@@ -109,17 +112,21 @@ def train(rank, model, dataset, opt):
             data['inputs'] = data['inputs'].requires_grad_(True)
             
         model_output = model(data['inputs'])
+        losses = {}
         loss = loss_func(model_output, data)
+        losses['fitting_loss'] = loss
         if(opt['seeding_points'] is not None):
             model_seed_output = model(data['seeds'])
-            loss = loss + seeding_loss(model_seed_output)
+            s_l = seeding_loss(model_seed_output)
+            loss = loss + s_l
+            losses['seeding_curve'] = s_l
 
         loss.backward()
         optimizer.step()
         scheduler.step()
         
         if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
-            logging(writer, iteration, loss)
+            logging(writer, iteration, losses)
     
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
