@@ -7,6 +7,7 @@ from Models.options import *
 import torch.nn.functional as F
 from Datasets.datasets import Dataset
 import torch
+import time
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -46,18 +47,25 @@ def model_reconstruction(model, dataset, opt):
 
 def model_stream_function(model, dataset, opt):
     grid = list(dataset.data.shape[2:])
+    total_points = 1
+    for i in range(len(grid)):
+        total_points *= grid[i]
     if("dsf" in opt['training_mode'] or opt['training_mode'].startswith("f_")): 
+        t_0_ff = time.time()
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points=10000)[...,0:1]
+            f = model.sample_grid(grid, max_points=100000)[...,0:1]
+            t_1_ff = time.time()
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=10000)
+        t_0_ff_w_grad = time.time()
+        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=100000)
+        t_1_ff_w_grad = time.time()
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points = 10000)[...,3:4]
+            f = model.sample_grid(grid, max_points = 100000)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=10000)
+        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=100000)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
 
@@ -76,7 +84,10 @@ def model_stream_function(model, dataset, opt):
     print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
     print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
-
+    GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
+    print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")
+    print(f"Maximum memory allocated on {opt['device']} was {GBytes : 0.02f} GB")
     tensor_to_cdf(angles.unsqueeze(0)/90, 
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
