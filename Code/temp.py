@@ -15,10 +15,10 @@ output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
 if __name__ == '__main__':
-    center = np.array([40, 64, 70])
+    center = np.array([300, 300, 400])
     r = 10
     
-    f = open("tornado_seeding_curve2.csv", 'w')
+    f = open("isotropic_seeding_curve2.csv", 'w')
     lines = []
     for i in np.linspace(0, 2*pi, 50):
         x = center[0]+r*np.cos(i)
