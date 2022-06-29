@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 import time
 from Other.utility_functions import nc_to_tensor
+from math import pi
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -14,23 +15,16 @@ output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
 if __name__ == '__main__':
-    test_file = "isotropic_1024^3.nc"
-    t = time.time()
-    data = Dataset(os.path.join(data_folder, test_file))
-    t_1 = time.time()
-    print(f"Took {t_1-t : 0.04f} sec. to load dataset as NetCDF")
-    t = time.time()
-    channels = []
-    for a in data.variables:
-        d = np.array(data[a])
-        channels.append(d)
-    t_1 = time.time()
-    d = np.stack(channels)
-    print(d.shape)
-    print(f"Took {t_1-t : 0.04f} sec. to load dataset to RAM (numpy).")
-    t = time.time()
-    d = torch.tensor(d).unsqueeze(0)
-    t_1 = time.time()
-    print(d.shape)
-    print(f"Took {t_1-t : 0.04f} sec. to move numpy data to tensor format.")
+    center = np.array([40, 64, 70])
+    r = 10
+    
+    f = open("tornado_seeding_curve2.csv", 'w')
+    lines = []
+    for i in np.linspace(0, 2*pi, 50):
+        x = center[0]+r*np.cos(i)
+        y = center[1]
+        z = center[2]+r*np.sin(i)
+        print(f"{x} {y} {z}")
+        lines.append(str(x) + ","+str(y)+","+str(z)+"\n")
+    f.writelines(lines)
     quit()

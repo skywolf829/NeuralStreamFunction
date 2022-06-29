@@ -1,7 +1,17 @@
 {
-    "tornado_seeds": [ "test.py",
+    "tornado_seeds1": [ "test.py",
         {        
-        "load_from": "tornado_seeds",
+        "load_from": "tornado_seeds1",
+        "tests": "streamfunction"
+    }],
+    "tornado_seeds2": [ "test.py",
+        {        
+        "load_from": "tornado_seeds2",
+        "tests": "streamfunction"
+    }],
+    "tornado_no_seeds": [ "test.py",
+        {        
+        "load_from": "tornado_no_seeds",
         "tests": "streamfunction"
     }]
 }
