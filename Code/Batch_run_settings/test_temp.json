@@ -1,0 +1,7 @@
+{
+    "temp": [ "test.py",
+        {        
+        "load_from": "temp",
+        "tests": "streamfunction"
+    }]
+}

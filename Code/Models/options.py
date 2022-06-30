@@ -13,6 +13,7 @@ class Options():
 
         opt['data']                                 = 'tornado.nc'
         opt['save_name']                            = 'tornado'
+        opt['interpolate']                          = False
         opt['seeding_points']                       = None
         opt['n_layers']                             = 4       
         opt['nodes_per_layer']                      = 128

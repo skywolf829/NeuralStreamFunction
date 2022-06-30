@@ -112,21 +112,27 @@ class Dataset(torch.utils.data.Dataset):
     def get_random_points(self, n_points):        
         possible_spots = self.index_grid
 
-        if(n_points >= possible_spots.shape[0]):
-            x = possible_spots.clone().unsqueeze_(0)
+        if(self.opt['interpolate']):
+            x = torch.rand([1, 1, 1, n_points, self.opt['n_dims']], 
+                device=self.opt['data_device']) * 2 - 1
+            y = F.grid_sample(self.data,
+                x, mode='bilinear', align_corners=False)
         else:
-            samples = torch.randperm(possible_spots.shape[0], 
-                dtype=torch.long, device=self.opt['data_device'])[:n_points]
-            # Change above to not use CPU when not on MPS
-            # Verify that the bottom two lines do the same thing
-            x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
-            #x = possible_spots[samples].clone().unsqueeze_(0)
-        for _ in range(len(self.data.shape[2:])-1):
-            x = x.unsqueeze(-2)
-        
+            if(n_points >= possible_spots.shape[0]):
+                x = possible_spots.clone().unsqueeze_(0)
+            else:
+                samples = torch.randperm(possible_spots.shape[0], 
+                    dtype=torch.long, device=self.opt['data_device'])[:n_points]
+                # Change above to not use CPU when not on MPS
+                # Verify that the bottom two lines do the same thing
+                x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
+                #x = possible_spots[samples].clone().unsqueeze_(0)
+            for _ in range(len(self.data.shape[2:])-1):
+                x = x.unsqueeze(-2)
+            
 
-        y = F.grid_sample(self.data, 
-            x, mode='nearest', align_corners=False)
+            y = F.grid_sample(self.data, 
+                x, mode='nearest', align_corners=False)
         
         y = y.squeeze()
         if(len(y.shape) == 1):

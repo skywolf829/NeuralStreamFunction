@@ -1,0 +1,17 @@
+{
+    "temp": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "interpolate": true,
+        "n_layers": 4,
+        "nodes_per_layer": 256,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "save_name": "temp",
+        "seeding_points": "tornado_seeding_curve1.csv"       
+    }]
+}
