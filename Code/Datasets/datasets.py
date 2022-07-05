@@ -33,7 +33,8 @@ class Dataset(torch.utils.data.Dataset):
         self.index_grid = make_coord_grid(
             self.data.shape[2:], 
             self.opt['data_device'],
-            flatten=True)
+            flatten=True,
+            align_corners=self.opt['align_corners'])
         self.index_mags = self.index_grid.norm(dim=1)
         print("Data size: " + str(self.data.shape))
         print("Min/mean/max: %0.04f, %0.04f, %0.04f" % \
@@ -92,7 +93,8 @@ class Dataset(torch.utils.data.Dataset):
         grid_to_sample = torch.stack(torch.meshgrid(*positions), dim=-1).unsqueeze(0)
 
         vals = F.grid_sample(self.data, 
-                grid_to_sample, mode='bilinear', align_corners=False)
+                grid_to_sample, mode='bilinear', 
+                align_corners=self.opt['align_corners'])
         print('dataset sample rect vals shape')
         print(vals.shape)
         return vals
@@ -106,7 +108,8 @@ class Dataset(torch.utils.data.Dataset):
     def get_full_coord_grid(self):
         if self.full_coord_grid is None:
             self.full_coord_grid = make_coord_grid(self.data.shape[2:], 
-                    self.opt['data_device'], flatten=True)
+                    self.opt['data_device'], flatten=True, 
+                    align_corners=self.opt['align_corners'])
         return self.full_coord_grid
 
     def get_random_points(self, n_points):        
@@ -116,7 +119,8 @@ class Dataset(torch.utils.data.Dataset):
             x = torch.rand([1, 1, 1, n_points, self.opt['n_dims']], 
                 device=self.opt['data_device']) * 2 - 1
             y = F.grid_sample(self.data,
-                x, mode='bilinear', align_corners=False)
+                x, mode='bilinear', 
+                align_corners=self.opt['align_corners'])
         else:
             if(n_points >= possible_spots.shape[0]):
                 x = possible_spots.clone().unsqueeze_(0)
@@ -132,7 +136,8 @@ class Dataset(torch.utils.data.Dataset):
             
 
             y = F.grid_sample(self.data, 
-                x, mode='nearest', align_corners=False)
+                x, mode='nearest', 
+                align_corners=self.opt['align_corners'])
         
         y = y.squeeze()
         if(len(y.shape) == 1):
@@ -143,7 +148,8 @@ class Dataset(torch.utils.data.Dataset):
         if('parallel' in self.opt['training_mode'] or 
            'direction' in self.opt['training_mode']):
             y_n = F.grid_sample(self.normal, 
-                x, mode='nearest', align_corners=False)
+                x, mode='nearest', 
+                align_corners=self.opt['align_corners'])
             y_n = y_n.squeeze()            
             if(len(y_n.shape) == 1):
                 y_n = y_n.unsqueeze(0)  

@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 import os
 from Other.utility_functions import PSNR, tensor_to_cdf, create_path
-from Models.models import load_model
+from Models.models import load_model, sample_grid, sample_grad_grid
 from Models.options import *
 import torch.nn.functional as F
 from Datasets.datasets import Dataset
@@ -18,14 +18,14 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 def model_reconstruction(model, dataset, opt):
     grid = list(dataset.data.shape[2:])
     if("dsfm" in opt['training_mode']): 
-        grads_f = model.sample_grad_grid(grid, output_dim=0, 
+        grads_f = sample_grad_grid(model, grid, output_dim=0, 
                                         max_points=10000)
-        grads_g = model.sample_grad_grid(grid, output_dim=1, 
+        grads_g = sample_grad_grid(model, grid, output_dim=1, 
                                         max_points=10000)
         grads_f = grads_f.permute(3, 0, 1, 2).unsqueeze(0)
         grads_g = grads_g.permute(3, 0, 1, 2).unsqueeze(0)
         with torch.no_grad():
-            m = model.sample_grid(grid, max_points=10000)[...,2:3]
+            m = sample_grid(model, grid, max_points=10000)[...,2:3]
             m = m.permute(3, 0, 1, 2).unsqueeze(0)
         result = torch.cross(grads_f, grads_g, dim=1)
         result /= (result.norm(dim=1) + 1e-8)
@@ -33,7 +33,7 @@ def model_reconstruction(model, dataset, opt):
         
     elif("uvw" in opt['training_mode']):
         with torch.no_grad():
-            result = model.sample_grid(grid, max_points = 10000)
+            result = sample_grid(model, grid, max_points = 10000)
             result = result[...,0:3]
             result = result.permute(3, 0, 1, 2).unsqueeze(0)
             
@@ -55,7 +55,7 @@ def model_stream_function(model, dataset, opt):
         torch.cuda.synchronize()
         t_0_ff = time.time()
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points=10000)[...,0:1]
+            f = sample_grid(model, grid, max_points=10000)[...,0:1]
             t_1_ff = time.time()
             torch.cuda.synchronize()
             f = f.permute(3, 0, 1, 2).unsqueeze(0)   
@@ -65,7 +65,7 @@ def model_stream_function(model, dataset, opt):
         
         torch.cuda.synchronize()
         t_0_ff_w_grad = time.time()
-        f_grad = model.sample_grad_grid(grid, output_dim=0, max_points=10000)
+        f_grad = sample_grad_grid(model, grid, output_dim=0, max_points=10000)
         torch.cuda.synchronize()
         t_1_ff_w_grad = time.time()
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
@@ -75,9 +75,9 @@ def model_stream_function(model, dataset, opt):
         
     elif("uvwf" in opt['training_mode']):
         with torch.no_grad():
-            f = model.sample_grid(grid, max_points = 2097152)[...,3:4]
+            f = sample_grid(model, grid, max_points = 2097152)[...,3:4]
             f = f.permute(3, 0, 1, 2).unsqueeze(0)
-        f_grad = model.sample_grad_grid(grid, output_dim=3, max_points=2097152)
+        f_grad = sample_grad_grid(model, grid, output_dim=3, max_points=2097152)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
 
