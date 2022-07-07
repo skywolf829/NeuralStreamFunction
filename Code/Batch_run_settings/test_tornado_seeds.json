@@ -1,4 +1,9 @@
 {
+    "tornado_seeds1_align": [ "test.py",
+        {        
+        "load_from": "tornado_seeds1_aligned",
+        "tests": "streamfunction"
+    }],
     "tornado_seeds1": [ "test.py",
         {        
         "load_from": "tornado_seeds1",

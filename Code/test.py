@@ -86,11 +86,10 @@ def model_stream_function(model, dataset, opt):
     
     cos_dist = F.cosine_similarity(dataset.data,
             f_grad, dim=1)
-    print(f"Maximum cos dist {cos_dist.max().item() : 0.03f} deg.")
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
-    print(f"Maximum cos dist {cos_dist.max().item() : 0.03f} deg.")
     angles = torch.acos(cos_dist)*(180/torch.pi)
     print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
+    print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
 
     print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
@@ -103,7 +102,7 @@ def model_stream_function(model, dataset, opt):
 
     print(f"Maximum memory allocated on {opt['device']} was {GBytes : 0.02f} GB")
     print(f"Maximum memory allocated w/ grad on {opt['device']} was {GBytes_w_grad : 0.02f} GB")
-    tensor_to_cdf(angles.unsqueeze(0)/90, 
+    tensor_to_cdf(angles.unsqueeze(0), 
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
     create_path(os.path.join(output_folder, "StreamFunction"))

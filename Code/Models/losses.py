@@ -32,7 +32,7 @@ def angle_parallel_loss(x, y):
     return weighted_angles.mean()
 
 def angle_orthogonal_loss(x, y):
-    angles = (F.cosine_similarity(x, y)**2)
+    angles = torch.abs(F.cosine_similarity(x, y))
     mask = (y.norm(dim=1) != 0).type(torch.float32).detach()
     weighted_angles = angles * mask
     return weighted_angles.mean()

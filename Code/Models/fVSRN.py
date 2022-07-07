@@ -83,7 +83,8 @@ class fVSRN(nn.Module):
     
     def forward(self, coords):   
         features = F.grid_sample(self.feature_grid, 
-            coords.unsqueeze(0).unsqueeze(0).unsqueeze(0)).squeeze().permute(1,0)
+            coords.unsqueeze(0).unsqueeze(0).unsqueeze(0),
+            align_corners=True).squeeze().permute(1,0)
         fourier_features = self.pe(coords)
         feature_input = torch.cat([features, fourier_features], dim=1)
         output = self.net(feature_input)

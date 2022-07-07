@@ -155,6 +155,8 @@ if __name__ == '__main__':
         help='Data file name')
     parser.add_argument('--interpolate',default=None,type=str2bool,
         help='Interpolate points during training')
+    parser.add_argument('--align_corners',default=None,type=str2bool,
+        help='Aligns corners in implicit model.')
     parser.add_argument('--seeding_points',default=None,type=str,
         help='Seeding points file')
     parser.add_argument('--save_name',default=None,type=str,

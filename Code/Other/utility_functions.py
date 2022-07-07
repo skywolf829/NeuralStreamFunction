@@ -645,3 +645,30 @@ def directed_hausdorff_nb(ar1, ar2):
             d_max = d_min
 
     return np.sqrt(d_max)
+
+def RK4_advection(vf, seeds, h=0.1, align_corners=True):
+    k1 = F.grid_sample(vf, seeds.unsqueeze(0).unsqueeze(0).unsqueeze(0),
+                       mode="linear", align_corners=align_corners).squeeze()
+    k2_spot = seeds + 0.5 * k1 * h
+    k2 = F.grid_sample(vf, k2_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
+                       mode="linear", align_corners=align_corners).squeeze()
+    k3_spot = seeds + 0.5 * k2 * h
+    k3 = F.grid_sample(vf, k3_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
+                       mode="linear", align_corners=align_corners).squeeze()
+    k4_spot = seeds + k3 * h
+    k4 = F.grid_sample(vf, k4_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
+                       mode="linear", align_corners=align_corners).squeeze()
+    return seeds + (1/6) * (k1+  2*k2 + 2*k3 + k4) * h
+
+def particle_tracing(vf, seeds, 
+                     steps=100, h=0.1,
+                     align_corners=True):
+    p = seeds.clone()
+    positions = []
+    positions.append(p.clone())
+    
+    for _ in range(steps):
+        p = RK4_advection(vf, p, h, align_corners)
+        positions.append(p.clone())
+    
+    return torch.stack(positions, axis=0)

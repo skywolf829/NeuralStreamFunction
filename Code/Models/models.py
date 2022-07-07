@@ -59,7 +59,7 @@ def sample_grid(model, grid, max_points = 100000):
         align_corners=model.opt['align_corners'])
     coord_grid_shape = list(coord_grid.shape)
     coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-    vals = model.forward_maxpoints(coord_grid, max_points = max_points)
+    vals = forward_maxpoints(model, coord_grid, max_points = max_points)
     coord_grid_shape[-1] = model.opt['n_outputs']
     vals = vals.reshape(coord_grid_shape)
     return vals
@@ -108,7 +108,7 @@ def sample_grid_for_image(model, grid,
 
     coord_grid_shape = list(coord_grid.shape)
     coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-    vals = model.forward_maxpoints(coord_grid)
+    vals = forward_maxpoints(model, coord_grid)
     coord_grid_shape[-1] = model.opt['n_outputs']
     vals = vals.reshape(coord_grid_shape)
     if(model.opt['loss'] == "l1occupancy"):
@@ -126,7 +126,7 @@ def sample_occupancy_grid_for_image(model, grid, opt, boundary_scaling = 1.0):
 
     coord_grid_shape = list(coord_grid.shape)
     coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
-    vals = model.forward_maxpoints(coord_grid)
+    vals = forward_maxpoints(model, coord_grid)
     coord_grid_shape[-1] = model.opt['n_outputs']
     vals = vals.reshape(coord_grid_shape)
     if(model.opt['loss'] == "l1occupancy"):
@@ -145,7 +145,7 @@ def sample_grad_grid_for_image(model, grid, boundary_scaling = 1.0,
     
     coord_grid_shape = list(coord_grid.shape)
     coord_grid = coord_grid.view(-1, coord_grid.shape[-1]).requires_grad_(True)
-    vals = model.forward_maxpoints(coord_grid)    
+    vals = forward_maxpoints(model, coord_grid)    
 
 
     grad = torch.autograd.grad(vals[:,output_dim], 

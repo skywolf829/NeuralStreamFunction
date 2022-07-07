@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import h5py
 import numpy as np
 import time
-from Other.utility_functions import nc_to_tensor
+from Other.utility_functions import nc_to_tensor, tensor_to_cdf
 from math import pi
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -15,16 +15,21 @@ output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
 if __name__ == '__main__':
-    center = np.array([300, 300, 400])
-    r = 10
+    from netCDF4 import Dataset
     
-    f = open("isotropic_seeding_curve2.csv", 'w')
-    lines = []
-    for i in np.linspace(0, 2*pi, 50):
-        x = center[0]+r*np.cos(i)
-        y = center[1]
-        z = center[2]+r*np.sin(i)
-        print(f"{x} {y} {z}")
-        lines.append(str(x) + ","+str(y)+","+str(z)+"\n")
-    f.writelines(lines)
-    quit()
+    # 100th timestep
+    
+    a = Dataset(os.path.join(data_folder, "halfcylinder.nc"))
+    print(a)
+    
+    u = np.array(a['u'][99])
+    v = np.array(a['v'][99])
+    w = np.array(a['w'][99])
+    
+    vf = np.stack([u,v,w])
+    print(vf.shape)
+    
+    t = torch.tensor(vf).unsqueeze(0)
+    print(t.shape)
+    
+    tensor_to_cdf(t, "halfcylinder_re160_ts100.nc")
