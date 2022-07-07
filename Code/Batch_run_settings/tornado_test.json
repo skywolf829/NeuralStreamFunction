@@ -1,7 +1,22 @@
 {
-    "temp": [ "test.py",
+    "1": [ "test.py",
         {        
-        "load_from": "temp",
+        "load_from": "tornado",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test.py",
+        {        
+        "load_from": "tornado_streamline",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test.py",
+        {        
+        "load_from": "tornado_seeds1",
+        "tests": "streamfunction"
+    }],
+    "4": [ "test.py",
+        {        
+        "load_from": "tornado_streamline_seeds1",
         "tests": "streamfunction"
     }]
 }
