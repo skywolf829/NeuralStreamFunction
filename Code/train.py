@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import argparse
 from Datasets.datasets import Dataset
 import datetime
-from Other.utility_functions import str2bool
+from Other.utility_functions import str2bool, particle_tracing
 from Models.models import load_model, create_model, save_model
 import torch
 import torch.optim as optim
@@ -120,6 +120,20 @@ def train(rank, model, dataset, opt):
             s_l = seeding_loss(model_seed_output)
             loss = loss + s_l
             losses['seeding_curve'] = s_l
+        if(opt['streamline_loss'] is not None):
+            traces = particle_tracing(dataset.data,
+            data['inputs'], steps=20, h=0.25, 
+            align_corners=opt['align_corners'])
+            
+            trace_shape = list(traces.shape)
+            trace_shape[-1] = 1
+            model_trace_output = model(traces.reshape(-1, 3))
+            model_trace_output = model_trace_output.reshape(trace_shape)
+            trace_mean = model_trace_output.mean(dim=0)
+            model_trace_output = model_trace_output - trace_mean
+            tracing_loss = model_trace_output.mean()
+            loss = loss + tracing_loss
+            losses['tracing_loss'] = tracing_loss
 
         loss.backward()
         optimizer.step()
@@ -159,6 +173,8 @@ if __name__ == '__main__':
         help='Aligns corners in implicit model.')
     parser.add_argument('--seeding_points',default=None,type=str,
         help='Seeding points file')
+    parser.add_argument('--streamline_loss',default=None,type=str2bool,
+        help='Streamline regularization loss enabled or not')
     parser.add_argument('--save_name',default=None,type=str,
         help='Save name for the model')
     

@@ -6,12 +6,11 @@
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
-        "interpolate": true,
-        "n_layers": 4,
+        "n_layers": 3,
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "save_name": "temp",
-        "seeding_points": "tornado_seeding_curve1.csv"       
+        "streamline_loss": true,
+        "save_name": "temp"     
     }]
 }

@@ -648,16 +648,16 @@ def directed_hausdorff_nb(ar1, ar2):
 
 def RK4_advection(vf, seeds, h=0.1, align_corners=True):
     k1 = F.grid_sample(vf, seeds.unsqueeze(0).unsqueeze(0).unsqueeze(0),
-                       mode="linear", align_corners=align_corners).squeeze()
+                       mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     k2_spot = seeds + 0.5 * k1 * h
     k2 = F.grid_sample(vf, k2_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
-                       mode="linear", align_corners=align_corners).squeeze()
+                       mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     k3_spot = seeds + 0.5 * k2 * h
     k3 = F.grid_sample(vf, k3_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
-                       mode="linear", align_corners=align_corners).squeeze()
+                       mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     k4_spot = seeds + k3 * h
     k4 = F.grid_sample(vf, k4_spot.unsqueeze(0).unsqueeze(0).unsqueeze(0), 
-                       mode="linear", align_corners=align_corners).squeeze()
+                       mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     return seeds + (1/6) * (k1+  2*k2 + 2*k3 + k4) * h
 
 def particle_tracing(vf, seeds, 
