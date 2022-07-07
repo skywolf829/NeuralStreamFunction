@@ -1,7 +1,0 @@
-{
-    "tornado_uvw": [ "test.py",
-        {        
-        "load_from": "tornado_uvw_featgrid",
-        "tests": "reconstruction"
-    }]
-}
