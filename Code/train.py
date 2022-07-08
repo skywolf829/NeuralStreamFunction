@@ -122,7 +122,7 @@ def train(rank, model, dataset, opt):
             losses['seeding_curve'] = s_l
         if(opt['streamline_loss'] is not None):
             traces = particle_tracing(dataset.data,
-            data['inputs'], steps=20, h=0.25, 
+            data['inputs'], steps=100, h=0.5, 
             align_corners=opt['align_corners'])
             
             trace_shape = list(traces.shape)
