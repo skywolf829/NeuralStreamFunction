@@ -673,6 +673,6 @@ def particle_tracing(vf : torch.Tensor, seeds : torch.Tensor,
     
     for i in range(steps):
         p = RK4_advection(vf, p, h, align_corners)
-        positions[1+i] = p
+        positions[1+i] = p.clone()
     
     return positions

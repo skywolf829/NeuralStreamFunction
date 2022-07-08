@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 import argparse
+from inspect import trace
 from Datasets.datasets import Dataset
 import datetime
 from Other.utility_functions import str2bool, particle_tracing
@@ -129,8 +130,17 @@ def train(rank, model, dataset, opt):
             trace_shape[-1] = 1
             model_trace_output = model(traces.reshape(-1, 3))
             model_trace_output = model_trace_output.reshape(trace_shape)
+            #print(f"model_trace_output {model_trace_output.shape}")
+            #print(f"model_trace_output {model_trace_output[0:10,0,0]}")
+
             trace_mean = model_trace_output.mean(dim=0)
-            model_trace_output = model_trace_output - trace_mean
+            trace_mean = trace_mean.unsqueeze(0).repeat(trace_shape[0], 1, 1)
+            #print(f"actual means {trace_mean[0:10,0,0]}")
+            
+            model_trace_output = torch.abs(model_trace_output - trace_mean)
+            #print(f"means {model_trace_output.shape}")
+            #print(f"means {model_trace_output[0:10, 0, 0]}")   
+            #print(f"diff means {model_trace_output.mean(dim=0).shape}")      
             tracing_loss = model_trace_output.mean()
             loss = loss + tracing_loss
             losses['tracing_loss'] = tracing_loss
