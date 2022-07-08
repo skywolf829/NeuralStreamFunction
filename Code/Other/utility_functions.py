@@ -646,7 +646,9 @@ def directed_hausdorff_nb(ar1, ar2):
 
     return np.sqrt(d_max)
 
-def RK4_advection(vf, seeds, h=0.1, align_corners=True):
+@torch.jit.script
+def RK4_advection(vf : torch.Tensor, seeds : torch.Tensor, 
+        h : float = 0.1, align_corners : bool = True):
     k1 = F.grid_sample(vf, seeds.unsqueeze(0).unsqueeze(0).unsqueeze(0),
                        mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     k2_spot = seeds + 0.5 * k1 * h
@@ -660,15 +662,17 @@ def RK4_advection(vf, seeds, h=0.1, align_corners=True):
                        mode="bilinear", align_corners=align_corners).squeeze().permute(1,0)
     return seeds + (1/6) * (k1+  2*k2 + 2*k3 + k4) * h
 
-def particle_tracing(vf, seeds, 
-                     steps=100, h=0.1,
-                     align_corners=True):
+@torch.jit.script
+def particle_tracing(vf : torch.Tensor, seeds : torch.Tensor, 
+                     steps : int = 100, h : float = 0.1,
+                     align_corners : bool = True):
     p = seeds.clone()
-    positions = []
-    positions.append(p.clone())
+    positions = torch.empty([steps+1, p.shape[0], p.shape[1]], 
+                            device=vf.device)
+    positions[0] = p
     
-    for _ in range(steps):
+    for i in range(steps):
         p = RK4_advection(vf, p, h, align_corners)
-        positions.append(p.clone())
+        positions[1+i] = p
     
-    return torch.stack(positions, axis=0)
+    return positions
