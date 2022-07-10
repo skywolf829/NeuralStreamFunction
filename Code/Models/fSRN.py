@@ -58,6 +58,7 @@ class fSRN(nn.Module):
                                             np.sqrt(6 / opt['nodes_per_layer']) / 30)
             
         self.net.append(final_linear)
+        self.net.append(nn.BatchNorm1d(opt['n_outputs']))
         
         self.net = nn.Sequential(*self.net)
     
