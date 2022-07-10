@@ -50,9 +50,9 @@ class Dataset(torch.utils.data.Dataset):
             seeds = np.array(seeds)
             self.seeds = torch.tensor(seeds, 
                     device=opt['data_device'], dtype=torch.float32)
-            self.seeds[:,0] /= self.data.shape[2]
-            self.seeds[:,1] /= self.data.shape[3]
-            self.seeds[:,2] /= self.data.shape[4]
+            self.seeds[:,0] /= (self.data.shape[2]-1)
+            self.seeds[:,1] /= (self.data.shape[3]-1)
+            self.seeds[:,2] /= (self.data.shape[4]-1)
             self.seeds *= 2
             self.seeds -= 1            
 

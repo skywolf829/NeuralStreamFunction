@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import PSNR, tensor_to_cdf, create_path
+from Other.utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces
 from Models.models import load_model, sample_grid, sample_grad_grid
 from Models.options import *
 import torch.nn.functional as F
@@ -108,6 +108,26 @@ def model_stream_function(model, dataset, opt):
     create_path(os.path.join(output_folder, "StreamFunction"))
     tensor_to_cdf(f, os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
 
+def model_streamline_error(model, dataset, opt):
+    grid = list(dataset.data.shape[2:])
+    total_points = 1
+    for i in range(len(grid)):
+        total_points *= grid[i]
+    
+    traces = particle_tracing(dataset.data,
+        dataset.seeds, steps=500, h=0.75, 
+        align_corners=opt['align_corners'])
+    
+    #visualize_traces(traces)
+    
+    trace_shape = list(traces.shape)
+    trace_shape[-1] = 1
+    model_trace_output = model(traces.reshape(-1, 3))
+    model_trace_output = model_trace_output.reshape(trace_shape)
+    model_trace_output = torch.abs(model_trace_output)
+    
+    print(f"Average streamfunction error for traces: {model_trace_output.mean()}")
+    print(f"Max streamfunction error for traces: {model_trace_output.max()}")
 
 def perform_tests(model, data, tests, opt):
     if("reconstruction" in tests):
@@ -124,6 +144,9 @@ def perform_tests(model, data, tests, opt):
             model_stream_function(model, data, opt)
         else:
             print(f"Training mode {opt['training_mode']} does not support the stream function task")
+    if("streamline" in tests):
+        model_streamline_error(model, data, opt)
+        
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate a model on some tests')

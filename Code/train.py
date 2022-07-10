@@ -118,7 +118,7 @@ def train(rank, model, dataset, opt):
         losses['fitting_loss'] = loss
         if(opt['seeding_points'] is not None):
             model_seed_output = model(data['seeds'])
-            s_l = seeding_loss(model_seed_output)
+            s_l = seeding_loss(model_seed_output) * 10
             loss = loss + s_l
             losses['seeding_curve'] = s_l
         if(opt['streamline_loss']):
@@ -141,7 +141,7 @@ def train(rank, model, dataset, opt):
             #print(f"means {model_trace_output.shape}")
             #print(f"means {model_trace_output[0:10, 0, 0]}")   
             #print(f"diff means {model_trace_output.mean(dim=0).shape}")      
-            tracing_loss = model_trace_output.mean()
+            tracing_loss = model_trace_output.mean() * 10
             loss = loss + tracing_loss
             losses['tracing_loss'] = tracing_loss
 

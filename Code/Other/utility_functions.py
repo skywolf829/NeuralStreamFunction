@@ -676,3 +676,27 @@ def particle_tracing(vf : torch.Tensor, seeds : torch.Tensor,
         positions[1+i] = p.clone()
     
     return positions
+
+def visualize_traces(traces):
+    '''
+    Uses matplotlib to visualize 3D streamline traces
+    Expectes traces to be of shape [s, n, 3], where
+    s is the number of steps, n is the number of particles,
+    and 3 is the [z,y,x] position.
+    '''
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    print(traces.shape)
+    for i in range(traces.shape[1]):
+        ax.plot3D(traces[:,i,0].cpu().numpy(),
+                  traces[:,i,1].cpu().numpy(),
+                  traces[:,i,2].cpu().numpy())
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    plt.title("Streamline traces")
+    plt.show()
