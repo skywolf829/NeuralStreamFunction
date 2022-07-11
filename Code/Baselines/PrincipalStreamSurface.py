@@ -1,14 +1,18 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import datetime
-from .. import Other
 import torch
 import time
 import os
-from Models.options import *
 import numba as nb
 import numpy as np
-from typing import Tuple
+from typing import Tuple, List
+import sys
+from Code.Other.utility_functions import tensor_to_cdf
+script_dir = os.path.dirname(__file__)
+utility_fn_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(utility_fn_dir)
+from utility_functions import jacobian, normal, nc_to_tensor
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")
@@ -18,21 +22,23 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 
 @nb.njit()
 def pp(i : int, j : int, k : int) -> Tuple[int]:
-    if(i == 0 and j == 0 and k == 0):
-        return 0
-    elif(i == 0 and j == 0 and k != 0):
-        return (0, 0, k-1)
+    to_return : Tuple[int] = (0,0,0)
+    if(i == 0 and j == 0 and k != 0):
+        to_return = (0, 0, k-1)
     elif(i == 0 and j != 0):
-        return (0, j-1, k)
+        to_return = (0, j-1, k)
     else:
-        return (i-1, j, k)
-    
+        to_return = (i-1, j, k)
+    return to_return
 
 @nb.njit()
-def princpal_stream_function(vf : np.ndarray, 
+def princpal_stream_function(
+    sf : np.ndarray,
+    vf : np.ndarray, 
     vf_normal : np.ndarray,
     jac : np.ndarray):
-    sf = np.zeros([vf.shape[2], vf.shape[3], vf.shape[4]])
+    
+    
     dv = 1 / vf.shape[2]
     for k in range(0, vf.shape[4]):
         for j in range(0, vf.shape[3]):
@@ -72,18 +78,25 @@ if __name__ == '__main__':
     start_time = time.time()    
     
     print(f"Loading and preprocessing the normal and jacobian fields for the vector field.")
-    vf = nc_to_tensor(os.path.join(data_folder, args['data']))
+    
+    vf = nc_to_tensor(os.path.join(data_folder, args['data']))    
+    shape : List[int] = [vf.shape[2], vf.shape[3], vf.shape[4]]
+    sf : np.ndarray = np.zeros(shape)
     n = normal(vf)
-    j = jacobian(vf)
+    j = jacobian(vf).sum(axis=2)
     end_time = time.time()
     print(f"Finished preprocessing in {end_time-start_time : 0.02f} seconds")
     print(f"Normal vf shape {n.shape}")
     print(f"Jacobian shape {j.shape}")
     print(f"Beginning principal stream function calculation.")
     start_time = time.time
-    sf = princpal_stream_function(vf.cpu().numpy(), 
+    sf = princpal_stream_function(
+        sf,
+        vf.cpu().numpy(), 
         n.cpu().numpy(),
         j.cpu().numpy())
 
     end_time = time.time()
     print(f"Finished stream function calculation in {end_time-start_time : 0.02f} seconds")
+    
+    tensor_to_cdf(torch.tensor(sf), "sf_"+args['data'])
