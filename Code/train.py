@@ -141,7 +141,7 @@ def train(rank, model, dataset, opt):
             #print(f"means {model_trace_output.shape}")
             #print(f"means {model_trace_output[0:10, 0, 0]}")   
             #print(f"diff means {model_trace_output.mean(dim=0).shape}")      
-            tracing_loss = model_trace_output.mean() * 100
+            tracing_loss = model_trace_output.mean() * 50
             loss = loss + tracing_loss
             losses['tracing_loss'] = tracing_loss
 
