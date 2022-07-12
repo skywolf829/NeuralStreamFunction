@@ -210,6 +210,7 @@ def bilinear_interpolate(im, x, y):
     wd = (x-x0.type(dtype)) * (y-y0.type(dtype))
     return Ia*wa + Ib*wb + Ic*wc + Id*wd
 
+
 def trilinear_interpolate(im, x, y, z, device, periodic=False):
 
     if(device == "cpu"):
