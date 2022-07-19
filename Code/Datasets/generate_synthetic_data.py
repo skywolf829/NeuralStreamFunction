@@ -5,8 +5,12 @@ import h5py
 from netCDF4 import Dataset
 from math import pi, sin, atan, cos, tan
 import skimage
+import sys
 from torch import tensor
-from Other.utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
+script_dir = os.path.dirname(__file__)
+utility_fn_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(utility_fn_dir)
+from utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
 import h5py
 
 
@@ -75,9 +79,9 @@ def generate_vortices_data(resolution = 128):
     tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
         "vortices.nc", channel_names) 
 
-def generate_flow_past_cylinder(resolution = 128, a=1):
-    start = - 2.5
-    end = 2.5
+def generate_flow_past_cylinder(resolution = 128, a=2):
+    start = - 5
+    end = 5
     
     zyx = torch.meshgrid(
         [torch.linspace(start, end, steps=resolution),
@@ -288,5 +292,6 @@ def generate_seed_files():
                        
 if __name__ == '__main__':
     torch.manual_seed(0)
-    generate_seed_files()
+    #generate_seed_files()
+    generate_flow_past_cylinder(resolution=10, a=2)
     quit()
