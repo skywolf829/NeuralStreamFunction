@@ -10,6 +10,10 @@ def mse(x, y):
 def l1_loss(network_output, target):
     return l1(network_output, target['data'])
 
+def l1_normal_loss(network_output, target): 
+    l = l1(network_output, target['normal'])
+    return l
+
 def l1_occupancy(gt, y):
     # Expects x to be [..., 3] or [..., 4] for (u, v, o) or (u, v, w, o)
     # Where o is occupancy
@@ -218,6 +222,8 @@ def get_loss_func(opt):
         return dsfm_direction_loss
     elif(opt['training_mode'] == "hhd"):
         return hhd_loss
+    elif(opt['training_mode'] == "PSF"):
+        return l1_normal_loss
     else:
         print(f"Missing loss function {opt['training_mode']}. Exiting.")
         quit()

@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces
-from Models.models import load_model, sample_grid, sample_grad_grid
+from Other.utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid
+from Models.models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
 from Models.options import *
 import torch.nn.functional as F
 from Datasets.datasets import Dataset
@@ -80,7 +80,24 @@ def model_stream_function(model, dataset, opt):
         f_grad = sample_grad_grid(model, grid, output_dim=3, max_points=2097152)
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
 
-
+    elif("PSF" in opt['training_mode']):
+        with torch.no_grad():
+            f = sample_grid(model, grid, max_points = 2097152).permute(3,0,1,2).unsqueeze(0)
+            
+            GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
+            coord_grid = make_coord_grid(grid, 
+                model.opt['device'], flatten=False,
+                align_corners=model.opt['align_corners'])
+            coord_grid_shape = list(coord_grid.shape)
+            coord_grid = coord_grid.view(-1, coord_grid.shape[-1])
+            vals = model.forward_grad(coord_grid)
+            coord_grid_shape[-1] = model.opt['n_outputs']*3
+            vals = vals.reshape(coord_grid_shape)
+            f_grad = vals.permute(3,0,1,2).unsqueeze(0)
+            GBytes_w_grad = (torch.cuda.max_memory_allocated(device=opt['device']) \
+            / (1024**3))
+    
     f = f.to(opt['data_device'])
     f_grad = f_grad.to(opt['data_device'])
     
@@ -97,8 +114,8 @@ def model_stream_function(model, dataset, opt):
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
-    print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")
-    print(f"Inference with grad took {t_1_ff_w_grad-t_0_ff_w_grad: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff_w_grad-t_0_ff_w_grad)/total_points: 0.09f} sec. per point")
+    #print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")
+    #print(f"Inference with grad took {t_1_ff_w_grad-t_0_ff_w_grad: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff_w_grad-t_0_ff_w_grad)/total_points: 0.09f} sec. per point")
 
     print(f"Maximum memory allocated on {opt['device']} was {GBytes : 0.02f} GB")
     print(f"Maximum memory allocated w/ grad on {opt['device']} was {GBytes_w_grad : 0.02f} GB")
@@ -140,7 +157,7 @@ def perform_tests(model, data, tests, opt):
     if("streamfunction" in tests):
         if("dsf" in opt['training_mode'] or \
             "uvwf" in opt['training_mode'] or
-            "f_" in opt['training_mode']):
+            "f_" in opt['training_mode'] or "PSF" in opt['training_mode']):
             model_stream_function(model, data, opt)
         else:
             print(f"Training mode {opt['training_mode']} does not support the stream function task")

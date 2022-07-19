@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 from inspect import trace
-from Datasets.datasets import Dataset
+from Datasets.datasets import get_dataset
 import datetime
 from Other.utility_functions import str2bool, particle_tracing
 from Models.models import load_model, create_model, save_model
@@ -82,11 +82,14 @@ def train(rank, model, dataset, opt):
     print("Training on %s" % (opt["device"]), 
         os.path.join(save_folder, opt["save_name"]))
 
-
-    optimizer = optim.Adam(model.parameters(), lr=opt["lr"],
-        betas=[opt['beta_1'], opt['beta_2']]) 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 
-        step_size=opt['iterations']//3, gamma=0.1)
+    if(opt['model'] == "grid"):
+        optimizer = optim.SGD(model.parameters(), lr=opt['lr'])
+        scheduler = None
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=opt["lr"],
+            betas=[opt['beta_1'], opt['beta_2']]) 
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 
+            step_size=opt['iterations']//3, gamma=0.1)
 
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         if(os.path.exists(os.path.join(project_folder_path, "tensorboard", opt['save_name']))):
@@ -104,18 +107,23 @@ def train(rank, model, dataset, opt):
     for iteration in range(0, opt['iterations']):
         opt['iteration_number'] = iteration
 
-        model.zero_grad()
+        optimizer.zero_grad()
         data = dataset.get_random_points(opt['points_per_iteration'])
         for k in data.keys():
             data[k] = data[k].to(opt['device'])
         if("any" in opt['training_mode'] or "direction" in opt['training_mode']
-           or "parallel" in opt['training_mode'] or opt['training_mode'] == "hhd"):
+           or "parallel" in opt['training_mode'] or opt['training_mode'] == "hhd" or 
+           "PSF" in opt['training_mode']):
             data['inputs'] = data['inputs'].requires_grad_(True)
-            
-        model_output = model(data['inputs'])
+        
+        if(opt['model'] == "grid"):
+            model_output = model.forward_grad(data['inputs'])
+        else:
+            model_output = model(data['inputs'])
         losses = {}
         loss = loss_func(model_output, data)
         losses['fitting_loss'] = loss
+        
         if(opt['seeding_points'] is not None):
             model_seed_output = model(data['seeds'])
             s_l = seeding_loss(model_seed_output) * 10
@@ -147,10 +155,12 @@ def train(rank, model, dataset, opt):
 
         loss.backward()
         optimizer.step()
-        scheduler.step()
+        if scheduler is not None:
+            scheduler.step()
         
         if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
             logging(writer, iteration, losses)
+        opt['iteration_number'] = iteration
     
     if((rank == 0 and opt['train_distributed']) or not opt['train_distributed']):
         writer.close()
@@ -254,7 +264,7 @@ if __name__ == '__main__':
             if args[k] is not None:
                 opt[k] = args[k]
 
-        dataset = Dataset(opt)
+        dataset = get_dataset(opt)
         model = create_model(opt)
     else:        
         opt = load_options(os.path.join(save_folder, args["load_from"]))
@@ -263,7 +273,7 @@ if __name__ == '__main__':
         for k in args.keys():
             if args[k] is not None:
                 opt[k] = args[k]
-        dataset = Dataset(opt)
+        dataset = get_dataset(opt)
         model = load_model(opt, opt['device'])
 
     now = datetime.datetime.now()

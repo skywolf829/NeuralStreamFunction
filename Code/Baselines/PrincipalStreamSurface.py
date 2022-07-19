@@ -145,6 +145,38 @@ def princpal_stream_function(
                     #        np.dot(N, dp) + \
                     #            0.5 * np.dot(A, dp**2)
 
+    return sf
+
+@nb.njit()
+def princpal_stream_function_v2(
+    sf : np.ndarray,
+    vf : np.ndarray, 
+    vf_normal : np.ndarray):
+    
+    dt = np.array([0.5], dtype=np.float32)
+    eps = np.array([1e-8], dtype=np.float32)
+    
+    vf_shape = np.array(list(vf.shape[2:]), dtype=np.float32) 
+    for k in range(0, vf.shape[4]):
+        for j in range(0, vf.shape[3]):
+            for i in range(0, vf.shape[2]):
+                if i == 0 and j == 0 and k == 0:
+                    sf[i,j,k] = 0
+                    sf[i+1,j,k] = vf_normal[0,0,i,j,k]
+                    sf[i,j+1,k] = vf_normal[0,1,i,j,k]
+                    sf[i,j,k+1] = vf_normal[0,2,i,j,k]
+                if i > 0 and i < vf.shape[2]-1:
+                    sf[i+1,j,k] = 2*vf_normal[0,0,i,j,k]+sf[i-1,j,k]
+                if j > 0 and j < vf.shape[3]-1:
+                    sf[i,j+1,k] = 2*vf_normal[0,1,i,j,k]+sf[i,j-1,k]
+                if k > 0 and k < vf.shape[4]-1:
+                    sf[i,j,k+1] = 2*vf_normal[0,2,i,j,k]+sf[i,j,k-1]
+                if i == vf.shape[2]-1:
+                    sf[i,j,k] = vf_normal[0,0,i,j,k] + sf[i-1,j,k]
+                if j == vf.shape[3]-1:
+                    sf[i,j,k] = vf_normal[0,1,i,j,k] + sf[i,j-1,k]
+                if k == vf.shape[4]-1:
+                    sf[i,j,k] = vf_normal[0,2,i,j,k] + sf[i,j,k-1]
 
 
     return sf
@@ -182,8 +214,7 @@ if __name__ == '__main__':
     sf = princpal_stream_function(
         sf.astype(np.float32),
         vf.cpu().numpy().astype(np.float32), 
-        n.cpu().numpy().astype(np.float32),
-        j.cpu().numpy().astype(np.float32))
+        n.cpu().numpy().astype(np.float32))
 
     end_time = time.time()
     print(f"Finished stream function calculation in {end_time-start_time : 0.02f} seconds")
