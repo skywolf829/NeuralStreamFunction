@@ -143,14 +143,14 @@ def princpal_stream_function(
                     
                     
                     dp_step = 1 / (vf_shape[0]-1)
-                    #sf[k,j,i] = \
-                    #    sf[pp[2], pp[1], pp[0]] + \
-                    #        N[0]*dp[0]+N[1]*dp[1]+N[2]*dp[2] + \
-                    #            0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
-                    sf[i,j,k] = \
+                    sf[k,j,i] = \
                         sf[pp[2], pp[1], pp[0]] + \
-                            np.linalg.norm(V) * dp_step + \
-                                0.5 * np.linalg.norm(A) * dp_step**2
+                            N[0]*dp[0]+N[1]*dp[1]+N[2]*dp[2] + \
+                                0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
+                    #sf[i,j,k] = \
+                    #    sf[pp[2], pp[1], pp[0]] + \
+                    #        np.linalg.norm(V) * dp_step + \
+                    #            0.5 * np.linalg.norm(A) * dp_step**2
 
     sf -= sf.min()
     sf /= sf.max()

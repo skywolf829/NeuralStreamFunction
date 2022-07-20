@@ -62,8 +62,8 @@ def generate_vortices_data(resolution = 128):
                 w = 0.5 * (vortex_z(x, y, z, -5.5, -5.5, -5.5) + \
                     vortex_z(x, y, z, 15.0, 15.0, 15.0))
                 a[:,k,j,i] = np.array([u, v, w], dtype=np.float32)
-                print("%0.02f %0.02f %0.02f" % (x, y, z))
-                print("%i %i %i" % (i, j, k))
+                #print("%0.02f %0.02f %0.02f" % (x, y, z))
+                #print("%i %i %i" % (i, j, k))
                 k += 1
             j += 1
         i += 1
@@ -74,8 +74,8 @@ def generate_vortices_data(resolution = 128):
     a /= np.linalg.norm(a, axis=0).max()
     
     channel_names = ['u', 'v', 'w']
-    tensor_to_h5(torch.tensor(a).unsqueeze(0).type(torch.float32), 
-        "vortices.h5", channel_names) 
+    #tensor_to_h5(torch.tensor(a).unsqueeze(0).type(torch.float32), 
+    #    "vortices.h5", channel_names) 
     tensor_to_cdf(torch.tensor(a).unsqueeze(0).type(torch.float32), 
         "vortices.nc", channel_names) 
 
@@ -294,4 +294,5 @@ if __name__ == '__main__':
     torch.manual_seed(0)
     #generate_seed_files()
     generate_flow_past_cylinder(resolution=10, a=2)
+    generate_vortices_data(resolution=10)
     quit()
