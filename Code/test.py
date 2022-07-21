@@ -52,24 +52,18 @@ def model_stream_function(model, dataset, opt):
         total_points *= grid[i]
     
     if("dsf" in opt['training_mode'] or opt['training_mode'].startswith("f_")):          
-        torch.cuda.synchronize()
         t_0_ff = time.time()
         with torch.no_grad():
             f = sample_grid(model, grid, max_points=10000)[...,0:1]
             t_1_ff = time.time()
-            torch.cuda.synchronize()
             f = f.permute(3, 0, 1, 2).unsqueeze(0)   
-            torch.cuda.synchronize()
             GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
         
-        torch.cuda.synchronize()
         t_0_ff_w_grad = time.time()
         f_grad = sample_grad_grid(model, grid, output_dim=0, max_points=10000)
-        torch.cuda.synchronize()
         t_1_ff_w_grad = time.time()
         f_grad = f_grad.permute(3,0,1,2).unsqueeze(0)
-        torch.cuda.synchronize()
         GBytes_w_grad = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
         
