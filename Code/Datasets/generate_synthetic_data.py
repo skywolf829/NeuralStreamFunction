@@ -142,6 +142,41 @@ def generate_ABC_flow(resolution = 128,
     tensor_to_cdf(abc.type(torch.float32), 
         "ABC_flow.nc", channel_names)
 
+def generate_hill_vortex(resolution = 128, 
+                      A=np.sqrt(3), B=np.sqrt(2), C=1):
+    start = -2
+    end = 2
+    
+    zyx = torch.meshgrid(
+        [torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution)],
+        indexing='ij'
+    )
+    zyx = torch.stack(zyx).type(torch.float32)
+    x = zyx[2].clone()
+    y = zyx[1].clone()
+    z = zyx[0].clone()
+    r = (x**2 + y**2 + z**2)**0.5
+    u = (r > 1).type(torch.LongTensor) * (3*y*x)/(2*(r**5)) + \
+        (r <= 1).type(torch.LongTensor) * (1.5*y*x)
+    v = (r > 1).type(torch.LongTensor) * ((3*y**2) - r**2)/(2*(r**5)) + \
+        (r <= 1).type(torch.LongTensor) * (1.5*(1 - 2*(r**2)))
+    w = (r > 1).type(torch.LongTensor) * (3*y*z)/(r*(r**5)) + \
+        (r <= 1).type(torch.LongTensor) * (1.5*y*z)
+    
+    hill = torch.stack([u,v,w], dim=0).unsqueeze(0)
+    print(hill.shape)
+    print(hill.max())
+    print(hill.min())
+    print(hill.mean())
+    print(hill.norm(dim=1).max())
+    hill /= hill.norm(dim=1).max()
+    
+    channel_names = ['u', 'v', 'w']
+    tensor_to_cdf(hill.type(torch.float32), 
+        "hill.nc", channel_names)
+
 def isabel_from_bin():
     u = np.fromfile('U.bin', dtype='>f')
     u = u.astype(np.float32)
@@ -293,6 +328,7 @@ def generate_seed_files():
 if __name__ == '__main__':
     torch.manual_seed(0)
     #generate_seed_files()
-    generate_flow_past_cylinder(resolution=10, a=2)
-    generate_vortices_data(resolution=10)
+    #generate_flow_past_cylinder(resolution=10, a=2)
+    #generate_vortices_data(resolution=10)
+    generate_hill_vortex(resolution=64)
     quit()
