@@ -102,6 +102,10 @@ def princpal_stream_function(
     for k in range(0, vf.shape[2]):
         for j in range(0, vf.shape[3]):
             for i in range(0, vf.shape[4]):
+                #dis = ((j - (vf.shape[3]-1)/2) ** 2 + (i - (vf.shape[4]-1)/2) ** 2) ** 0.5
+                #print(dis)
+                #if(dis < 2):
+                #    vf[0,:,k,j,i] = 0
                 
                 if i == 0 and j == 0 and k == 0:
                     sf[k,j,i] = 0
