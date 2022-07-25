@@ -14,6 +14,7 @@ class Options():
         opt['data']                                 = 'tornado.nc'
         opt['save_name']                            = 'tornado'
         opt['interpolate']                          = False
+        opt['vorticity']                            = False
         opt['seeding_points']                       = None
         opt['streamline_loss']                      = False
         opt['align_corners']                        = True

@@ -177,6 +177,13 @@ def f_parallel_loss(network_output, target):
     normal_err = angle_parallel_loss(grads_f, target['normal'])
     return normal_err
 
+def vortex_tubes_loss(network_output, target):
+    grads_f = torch.autograd.grad(network_output[:,0], target['inputs'], 
+        grad_outputs=torch.ones_like(network_output[:,0]),
+        create_graph=True)[0]
+    normal_err = angle_same_loss(grads_f, target['data'])
+    return normal_err
+
 def f_direction_loss(network_output, target):
     grads_f = torch.autograd.grad(network_output[:,0], target['inputs'], 
         grad_outputs=torch.ones_like(network_output[:,0]),
@@ -224,6 +231,8 @@ def get_loss_func(opt):
         return hhd_loss
     elif(opt['training_mode'] == "PSF"):
         return l1_normal_loss
+    elif(opt['training_mode'] == "vorticity"):
+        return vortex_tubes_loss
     else:
         print(f"Missing loss function {opt['training_mode']}. Exiting.")
         quit()

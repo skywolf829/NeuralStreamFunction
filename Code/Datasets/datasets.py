@@ -1,6 +1,6 @@
 import os
 import torch
-from Other.utility_functions import make_coord_grid, normal, nc_to_tensor, tensor_to_cdf
+from Other.utility_functions import make_coord_grid, normal, nc_to_tensor, curl, tensor_to_cdf
 import torch.nn.functional as F
 import pandas as pd
 import numpy as np
@@ -30,8 +30,13 @@ class Dataset(torch.utils.data.Dataset):
         print(f"Initializing dataset - reading {folder_to_load}")
         
         d = nc_to_tensor(folder_to_load).to(opt['data_device'])
-        d /= (d.norm(dim=1).max() + 1e-8)
+        if(opt['vorticity']):
+            print(f"Using vorticity field")
+            d = curl(d)
+            tensor_to_cdf(d, "vorticity")
+        #d /= (d.norm(dim=1).max() + 1e-8)
         self.data = d
+        print("Data size: " + str(self.data.shape))
             
         if("direction" in opt['training_mode'] or "parallel" in opt['training_mode'] or 
            "PSF" in self.opt['training_mode']):
@@ -46,7 +51,6 @@ class Dataset(torch.utils.data.Dataset):
             flatten=True,
             align_corners=self.opt['align_corners'])
         
-        print("Data size: " + str(self.data.shape))
         print("Min/mean/max: %0.04f, %0.04f, %0.04f" % \
             (self.min(), self.mean(), self.max()))
         print("Min/mean/max mag: %0.04f, %0.04f, %0.04f" % \
@@ -194,7 +198,10 @@ class Grid_Dataset(torch.utils.data.Dataset):
         print(f"Initializing dataset - reading {folder_to_load}")
         
         d = nc_to_tensor(folder_to_load).to(opt['data_device'])
-        d /= (d.norm(dim=1).max() + 1e-8)
+        #d /= (d.norm(dim=1).max() + 1e-8)
+        if(opt['vorticity']):
+            print(f"Using vorticity field")
+            d = curl(d)
         self.data = d
             
         if("direction" in opt['training_mode'] or "parallel" in opt['training_mode'] or 

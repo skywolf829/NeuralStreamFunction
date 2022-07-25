@@ -111,10 +111,7 @@ def train(rank, model, dataset, opt):
         data = dataset.get_random_points(opt['points_per_iteration'])
         for k in data.keys():
             data[k] = data[k].to(opt['device'])
-        if("any" in opt['training_mode'] or "direction" in opt['training_mode']
-           or "parallel" in opt['training_mode'] or opt['training_mode'] == "hhd" or 
-           "PSF" in opt['training_mode']):
-            data['inputs'] = data['inputs'].requires_grad_(True)
+        data['inputs'] = data['inputs'].requires_grad_(True)
         
         if(opt['model'] == "grid"):
             model_output = model.forward_grad(data['inputs'])
@@ -189,6 +186,8 @@ if __name__ == '__main__':
         help='Data file name')
     parser.add_argument('--interpolate',default=None,type=str2bool,
         help='Interpolate points during training')
+    parser.add_argument('--vorticity',default=None,type=str2bool,
+        help='Fine integral of vorticity')
     parser.add_argument('--align_corners',default=None,type=str2bool,
         help='Aligns corners in implicit model.')
     parser.add_argument('--seeding_points',default=None,type=str,

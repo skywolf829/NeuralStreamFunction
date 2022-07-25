@@ -4,14 +4,15 @@
         {        
         "model": "fSRN",
         "data": "hill.nc",
-        "training_mode": "f_direction",
+        "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 4,
         "nodes_per_layer": 128,
-        "iterations": 1000,
+        "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
-        "save_name": "hill_PSS"     
+        "vorticity": true,
+        "save_name": "hill_vorticity"     
     }]
 }
