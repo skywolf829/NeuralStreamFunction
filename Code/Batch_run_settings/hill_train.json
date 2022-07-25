@@ -3,8 +3,8 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "hill.nc",
-        "training_mode": "f_parallel",
+        "data": "non_closed.nc",
+        "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 4,
@@ -12,7 +12,7 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
-        "vorticity": true,
-        "save_name": "hill_vorticity"     
+        "vorticity": false,
+        "save_name": "non_closed"     
     }]
 }

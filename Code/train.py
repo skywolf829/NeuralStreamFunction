@@ -251,6 +251,7 @@ if __name__ == '__main__':
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")
 
+    print("Seeding at 11235813")
     torch.manual_seed(11235813)
 
     if(args['load_from'] is None):

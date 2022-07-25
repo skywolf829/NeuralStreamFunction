@@ -177,6 +177,37 @@ def generate_hill_vortex(resolution = 128,
     tensor_to_cdf(hill.type(torch.float32), 
         "hill.nc", channel_names)
 
+def generate_non_closed_vortex(resolution = 128):
+    start = -1
+    end = 1
+    
+    zyx = torch.meshgrid(
+        [torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution)],
+        indexing='ij'
+    )
+    zyx = torch.stack(zyx).type(torch.float32)
+    x = zyx[2].clone()
+    y = zyx[1].clone()
+    z = zyx[0].clone()
+    r = (x**2 + y**2 + z**2)**0.5
+    u = 1.5*(x*z) - y
+    v = 1.5*(y*z) + x
+    w = 1.5*(1 - 2*(x**2 + y**2) - z**2)
+    
+    non_closed = torch.stack([u,v,w], dim=0).unsqueeze(0)
+    print(non_closed.shape)
+    print(non_closed.max())
+    print(non_closed.min())
+    print(non_closed.mean())
+    print(non_closed.norm(dim=1).max())
+    non_closed /= non_closed.norm(dim=1).max()
+    
+    channel_names = ['u', 'v', 'w']
+    tensor_to_cdf(non_closed.type(torch.float32), 
+        "non_closed.nc", channel_names)
+
 def isabel_from_bin():
     u = np.fromfile('U.bin', dtype='>f')
     u = u.astype(np.float32)
@@ -330,5 +361,5 @@ if __name__ == '__main__':
     #generate_seed_files()
     #generate_flow_past_cylinder(resolution=10, a=2)
     #generate_vortices_data(resolution=10)
-    generate_hill_vortex(resolution=64)
+    generate_non_closed_vortex(resolution=64)
     quit()

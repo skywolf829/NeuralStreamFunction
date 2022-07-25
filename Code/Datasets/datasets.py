@@ -50,6 +50,7 @@ class Dataset(torch.utils.data.Dataset):
             self.opt['data_device'],
             flatten=True,
             align_corners=self.opt['align_corners'])
+
         
         print("Min/mean/max: %0.04f, %0.04f, %0.04f" % \
             (self.min(), self.mean(), self.max()))
@@ -128,19 +129,25 @@ class Dataset(torch.utils.data.Dataset):
         
     def get_random_points(self, n_points):        
         possible_spots = self.index_grid
-        
         if(self.opt['interpolate']):
             x = torch.rand([1, 1, 1, n_points, self.opt['n_dims']], 
                 device=self.opt['data_device']) * 2 - 1
             y = F.grid_sample(self.data,
                 x, mode='bilinear', 
                 align_corners=self.opt['align_corners'])
+            y = y.squeeze()
+            if(len(y.shape) == 1):
+                y = y.unsqueeze(0)    
+            
+            y = y.permute(1,0)
         else:
             if(n_points >= possible_spots.shape[0]):
                 x = possible_spots.clone().unsqueeze_(0)
             else:
-                samples = torch.randperm(possible_spots.shape[0], 
-                    dtype=torch.long, device=self.opt['data_device'])[:n_points]
+                #samples = torch.randperm(possible_spots.shape[0], 
+                #    dtype=torch.long, device=self.opt['data_device'])[:n_points]
+                samples = torch.multinomial(torch.ones([possible_spots.shape[0]]),
+                    n_points, replacement=False).to(self.opt['data_device'])
                 # Change above to not use CPU when not on MPS
                 # Verify that the bottom two lines do the same thing
                 x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
@@ -148,16 +155,13 @@ class Dataset(torch.utils.data.Dataset):
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             
-
-            y = F.grid_sample(self.data, 
-                x, mode='nearest', 
-                align_corners=self.opt['align_corners'])
+            y = self.data.flatten(start_dim=2)[0].permute(1,0)
+            y = torch.index_select(y, 0, samples)
+            #y = F.grid_sample(self.data, 
+            #    x, mode='nearest', 
+            #    align_corners=self.opt['align_corners'])
         
-        y = y.squeeze()
-        if(len(y.shape) == 1):
-            y = y.unsqueeze(0)    
         
-        y = y.permute(1,0)
             
         if('parallel' in self.opt['training_mode'] or 
            'direction' in self.opt['training_mode']or 
@@ -171,7 +175,8 @@ class Dataset(torch.utils.data.Dataset):
             y_n = y_n.permute(1,0)
                 
         x = x.squeeze()
-
+        #print(x.shape)
+        #print(y.shape)
         to_return = {
             "inputs": x,
             "data": y
