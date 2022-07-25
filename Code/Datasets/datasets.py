@@ -33,7 +33,7 @@ class Dataset(torch.utils.data.Dataset):
         if(opt['vorticity']):
             print(f"Using vorticity field")
             d = curl(d)
-            tensor_to_cdf(d, "vorticity")
+            tensor_to_cdf(d, "vorticity.nc")
         #d /= (d.norm(dim=1).max() + 1e-8)
         self.data = d
         print("Data size: " + str(self.data.shape))
