@@ -17,19 +17,9 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 if __name__ == '__main__':
     from netCDF4 import Dataset
     
-    # 100th timestep
+    psi1 = torch.tensor(np.load("psi1.npy"))
+    psi2 = torch.tensor(np.load("psi2.npy"))
     
-    a = Dataset(os.path.join(data_folder, "halfcylinder.nc"))
-    print(a)
+    t = torch.stack([psi1, psi2], dim=0).unsqueeze(0)
     
-    u = np.array(a['u'][99])
-    v = np.array(a['v'][99])
-    w = np.array(a['w'][99])
-    
-    vf = np.stack([u,v,w])
-    print(vf.shape)
-    
-    t = torch.tensor(vf).unsqueeze(0)
-    print(t.shape)
-    
-    tensor_to_cdf(t, "halfcylinder_re160_ts100.nc")
+    tensor_to_cdf(t, "psi.nc")
