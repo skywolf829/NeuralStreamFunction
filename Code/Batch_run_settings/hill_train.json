@@ -3,7 +3,7 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "non_closed.nc",
+        "data": "hill.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -12,7 +12,7 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
-        "vorticity": false,
-        "save_name": "non_closed"     
+        "vorticity": true,
+        "save_name": "hill"     
     }]
 }

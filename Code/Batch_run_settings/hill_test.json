@@ -1,7 +1,7 @@
 {
     "1": [ "test.py",
         {        
-        "load_from": "non_closed",
+        "load_from": "hill",
         "tests": "streamfunction"
     }]
 }

@@ -144,8 +144,8 @@ def generate_ABC_flow(resolution = 128,
 
 def generate_hill_vortex(resolution = 128, 
                       A=np.sqrt(3), B=np.sqrt(2), C=1):
-    start = -2
-    end = 2
+    start = -1
+    end = 1
     
     zyx = torch.meshgrid(
         [torch.linspace(start, end, steps=resolution),
@@ -361,5 +361,6 @@ if __name__ == '__main__':
     #generate_seed_files()
     #generate_flow_past_cylinder(resolution=10, a=2)
     #generate_vortices_data(resolution=10)
-    generate_non_closed_vortex(resolution=64)
+    generate_hill_vortex(resolution=64)
+    #generate_non_closed_vortex(resolution=64)
     quit()
