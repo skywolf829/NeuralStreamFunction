@@ -1,0 +1,51 @@
+
+
+Name: Delta Wing at 40 degrees angle of attack
+
+Files:	Name			Size (bytes)		Type
+	delta-40.readme		1122			ASCII
+	delta-40.q		4,233,628		binary
+	delta-40.x		2,540,172		binary
+
+Grid: 	Single, curvilinear, structured block 
+	dimensions = 56 x 54 x 70
+
+Flow Parameters: 
+	Free Stream Mach number =  	0.30
+	Angle of attack = 		40.00
+	Reynolds number = 		1 x 10e6
+	time step number =   		0.00
+
+
+Description:
+
+Flow past a very simplified geometry representing a delta wing
+aircraft, at a moderately high angle of attack.  Features of interest
+are vortices and vortex breakdowns.  This grid is particularly twisted
+and scaled, and therefore makes a good test of certain features and
+capabilities of visualization systems.
+
+The modeled body surface covers the faces of the following grid cells:
+
+	top
+		i = ( 1 .. 40)
+		j = ( 2 .. 31)	
+		k = ( 1 ..  1)
+
+	belly
+		i = ( 1 .. 40)
+		j = (31 .. 53)
+		k = ( 1 ..  1)	
+
+
+Reference:
+
+Ekaterinaris, J.A. and L.B. Schiff, "Vortical Flows over Delta Wings
+and Numerical Prediction of Vortex Breakdown," AIAA Paper 90-0102,
+AIAA Aerospace Sciences Conference, Reno, NV, January 1990.
+
+
+
+
+
+

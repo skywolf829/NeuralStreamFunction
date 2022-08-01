@@ -1,7 +1,7 @@
 {
     "1": [ "test.py",
         {        
-        "load_from": "hill_frenet",
+        "load_from": "cylinder_parallel",
         "tests": "streamfunction"
     }]
 }

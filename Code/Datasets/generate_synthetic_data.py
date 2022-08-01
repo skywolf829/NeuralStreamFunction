@@ -177,6 +177,34 @@ def generate_hill_vortex(resolution = 128,
     tensor_to_cdf(hill.type(torch.float32), 
         "hill.nc", channel_names)
 
+def generate_isolated_zero_vortex(resolution = 128):
+    start = -1
+    end = 1
+    
+    zyx = torch.meshgrid(
+        [torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution),
+        torch.linspace(start, end, steps=resolution)],
+        indexing='ij'
+    )
+    zyx = torch.stack(zyx).type(torch.float32)
+    x = zyx[2].clone()
+    y = zyx[1].clone()
+    z = zyx[0].clone()
+    
+    
+    hill = torch.stack([x,y,-2*z], dim=0).unsqueeze(0)
+    print(hill.shape)
+    print(hill.max())
+    print(hill.min())
+    print(hill.mean())
+    print(hill.norm(dim=1).max())
+    hill /= hill.norm(dim=1).max()
+    
+    channel_names = ['u', 'v', 'w']
+    tensor_to_cdf(hill.type(torch.float32), 
+        "isolated_zero.nc", channel_names)
+
 def generate_non_closed_vortex(resolution = 128):
     start = -1
     end = 1
@@ -361,6 +389,6 @@ if __name__ == '__main__':
     #generate_seed_files()
     #generate_flow_past_cylinder(resolution=10, a=2)
     #generate_vortices_data(resolution=10)
-    generate_hill_vortex(resolution=64)
+    generate_isolated_zero_vortex(resolution=64)
     #generate_non_closed_vortex(resolution=64)
     quit()

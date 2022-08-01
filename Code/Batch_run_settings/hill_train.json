@@ -3,16 +3,16 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "hill.nc",
+        "data": "cylinder.nc",
         "training_mode": "f_parallel",
         "n_dims": 3,
         "n_outputs": 1,
-        "n_layers": 4,
+        "n_layers": 2,
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
-        "vorticity": true,
-        "save_name": "hill_frenet"     
+        "vorticity": false,
+        "save_name": "cylinder_parallel"     
     }]
 }
