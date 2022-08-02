@@ -144,22 +144,22 @@ class Dataset(torch.utils.data.Dataset):
             if(n_points >= possible_spots.shape[0]):
                 x = possible_spots.clone().unsqueeze_(0)
             else:
-                #samples = torch.randperm(possible_spots.shape[0], 
-                #    dtype=torch.long, device=self.opt['data_device'])[:n_points]
-                samples = torch.multinomial(torch.ones([possible_spots.shape[0]]),
-                    n_points, replacement=False).to(self.opt['data_device'])
+                samples = torch.randperm(possible_spots.shape[0], 
+                    dtype=torch.long, device=self.opt['data_device'])[:n_points]
+                #samples = torch.multinomial(torch.ones([possible_spots.shape[0]]),
+                #    n_points, replacement=False).to(self.opt['data_device'])
                 # Change above to not use CPU when not on MPS
                 # Verify that the bottom two lines do the same thing
-                x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
-                #x = possible_spots[samples].clone().unsqueeze_(0)
+                #x = torch.index_select(possible_spots, 0, samples).clone().unsqueeze_(0)
+                x = possible_spots[samples].clone().unsqueeze_(0)
             for _ in range(len(self.data.shape[2:])-1):
                 x = x.unsqueeze(-2)
             
-            y = self.data.flatten(start_dim=2)[0].permute(1,0)
-            y = torch.index_select(y, 0, samples)
-            #y = F.grid_sample(self.data, 
-            #    x, mode='nearest', 
-            #    align_corners=self.opt['align_corners'])
+            #y = self.data.flatten(start_dim=2)[0].permute(1,0)
+            #y = torch.index_select(y, 0, samples)
+            y = F.grid_sample(self.data, 
+                x, mode='nearest', 
+                align_corners=self.opt['align_corners'])
         
         
             
