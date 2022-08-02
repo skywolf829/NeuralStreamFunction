@@ -513,6 +513,34 @@ def jacobian(data, normalize=True):
         jac /= (data.norm(dim=1) + 1e-8)
     return jac
 
+def tensor_to_obj(t, path):
+    t = t[:,:,::8,::8,::8]
+    grid = make_coord_grid(t.shape[2:], device=t.device, 
+                           flatten=True, align_corners=True)
+    t = t.flatten(2).squeeze().transpose(1,0)
+    t = t.cpu().numpy()
+    grid = grid.cpu().numpy()
+    xyz_path = path + "_xyz.obj"
+    uvw_path = path + "_uvw.obj"
+
+    xyz_f = open(xyz_path, "w")
+    uvw_f = open(uvw_path, "w")
+
+    xyz = []
+    uvw = []
+
+    for i in range(t.shape[0]):
+       xyz_line = "v " + str(grid[i,0]) + " " + str(grid[i,1]) + " " + str(grid[i,2]) + "\n"
+       uvw_line = "v " + str(t[i,0]) + " " + str(t[i,1]) + " " + str(t[i,2]) + "\n"
+       xyz.append(xyz_line)
+       uvw.append(uvw_line)
+    
+    xyz_f.writelines(xyz)
+    uvw_f.writelines(uvw)
+    xyz_f.close()
+    uvw_f.close()
+    
+
 def curl(data):
     dwdy = spatial_gradient(data,2,1)
     dvdz = spatial_gradient(data,1,2)

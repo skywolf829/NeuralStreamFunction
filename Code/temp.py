@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import h5py
 import numpy as np
 import time
-from Other.utility_functions import nc_to_tensor, tensor_to_cdf, curl, make_coord_grid
+from Other.utility_functions import nc_to_tensor, tensor_to_cdf, curl, make_coord_grid, tensor_to_obj
 from math import pi
 from scipy.spatial.transform import Rotation as R
 
@@ -145,6 +145,8 @@ def delta_40_load():
     
 if __name__ == '__main__':
     
-    delta_40_load()
+    t = nc_to_tensor(os.path.join(data_folder, "tornado.nc"))
+    t = curl(t)
+    tensor_to_cdf(t, "tornado_vort.nc")
 
     quit()

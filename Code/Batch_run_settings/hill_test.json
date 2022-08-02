@@ -1,7 +1,7 @@
 {
     "1": [ "test.py",
         {        
-        "load_from": "cylinder_parallel",
+        "load_from": "tornado_vort_principal",
         "tests": "streamfunction"
     }]
 }
