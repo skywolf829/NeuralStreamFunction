@@ -104,9 +104,10 @@ def model_stream_function(model, dataset, opt):
     print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
 
-    print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
-    print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
+    print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
+    print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
+    print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
     #print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")

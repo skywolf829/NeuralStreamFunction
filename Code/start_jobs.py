@@ -30,7 +30,7 @@ def build_commands(settings_path):
         commands.append(command)
         if(script_name == "train.py"):
             log_locations.append(os.path.join(save_folder, variables["save_name"], "train_log.txt"))
-        elif(script_name == "test.py"):
+        elif(script_name == "test_model.py"):
             log_locations.append(os.path.join(save_folder,  variables['load_from'], "test_log.txt"))
     f.close()
     return command_names, commands, log_locations
