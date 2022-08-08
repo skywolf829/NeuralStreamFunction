@@ -94,6 +94,7 @@ def generate_flow_past_cylinder(resolution = 128, a=2):
     y = zyx[1].clone()
     z = zyx[0].clone()
     r = (x**2 + y**2)**0.5
+    mask = r < a
     theta = torch.atan(y/x)
 
     u = torch.cos(2*theta) / r**2 - 1
@@ -101,11 +102,12 @@ def generate_flow_past_cylinder(resolution = 128, a=2):
     w = torch.zeros_like(u)
     
     vf = torch.stack([u, v, w], dim=0)
-    
+    vf = vf * ~mask
+
     tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "flow_past_cylinder.nc")    
+        "cylinder_hole.nc")    
     tensor_to_h5(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "flow_past_cylinder.h5")
+        "cylinder_hole.h5")
 
 def generate_ABC_flow(resolution = 128, 
                       A=np.sqrt(3), B=np.sqrt(2), C=1):
@@ -330,5 +332,5 @@ if __name__ == '__main__':
     #generate_seed_files()
     #generate_flow_past_cylinder(resolution=10, a=2)
     #generate_vortices_data(resolution=10)
-    generate_hill_vortex(resolution=64)
+    generate_flow_past_cylinder(resolution=128)
     quit()

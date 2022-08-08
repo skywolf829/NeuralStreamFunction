@@ -93,7 +93,8 @@ def previous_point(i : int, j : int, k : int) -> np.ndarray:
 @nb.njit()
 def princpal_stream_function(
     sf : np.ndarray,
-    vf : np.ndarray):
+    vf : np.ndarray,
+    n : np.ndarray):
     
     dt = np.array([0.5], dtype=np.float32)
     eps = np.array([1e-10], dtype=np.float32)
@@ -102,10 +103,7 @@ def princpal_stream_function(
     for k in range(0, vf.shape[2]):
         for j in range(0, vf.shape[3]):
             for i in range(0, vf.shape[4]):
-                #dis = ((j - (vf.shape[3]-1)/2) ** 2 + (i - (vf.shape[4]-1)/2) ** 2) ** 0.5
-                #print(dis)
-                #if(dis < 2):
-                #    vf[0,:,k,j,i] = 0
+                
                 
                 if i == 0 and j == 0 and k == 0:
                     sf[k,j,i] = 0
@@ -149,7 +147,7 @@ def princpal_stream_function(
                     dp_step = 1 / (vf_shape[0]-1)
                     sf[k,j,i] = \
                         sf[pp[2], pp[1], pp[0]] + \
-                            N[0]*dp[0]+N[1]*dp[1]+N[2]*dp[2] + \
+                            n[0,0,pp[2],pp[1],pp[0]]*dp[0]+n[0,1,pp[2],pp[1],pp[0]]*dp[1]+n[0,2,pp[2],pp[1],pp[0]]*dp[2] + \
                                 0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
                     #sf[i,j,k] = \
                     #    sf[pp[2], pp[1], pp[0]] + \
@@ -180,20 +178,24 @@ if __name__ == '__main__':
     print(f"Loading and preprocessing the normal and jacobian fields for the vector field.")
     
     vf = nc_to_tensor(os.path.join(data_folder, args['data']))    
+    print(vf.max())
+    print(vf.min())
     shape : List[int] = [vf.shape[2], vf.shape[3], vf.shape[4]]
     sf : np.ndarray = np.zeros(shape, np.float32)
     n = normal(vf, normalize=False)
-    j = jacobian(vf, normalize=False).sum(axis=2)
+    n /= n.norm(dim=1, keepdim=True)
+    n *= vf.norm(dim=1, keepdim=True)
+    #tensor_to_cdf(n, "cylinder_normal.nc")
     end_time = time.time()
     print(f"Finished preprocessing in {end_time-start_time : 0.02f} seconds")
     print(f"Normal vf shape {n.shape}")
-    print(f"Jacobian shape {j.shape}")
     print(f"Beginning principal stream function calculation.")
     start_time = time.time()
 
     sf = princpal_stream_function(
         sf.astype(np.float32),
-        vf.cpu().numpy().astype(np.float32))
+        vf.cpu().numpy().astype(np.float32),
+        n.cpu().numpy().astype(np.float32))
 
     end_time = time.time()
     print(f"Finished stream function calculation in {end_time-start_time : 0.02f} seconds")

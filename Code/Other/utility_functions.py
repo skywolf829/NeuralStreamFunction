@@ -469,7 +469,7 @@ def normal(vf, b=None, normalize=True):
     # jac: [1, 3, 3, d, h, w]
     
     if b is None:
-        b = binormal(vf)
+        b = binormal(vf, normalize=normalize)
     b = b.squeeze().flatten(1).permute(1,0).unsqueeze(2)
     n = torch.cross(b,
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
@@ -497,6 +497,7 @@ def binormal(vf, jac=None, normalize=True):
         vf.shape[3], vf.shape[4]).unsqueeze(0)
     if(normalize):
         b /= (b.norm(dim=1) + 1e-8)
+    #tensor_to_cdf(b, "binormal.nc")
     return b
 
 def jacobian(data, normalize=True):
