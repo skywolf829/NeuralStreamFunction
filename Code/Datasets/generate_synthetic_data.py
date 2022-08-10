@@ -93,21 +93,50 @@ def generate_flow_past_cylinder(resolution = 128, a=2):
     x = zyx[2].clone()
     y = zyx[1].clone()
     z = zyx[0].clone()
-    r = (x**2 + y**2)**0.5
-    mask = r < a
-    theta = torch.atan(y/x)
+    #r = (x**2 + y**2)**0.5
+    #mask = r < a
+    #theta = torch.atan(y/x)
 
-    u = torch.cos(2*theta) / r**2 - 1
-    v = torch.sin(2*theta) / r**2
+    u = ((a**2)*(x**2 - y**2))/((x**2 + y**2)**2) - 1
+    v = ((a**3)*x*y) / ((x**2 + y**2)**2)
+    
+    #u = torch.cos(2*theta) / r**2 - 1
+    #v = torch.sin(2*theta) / r**2
     w = torch.zeros_like(u)
     
     vf = torch.stack([u, v, w], dim=0)
-    vf = vf * ~mask
+    #vf = vf * ~mask
 
-    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "cylinder_hole.nc")    
-    tensor_to_h5(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "cylinder_hole.h5")
+    dudx = -(a**3)*x*(x**2-3*y**2) / ((x**2 + y**2)**3)
+    dudy = -(a**3)*y*(y**2-3*x**2) / ((x**2 + y**2)**3)
+    dudz = torch.zeros_like(dudx)
+    dvdx = (a**3)*y*(y**2-3*x**2) / ((x**2 + y**2)**3)
+    dvdy = (a**3)*x*(x**2-3*y**2) / ((x**2 + y**2)**3)
+    dvdz = torch.zeros_like(dudx)
+    dwdx = torch.zeros_like(dudx)
+    dwdy = torch.zeros_like(dudx)
+    dwdz = torch.zeros_like(dudx)
+
+    J = torch.stack([
+        torch.stack([dudx, dudy, dudz]),
+        torch.stack([dvdx, dvdy, dvdz]),
+        torch.stack([dwdx, dwdy, dwdz])
+    ])
+    print(J.shape)
+    J = J.flatten(2).permute(2,0,1)
+    print(J.shape)
+    print(vf.shape)
+    vf = vf.flatten(1).permute(1,0).unsqueeze(2)
+    print(vf.shape)
+    Jv = torch.bmm(J, vf)
+    print(Jv.shape)
+    b = torch.cross(Jv, vf)
+    print(b.shape)
+    n = torch.cross(b, vf)
+    tensor_to_cdf(b.squeeze().permute(1,0).reshape(1,3,128,128,128), "binormal.nc")
+    tensor_to_cdf(n.squeeze().permute(1,0).reshape(1,3,128,128,128), "normal.nc")
+    #tensor_to_cdf(vf.unsqueeze(0).type(torch.float32), 
+    #    "cylinder.nc")    
 
 def generate_ABC_flow(resolution = 128, 
                       A=np.sqrt(3), B=np.sqrt(2), C=1):

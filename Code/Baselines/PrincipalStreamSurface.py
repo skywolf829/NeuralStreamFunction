@@ -147,8 +147,8 @@ def princpal_stream_function(
                     dp_step = 1 / (vf_shape[0]-1)
                     sf[k,j,i] = \
                         sf[pp[2], pp[1], pp[0]] + \
-                            n[0,0,pp[2],pp[1],pp[0]]*dp[0]+n[0,1,pp[2],pp[1],pp[0]]*dp[1]+n[0,2,pp[2],pp[1],pp[0]]*dp[2] + \
-                                0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
+                            n[0,0,pp[2],pp[1],pp[0]]*dp[0]+n[0,1,pp[2],pp[1],pp[0]]*dp[1]+n[0,2,pp[2],pp[1],pp[0]]*dp[2]# + \
+                                #0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
                     #sf[i,j,k] = \
                     #    sf[pp[2], pp[1], pp[0]] + \
                     #        np.linalg.norm(V) * dp_step + \
@@ -185,7 +185,11 @@ if __name__ == '__main__':
     n = normal(vf, normalize=False)
     n /= n.norm(dim=1, keepdim=True)
     n *= vf.norm(dim=1, keepdim=True)
-    #tensor_to_cdf(n, "cylinder_normal.nc")
+    mask = n[0,1] > 0
+    mask = mask.unsqueeze(0).unsqueeze(0)
+    n = n*mask + (-n* ~mask)
+
+    tensor_to_cdf(n, "cylinder_normal.nc")
     end_time = time.time()
     print(f"Finished preprocessing in {end_time-start_time : 0.02f} seconds")
     print(f"Normal vf shape {n.shape}")
