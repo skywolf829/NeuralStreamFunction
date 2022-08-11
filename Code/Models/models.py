@@ -4,14 +4,15 @@ import torch.autograd
 import torch.nn as nn
 import torch.nn.functional as F
 import os
-from math import pi
-from Models.options import *
-from Other.utility_functions import create_folder
-from Models.siren import SIREN
-from Models.fSRN import fSRN
-from Models.fVSRN import fVSRN
-from Models.grid import Grid
-from Other.utility_functions import make_coord_grid
+import sys
+from siren import SIREN
+from fSRN import fSRN
+from fVSRN import fVSRN
+from grid import Grid
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+from utility_functions import make_coord_grid, create_folder
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")

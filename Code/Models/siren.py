@@ -1,7 +1,12 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from Other.utility_functions import make_coord_grid
+import os
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+from utility_functions import make_coord_grid
 
 class SineLayer(nn.Module):
     def __init__(self, in_features, out_features, bias=True,

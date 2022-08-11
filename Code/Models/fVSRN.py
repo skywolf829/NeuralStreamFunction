@@ -2,8 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from Other.utility_functions import make_coord_grid
-from Models.siren import SineLayer
+import os
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+from utility_functions import make_coord_grid
+from siren import SineLayer
 
 class PositionalEncoding(nn.Module):
     def __init__(self, opt):
