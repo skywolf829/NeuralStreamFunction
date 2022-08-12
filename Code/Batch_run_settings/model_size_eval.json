@@ -26,7 +26,22 @@
     }],
     "6": [ "test_model.py",
         {        
+        "load_from": "halfcylinder_8x256",
+        "tests": "streamfunction"
+    }],
+    "7": [ "test_model.py",
+        {        
         "load_from": "halfcylinder_4x512",
+        "tests": "streamfunction"
+    }],
+    "8": [ "test_model.py",
+        {        
+        "load_from": "halfcylinder_6x512",
+        "tests": "streamfunction"
+    }],
+    "9": [ "test_model.py",
+        {        
+        "load_from": "halfcylinder_8x512",
         "tests": "streamfunction"
     }]
 }
