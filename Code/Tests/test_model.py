@@ -18,6 +18,7 @@ from datasets import Dataset
 import torch
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -113,8 +114,11 @@ def model_stream_function(model, dataset, opt):
     print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
     print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
-    plt.boxplot(angles.cpu().numpy().flatten(), vert=False)
-    plt.show()
+    #plt.boxplot(angles.cpu().numpy().flatten(), vert=False, showfliers=False)
+    #plt.show()
+    create_path(os.path.join(output_folder, "Error"))
+    np.save(os.path.join(output_folder, "Error", opt['save_name']+".npy"),
+        angles.cpu().numpy().flatten())
     print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
     print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
