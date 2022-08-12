@@ -1,0 +1,22 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "ABC_100ppi",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "ABC_1000ppi",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test_model.py",
+        {        
+        "load_from": "ABC_10000ppi",
+        "tests": "streamfunction"
+    }],
+    "4": [ "test_model.py",
+        {        
+        "load_from": "ABC_100000ppi",
+        "tests": "streamfunction"
+    }]
+}

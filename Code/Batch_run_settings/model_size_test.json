@@ -1,0 +1,87 @@
+{
+    
+    "2": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 128,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_4x128"     
+    }],
+    "1": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 3,
+        "nodes_per_layer": 128,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_6x128"     
+    }],
+    "3": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 4,
+        "nodes_per_layer": 128,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_8x128"     
+    }],
+    "4": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 256,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_4x256"     
+    }],
+    "5": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 3,
+        "nodes_per_layer": 256,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_6x256"     
+    }],
+    "6": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "halfcylinder_re160_ts100.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 3,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "streamline_loss": false,
+        "save_name": "halfcylinder_4x512"     
+    }]
+}

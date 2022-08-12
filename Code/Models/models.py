@@ -5,13 +5,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+sys.path.append(script_dir)
 from siren import SIREN
 from fSRN import fSRN
 from fVSRN import fVSRN
 from grid import Grid
-script_dir = os.path.dirname(__file__)
-other_dir = os.path.join(script_dir, "..", "Other")
-sys.path.append(other_dir)
+from options import save_options
 from utility_functions import make_coord_grid, create_folder
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))

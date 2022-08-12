@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 import argparse
-from inspect import trace
 from Datasets.datasets import get_dataset
 import datetime
 from Other.utility_functions import str2bool, particle_tracing
@@ -11,7 +10,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import time
 import os
-from Models.options import *
+from Models.options import load_options, Options
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
 from Models.losses import *

@@ -1,8 +1,8 @@
 import os
 import sys
 script_dir = os.path.dirname(__file__)
-models_dir = os.path.join(script_dir, "..", "Models")
-sys.path.append(models_dir)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
 from utility_functions import make_coord_grid, normal, nc_to_tensor, curl, tensor_to_cdf
 import torch
 import torch.nn.functional as F

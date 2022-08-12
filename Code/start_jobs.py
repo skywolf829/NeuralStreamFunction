@@ -26,7 +26,7 @@ def build_commands(settings_path):
         if(script_name == "train.py"):
             command = "python Code/" + str(script_name) + " "
         elif(script_name == "test_model.py"):
-            command = "python Code/Tests" + str(script_name) + " "
+            command = "python Code/Tests/" + str(script_name) + " "
             
         for var_name in variables.keys():
             command = command + "--" + str(var_name) + " "

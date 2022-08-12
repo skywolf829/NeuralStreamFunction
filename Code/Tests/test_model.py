@@ -1,13 +1,23 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid
-from Models.models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
-from Models.options import *
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+models_dir = os.path.join(script_dir, "..", "Models")
+datasets_dir = os.path.join(script_dir, "..", "Datasets")
+sys.path.append(other_dir)
+sys.path.append(models_dir)
+sys.path.append(datasets_dir)
+sys.path.append(script_dir)
+from utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid
+from models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
+from options import load_options
 import torch.nn.functional as F
-from Datasets.datasets import Dataset
+from datasets import Dataset
 import torch
 import time
+import matplotlib.pyplot as plt
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -103,7 +113,8 @@ def model_stream_function(model, dataset, opt):
     print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
     print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
-
+    plt.boxplot(angles.cpu().numpy().flatten(), vert=False)
+    plt.show()
     print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
     print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
@@ -175,7 +186,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
-    project_folder_path = os.path.join(project_folder_path, "..")
+    project_folder_path = os.path.join(project_folder_path, "..", "..")
     data_folder = os.path.join(project_folder_path, "Data")
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")
