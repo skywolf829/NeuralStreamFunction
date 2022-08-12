@@ -1,9 +1,15 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import jacobian, curl, nc_to_tensor, tensor_to_cdf
-import torch.nn.functional as F
-import torch
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+models_dir = os.path.join(script_dir, "..", "Models")
+datasets_dir = os.path.join(script_dir, "..", "Datasets")
+sys.path.append(other_dir)
+sys.path.append(models_dir)
+sys.path.append(datasets_dir)
+sys.path.append(script_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 
