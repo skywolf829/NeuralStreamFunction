@@ -41,6 +41,7 @@ if __name__ == '__main__':
         names.append(filename.split('.')[0])
 
     plt.boxplot(arrays, vert=False, showfliers=False, labels=names)
+    plt.xlabel("Orthogonality error")
     plt.show()
     
     
