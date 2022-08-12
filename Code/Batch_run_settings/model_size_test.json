@@ -1,6 +1,6 @@
 {
     
-    "2": [ "train.py",
+    "1": [ "train.py",
         {        
         "model": "fSRN",
         "data": "halfcylinder_re160_ts100.nc",
@@ -14,7 +14,7 @@
         "streamline_loss": false,
         "save_name": "halfcylinder_4x128"     
     }],
-    "1": [ "train.py",
+    "2": [ "train.py",
         {        
         "model": "fSRN",
         "data": "halfcylinder_re160_ts100.nc",
@@ -112,7 +112,7 @@
         "streamline_loss": false,
         "save_name": "halfcylinder_6x512"     
     }],
-    "8": [ "train.py",
+    "9": [ "train.py",
         {        
         "model": "fSRN",
         "data": "halfcylinder_re160_ts100.nc",
