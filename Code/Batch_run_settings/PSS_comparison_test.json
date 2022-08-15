@@ -1,0 +1,12 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "cylinder_PSS",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "vortices_PSS",
+        "tests": "streamfunction"
+    }]
+}

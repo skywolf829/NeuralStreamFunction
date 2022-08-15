@@ -1,0 +1,33 @@
+{
+    
+    "1": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "cylinder.nc",
+        "training_mode": "f_parallel",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "streamline_loss": false,
+        "vorticity": false,
+        "save_name": "cylinder_PSS"     
+    }],
+    "2": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "vortices.nc",
+        "training_mode": "f_parallel",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "streamline_loss": false,
+        "vorticity": false,
+        "save_name": "vortices_PSS"     
+    }]
+}
