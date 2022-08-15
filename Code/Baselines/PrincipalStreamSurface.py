@@ -187,11 +187,10 @@ if __name__ == '__main__':
     n *= vf.norm(dim=1, keepdim=True)
 
     # Fix for the cylinder dataset
-    '''
-    mask = n[0,1] > 0
-    mask = mask.unsqueeze(0).unsqueeze(0)
-    n = n*mask + (-n* ~mask)
-    '''
+    #mask = n[0,1] > 0
+    #mask = mask.unsqueeze(0).unsqueeze(0)
+    #n = n*mask + (-n* ~mask)
+    
 
     tensor_to_cdf(n, "cylinder_normal.nc")
     end_time = time.time()

@@ -1,7 +1,16 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import jacobian, curl, nc_to_tensor, tensor_to_cdf
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+models_dir = os.path.join(script_dir, "..", "Models")
+datasets_dir = os.path.join(script_dir, "..", "Datasets")
+sys.path.append(other_dir)
+sys.path.append(models_dir)
+sys.path.append(datasets_dir)
+sys.path.append(script_dir)
+from utility_functions import jacobian, curl, nc_to_tensor, tensor_to_cdf
 import torch.nn.functional as F
 import torch
 
@@ -18,7 +27,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
-    project_folder_path = os.path.join(project_folder_path, "..")
+    project_folder_path = os.path.join(project_folder_path, "..", "..")
     data_folder = os.path.join(project_folder_path, "Data")
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")
@@ -27,6 +36,9 @@ if __name__ == '__main__':
     inside_fluids_result = nc_to_tensor(os.path.join((output_folder), 
         "InsideFluids",
         args['data']))[:,0:1]
+    inside_fluids_result = inside_fluids_result.permute(0,1,3,4,2).contiguous()
+    print(vector_field.shape)
+    print(inside_fluids_result.shape)
     inside_fluids_result = F.interpolate(inside_fluids_result,
         size = vector_field.shape[2:], mode="trilinear", align_corners=False)
 
