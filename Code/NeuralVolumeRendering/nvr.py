@@ -138,7 +138,7 @@ def nvr_on_axis(model, dataset, tf,
     a_out: torch.Tensor = torch.zeros([resolution[0], resolution[1], 1], 
         device=device)
 
-    zyx: torch.Tensor = torch.tensor([0], device=device)
+    zyx: torch.Tensor = torch.tensor([0])
     delta : torch.Tensor = torch.tensor([0.0, 0.0, 0.0], 
             device=device)
 
@@ -220,6 +220,11 @@ def nvr_on_axis(model, dataset, tf,
         #compositing_timing += (time.time() - t_0)
     
     print(f"Volume rendering took {time.time() - time_start} seconds.")
+    if("cuda" in device):
+        GBytes = (torch.cuda.max_memory_allocated(device=device) \
+            / (1024**3))
+        print(f"Max memory allocated {GBytes : 0.02f}GB")
+    
     #print(f"Interpolation time: {solution_timing} seconds.")
     #print(f"Transfer function time: {transfer_function_timing} seconds.")
     #print(f"Compositing time: {compositing_timing} seconds.")
@@ -243,17 +248,17 @@ if __name__ == '__main__':
     save_folder = os.path.join(project_folder_path, "SavedModels")
 
     torch.manual_seed(11235813)
+
     opt = load_options(os.path.join(save_folder, args["load_from"]))
     opt["device"] = args["device"]
     opt['data_device'] = args['device']
     opt["save_name"] = args["load_from"]
-    
     for k in args.keys():
         if args[k] is not None:
             opt[k] = args[k]
     dataset = get_dataset(opt)
     model = load_model(opt, opt['device'])
-    print(model)
+
 
     tf = TransferFunction(args['device'])
     tf.set_colors_at_positions(
@@ -277,23 +282,23 @@ if __name__ == '__main__':
             0.0
             ]).unsqueeze(1),
         torch.tensor([0.0,
-                    0.10,
-                    0.11,
-                    0.12,
-                    0.77,
-                    0.78,
-                    0.79,
+                    0.2,
+                    0.21,
+                    0.22,
+                    0.7,
+                    0.71,
+                    0.72,
                     1.0])
     )
     
-    tf.set_min(-0.351)
-    tf.set_max(0.298)
+    tf.set_min(-0.1)
+    tf.set_max(0.17)
     
     with torch.no_grad():
         c_out = nvr_on_axis(model, dataset, tf,
-                          resolution=[1024, 1024],
+                          resolution=[512, 512],
                           total_steps=256,
                           axis='x',
-                          device=opt['device'])
+                          device=args['device'])
 
     tensor_to_img(c_out, "./render.jpg")
