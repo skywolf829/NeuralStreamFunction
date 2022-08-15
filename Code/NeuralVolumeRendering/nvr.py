@@ -138,7 +138,7 @@ def nvr_on_axis(model, dataset, tf,
     a_out: torch.Tensor = torch.zeros([resolution[0], resolution[1], 1], 
         device=device)
 
-    zyx: torch.Tensor = torch.tensor([0])
+    zyx: torch.Tensor = torch.tensor([0], device=device)
     delta : torch.Tensor = torch.tensor([0.0, 0.0, 0.0], 
             device=device)
 
@@ -243,17 +243,17 @@ if __name__ == '__main__':
     save_folder = os.path.join(project_folder_path, "SavedModels")
 
     torch.manual_seed(11235813)
-
     opt = load_options(os.path.join(save_folder, args["load_from"]))
     opt["device"] = args["device"]
     opt['data_device'] = args['device']
     opt["save_name"] = args["load_from"]
+    
     for k in args.keys():
         if args[k] is not None:
             opt[k] = args[k]
     dataset = get_dataset(opt)
     model = load_model(opt, opt['device'])
-
+    print(model)
 
     tf = TransferFunction(args['device'])
     tf.set_colors_at_positions(
@@ -277,23 +277,23 @@ if __name__ == '__main__':
             0.0
             ]).unsqueeze(1),
         torch.tensor([0.0,
-                    0.2,
-                    0.21,
-                    0.22,
-                    0.7,
-                    0.71,
-                    0.72,
+                    0.10,
+                    0.11,
+                    0.12,
+                    0.77,
+                    0.78,
+                    0.79,
                     1.0])
     )
     
-    tf.set_min(-0.1)
-    tf.set_max(0.17)
+    tf.set_min(-0.351)
+    tf.set_max(0.298)
     
     with torch.no_grad():
         c_out = nvr_on_axis(model, dataset, tf,
-                          resolution=[512, 512],
+                          resolution=[1024, 1024],
                           total_steps=256,
                           axis='x',
-                          device=args['device'])
+                          device=opt['device'])
 
     tensor_to_img(c_out, "./render.jpg")

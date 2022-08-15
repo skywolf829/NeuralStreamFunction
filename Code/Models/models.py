@@ -40,7 +40,7 @@ def load_model(opt, device):
         map_location = device)
     
     model.load_state_dict(ckpt['state_dict'])
-
+    model = model.to(opt['device'])
     return model
 
 def create_model(opt):

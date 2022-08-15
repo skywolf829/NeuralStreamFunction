@@ -111,8 +111,6 @@ def model_stream_function(model, dataset, opt):
             f_grad, dim=1)
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     angles = torch.acos(cos_dist)*(180/torch.pi)
-    print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
-    print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
     #plt.boxplot(angles.cpu().numpy().flatten(), vert=False, showfliers=False)
     #plt.show()
@@ -134,6 +132,9 @@ def model_stream_function(model, dataset, opt):
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
     create_path(os.path.join(output_folder, "StreamFunction"))
+    
+    print(f"Min stream function value {f.min().item() : 0.03f}.")
+    print(f"Max stream function value {f.max().item() : 0.03f}.")
     tensor_to_cdf(f, os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
 
 def model_streamline_error(model, dataset, opt):
