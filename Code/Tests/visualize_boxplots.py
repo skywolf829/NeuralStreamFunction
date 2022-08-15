@@ -38,7 +38,7 @@ if __name__ == '__main__':
     for filename in os.listdir(folder_with_npys):
         a = np.load(os.path.join(folder_with_npys, filename))
         arrays.append(a)
-        names.append(filename.split('.')[0])
+        names.append(filename.split('.npy')[0])
 
     plt.boxplot(arrays, vert=False, showfliers=False, labels=names)
     plt.xlabel("Orthogonality error")
