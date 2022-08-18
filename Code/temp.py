@@ -8,6 +8,8 @@ import time
 from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid
 from math import pi
 from scipy.spatial.transform import Rotation as R
+from Models.options import *
+from Models.models import create_model
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -143,17 +145,21 @@ def delta_40_load():
     uvw = torch.tensor(uvw).permute(3, 0, 1, 2).unsqueeze(0)
     tensor_to_cdf(uvw, "delta_40.nc")
 
-if __name__ == '__main__':
+def insidefluids():
     from netCDF4 import Dataset
-
     shape = [64, 64, 64]
-    
     sx = torch.tensor(np.load("deltawing_sx.npy").reshape(shape))
     sy = torch.tensor(np.load("deltawing_sy.npy").reshape(shape))
     sz = torch.tensor(np.load("deltawing_sz.npy").reshape(shape))
     t = torch.stack([sx, sy, sz]).unsqueeze(0)
-
     tensor_to_cdf(t, "InsideFluids.nc", 
         channel_names=["sx", "sy", "sz"])
+    
+if __name__ == '__main__':
 
+    
+    opt = Options.get_default()
+    model = create_model(opt)
+
+    model.change_nodes_per_layer(256)
     

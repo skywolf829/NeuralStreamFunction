@@ -208,3 +208,4 @@ if __name__ == '__main__':
     print(f"Finished stream function calculation in {end_time-start_time : 0.02f} seconds")
     
     tensor_to_cdf(torch.tensor(sf).unsqueeze(0).unsqueeze(0), "sf_"+args['data'])
+    tensor_to_cdf(n, "normal_"+args['data'])

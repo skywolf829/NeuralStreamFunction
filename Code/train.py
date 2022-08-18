@@ -205,6 +205,8 @@ if __name__ == '__main__':
         help='Number of features in the feature grid')    
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int,
         help='Number of fourier features')
+    parser.add_argument('--omega',default=None,type=float,
+        help='Omega for weight initialization')
     parser.add_argument('--grid_size',default=None,type=int,
         help='Feature grid size, or grid size for direct solving')    
     

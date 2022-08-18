@@ -7,22 +7,23 @@ class Options():
 
         # For descriptions of all variables, see train.py
         opt['n_dims']                               = 3       
-        opt['n_outputs']                            = 2
-        opt['model']                                = 'siren'
-        opt['training_mode']                        = 'inr'                
+        opt['n_outputs']                            = 1
+        opt['model']                                = 'fSRN'
+        opt['training_mode']                        = 'f_any'                
 
-        opt['data']                                 = 'tornado.nc'
-        opt['save_name']                            = 'tornado'
+        opt['data']                                 = 'cylinder.nc'
+        opt['save_name']                            = 'cylinder'
         opt['interpolate']                          = False
         opt['vorticity']                            = False
         opt['seeding_points']                       = None
         opt['streamline_loss']                      = False
         opt['align_corners']                        = True
-        opt['n_layers']                             = 4       
+        opt['n_layers']                             = 2       
         opt['nodes_per_layer']                      = 128
 
         opt['n_features']                           = 16
         opt['num_positional_encoding_terms']        = 6
+        opt['omega']                                = 30
         opt['grid_size']                            = 128
 
         opt['train_distributed']                    = False
@@ -33,7 +34,7 @@ class Options():
         opt['ranking']                              = 0
 
         opt['iterations']                           = 10000
-        opt['points_per_iteration']                 = 200000   
+        opt['points_per_iteration']                 = 10000   
         opt['lr']                                   = 5e-5 
         opt['beta_1']                               = 0.9
         opt['beta_2']                               = 0.999
