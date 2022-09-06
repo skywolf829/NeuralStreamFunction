@@ -1,4 +1,4 @@
-# Neural Dual Stream Function
+# Neural Stream Function
 This project uses neural networks to model vector fields for visualization.
 
 
