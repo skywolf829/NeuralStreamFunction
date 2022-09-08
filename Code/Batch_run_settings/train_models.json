@@ -80,7 +80,7 @@
         "n_layers": 2,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 300000,
+        "points_per_iteration": 100000,
         "streamline_loss": false,
         "save_name": "isotropic512"     
     }],
@@ -108,7 +108,7 @@
         "n_layers": 2,
         "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 500000,
+        "points_per_iteration": 100000,
         "streamline_loss": false,
         "save_name": "plume"     
     }],
