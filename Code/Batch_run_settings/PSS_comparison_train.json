@@ -46,6 +46,6 @@
         "points_per_iteration": 10000,
         "streamline_loss": false,
         "vorticity": false,
-        "save_name": "vortices_PSS"     
+        "save_name": "tornado_PSS"     
     }]
 }
