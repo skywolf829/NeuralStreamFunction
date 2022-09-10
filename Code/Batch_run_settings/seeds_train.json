@@ -29,8 +29,8 @@
         "points_per_iteration": 10000,
         "streamline_loss": false,
         "vorticity": false,
-        "seeding_points": "ABC_flow_seeds.csv",
-        "save_name": "ABC_flow_seeds"     
+        "seeding_points": "ABC_seeds.csv",
+        "save_name": "ABC_seeds"     
     }],
     "3": [ "train.py",
         {        

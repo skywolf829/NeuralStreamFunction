@@ -6,7 +6,7 @@
     }],
     "2": [ "test_model.py",
         {        
-        "load_from": "ABC_flow_seeds",
+        "load_from": "ABC_seeds",
         "tests": "streamfunction"
     }],
     "3": [ "test_model.py",
