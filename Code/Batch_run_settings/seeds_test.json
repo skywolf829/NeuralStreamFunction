@@ -1,0 +1,17 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "delta_40_seeds",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "ABC_seeds",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test_model.py",
+        {        
+        "load_from": "isabel_seeds",
+        "tests": "streamfunction"
+    }]
+}
