@@ -43,6 +43,6 @@
         "points_per_iteration": 10000,
         "streamline_loss": false,
         "vorticity": true,
-        "save_name": "delta_40"     
+        "save_name": "delta_40_vort"     
     }]
 }
