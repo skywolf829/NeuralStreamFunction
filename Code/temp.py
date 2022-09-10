@@ -157,9 +157,11 @@ def insidefluids():
     
 if __name__ == '__main__':
 
+    start = np.array([373.30390327817685, 96.979344683741, 53.55613006999293])
+    end = np.array([367.7322292523633, 90.77790679253187, 13.740715257393859])
+    num_points = 50
     
-    opt = Options.get_default()
-    model = create_model(opt)
-
-    model.change_nodes_per_layer(256)
-    
+    for i in range(num_points):
+        p = i / (num_points - 1)
+        spot = start * (1-p) + end * p
+        print(f"{spot[0]},{spot[1]},{spot[2]}")
