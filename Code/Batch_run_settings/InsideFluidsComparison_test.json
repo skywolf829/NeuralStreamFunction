@@ -6,7 +6,7 @@
     }],
     "2": [ "test_model.py",
         {        
-        "load_from": "delta_40",
+        "load_from": "delta_40_vort",
         "tests": "streamfunction"
     }],
     "3": [ "test_model.py",
