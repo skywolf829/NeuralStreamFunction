@@ -25,7 +25,7 @@
         "n_outputs": 1,
         "n_layers": 2,
         "nodes_per_layer": 512,
-        "omega": 30,
+        "omega": 20,
         "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
