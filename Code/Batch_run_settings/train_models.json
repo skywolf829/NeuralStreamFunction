@@ -139,5 +139,19 @@
         "points_per_iteration": 10000,
         "streamline_loss": false,
         "save_name": "vortices"     
+    }],
+    "12": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "cylinder.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "streamline_loss": false,
+        "save_name": "cylinder"     
     }]
 }
