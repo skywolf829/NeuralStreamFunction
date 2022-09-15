@@ -10,7 +10,8 @@ sys.path.append(other_dir)
 sys.path.append(models_dir)
 sys.path.append(datasets_dir)
 sys.path.append(script_dir)
-from utility_functions import jacobian, curl, nc_to_tensor, tensor_to_cdf
+from utility_functions import jacobian, curl, nc_to_tensor, tensor_to_cdf, create_path
+import numpy as np
 import torch.nn.functional as F
 import torch
 
@@ -51,6 +52,9 @@ if __name__ == '__main__':
     print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
     print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
+    create_path(os.path.join(output_folder, "Error"))
+    np.save(os.path.join(output_folder, "Error", args["data"]+"_PSS.npy"),
+        angles.cpu().numpy().flatten())
 
     print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")
     print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
