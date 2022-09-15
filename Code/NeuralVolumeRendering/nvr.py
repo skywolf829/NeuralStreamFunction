@@ -12,16 +12,558 @@ import argparse
 from options import load_options
 from models import load_model, forward_w_grad
 from datasets import get_dataset
+from utility_functions import nc_to_tensor
 import time
 from typing import List
 import imageio
 import numpy as np
+import torch.nn
 
 def tensor_to_img(t: torch.Tensor, path:str):    
     img_data: np.ndarray = t.detach().cpu().numpy()
     img_data *= 255
     img_data = img_data.astype(np.uint8)
     imageio.imwrite(path, img_data)
+
+class Grid():
+    """
+    A class used to represent a grid
+    """
+
+    def __init__(self, 
+        z_min: float, z_max: float, z_dim: int,
+        y_min: float, y_max: float, y_dim: int,
+        x_min: float, x_max: float, x_dim: int):
+        """
+        the initialization method for a
+        Grid object. Requires the extents and dimension sizes.
+        """
+        self.__zmin : float = z_min
+        self.__zmax : float = z_max
+        self.__zdim : float = z_dim
+        self.__ymin : float = y_min
+        self.__ymax : float = y_max
+        self.__ydim : float = y_dim
+        self.__xmin : float = x_min
+        self.__xmax : float = x_max
+        self.__xdim : float = x_dim
+        
+    def get_extents(self) -> List[float]:
+        '''
+        returns the extents for the instantiated Grid
+        in the same order that the initialization method takes.
+        '''
+        return [
+            self.__zmin, self.__zmax,
+            self.__ymin, self.__ymax,
+            self.__xmin, self.__xmax
+        ]
+
+    def shape(self) -> List[int]:
+        '''
+        Returns the z,y,x dim sizes in that order
+        '''
+        return [
+            self.__zdim,
+            self.__ydim,
+            self.__xdim
+        ]
+
+    def in_bounds(self, positions: torch.Tensor):
+        '''
+        checks whether positions (given in z, y, x order)
+        is within the domain of the defined grid or
+        not. positions is a tensor of size [n, 3], equating 
+        to n points to check if they are in
+        the bounds.
+        '''
+        in_bounds : torch.Tensor = positions[:,0] >= self.__zmin
+        in_bounds : torch.Tensor = torch.logical_and(in_bounds, 
+            (positions[:,0] <= self.__zmax))
+            
+        in_bounds : torch.Tensor = torch.logical_and(in_bounds, 
+            positions[:,1] >= self.__ymin)
+        in_bounds : torch.Tensor = torch.logical_and(in_bounds, 
+            positions[:,1] <= self.__ymax)
+
+        in_bounds : torch.Tensor = torch.logical_and(in_bounds, 
+            positions[:,2] >= self.__xmin)
+        in_bounds : torch.Tensor = torch.logical_and(in_bounds, 
+            positions[:,2] <= self.__xmax)
+        return in_bounds#.all()
+    
+    def index_and_weights_for(self, positions): 
+        """
+        takes an array of positions of shape [n, 3], and returns their
+        z,y,x indices (in return position 0) and trilinear interpolation 
+        weights for the 8 corners (in return position 1). 
+        Return position 0 is of shape [n, 3] (3 indices per position) 
+        and return position 1 is of shape [n, 8] (8 trilinear 
+        weights per position). 
+        """
+        indices : torch.Tensor = positions - torch.tensor(
+            [self.__zmin, self.__ymin, self.__xmin], 
+            device = positions.device
+            ).unsqueeze(0).repeat(positions.shape[0], 1)
+        indices /= torch.tensor(
+            [self.__zmax - self.__zmin, 
+            self.__ymax - self.__ymin, 
+            self.__xmax - self.__xmin], 
+            device = positions.device
+            ).unsqueeze(0).repeat(positions.shape[0], 1)
+        indices *= torch.tensor(
+            [self.__zdim-1, self.__ydim-1, self.__xdim-1],
+            device = positions.device
+            ).unsqueeze(0).repeat(positions.shape[0], 1)
+
+        indices_floor : torch.Tensor = indices.clone().type(dtype=torch.long)
+
+        diffs : torch.Tensor = indices - indices_floor
+        weights : torch.Tensor = torch.empty(size=[positions.shape[0], 8],
+                            device=positions.device)
+        weights[:,0] = (1-diffs[:,0])*(1-diffs[:,1])*(1-diffs[:,2])
+        weights[:,1] = diffs[:,0]*(1-diffs[:,1])*(1-diffs[:,2])
+        weights[:,2] = (1-diffs[:,0])*diffs[:,1]*(1-diffs[:,2])
+        weights[:,3] = diffs[:,0]*diffs[:,1]*(1-diffs[:,2])
+        weights[:,4] = (1-diffs[:,0])*(1-diffs[:,1])*diffs[:,2]
+        weights[:,5] = diffs[:,0]*(1-diffs[:,1])*diffs[:,2]
+        weights[:,6] = (1-diffs[:,0])*diffs[:,1]*diffs[:,2]
+        weights[:,7] = diffs[:,0]*diffs[:,1]*diffs[:,2]
+        
+        return indices_floor, weights
+
+class Solution():
+    '''
+    A solution class that contains the scalar/multivariate field data 
+    represented as a 3D array.
+    '''
+
+    def __init__(self, 
+        chans=None,
+        zdim=None, 
+        ydim=None, xdim=None,
+        data=None, device=None):
+        self.__data : torch.Tensor = torch.tensor([0])
+        self.__device : str = ""
+        self.__channels : int = 0
+        self.__zdim : int = 0
+        self.__ydim : int = 0
+        self.__xdim : int = 0
+        self.__data_grad : torch.Tensor = torch.tensor([0])
+        self.__did_precompute_gradients = False
+        if device is not None:
+            self.__device = device
+        else:
+            self.__device = "cpu"
+            
+        if data is not None:
+            self.__data  = data.clone()
+            self.__device= str(data.device)
+            self.__zdim = int(data.shape[0])
+            self.__ydim  = int(data.shape[1])
+            self.__xdim  = int(data.shape[2])
+            self.__channels = int(data.shape[3])
+            #print("Precomputing all gradients")
+            #self.__data_grad = self.precompute_gradients()
+            #self.__did_precompute_gradients = True
+        else:
+            if(chans is not None):
+                self.__channels = chans
+            else:
+                self.__channels = 1
+            if(zdim is not None):
+                self.__zdim= zdim
+            else:
+                self.__zdim = 2
+            if(ydim is not None):
+                self.__ydim= ydim
+            else:
+                self.__ydim = 2
+            if(xdim is not None):
+                self.__xdim = xdim
+            else:
+                self.__xdim = 2
+            self.__data = torch.zeros((
+                self.__zdim, self.__ydim, self.__xdim,
+                self.__channels), 
+                dtype=torch.float32,
+                device=self.__device)
+
+    def device(self) -> str:
+        return self.__device
+
+    def to_device(self, device: str):
+        self.__device : str = device
+        self.__data : torch.Tensor = self.__data.to(device)
+        self.__data_grad : torch.Tensor = self.__data_grad.to(device)
+
+    def set_dims(self, z_size: int, y_size: int, x_size: int):
+        '''
+        Assigns the z,y,x dimension lengths
+        '''
+        self.__zdim: int = z_size
+        self.__ydim: int = y_size
+        self.__xdim: int = x_size
+        self.__data: torch.Tensor = torch.empty(
+            [self.__zdim, self.__ydim, self.__xdim,
+             self.__channels], 
+            device=self.__device)
+
+    def shape(self):
+        '''
+        Returns the # variables and dimension lengths in z,y,x order
+        '''
+        return (self.__zdim, self.__ydim, self.__xdim, self.__channels)
+
+    def get_min(self) -> float:
+        return self.__data.min().item()
+
+    def get_max(self) -> float:
+        return self.__data.max().item()
+
+    def set_data(self, data: torch.Tensor):      
+        self.__zdim : int = data.shape[0]
+        self.__ydim : int = data.shape[1]
+        self.__xdim : int = data.shape[2]
+        self.__channels : int = data.shape[3]  
+        self.__data : torch.Tensor = data.clone()
+        self.__device : str = str(data.device)
+
+    def get_data(self) -> torch.Tensor:
+        return self.__data
+
+    def solution_at(self, positions: torch.Tensor) -> torch.Tensor:
+        '''
+        Returns the solution at grid points
+        '''
+        assert positions.dtype is torch.long
+                
+        #print(positions.chunk(3,1)[0].shape)
+        #print(self.__data.shape)
+        solutions : torch.Tensor = self.__data[positions[:,0],
+                                               positions[:,1],
+                                               positions[:,2],
+                                               :]
+        #solutions : torch.Tensor = self.__data[positions.chunk(3, 1)]
+        return solutions
+
+    def set_at(self, positions: torch.Tensor, v : torch.Tensor):
+        '''
+        Sets the solution at a grid point
+        '''
+        assert positions.dtype is torch.long
+        #self.__data[positions.chunk(chunks=3, dim=1)] = v    
+        self.__data[positions[:,0],
+                                positions[:,1],
+                                positions[:,2],
+                                :] = v
+    
+    def precompute_gradients(self):
+        kji = torch.meshgrid(
+            [
+                torch.tensor(np.linspace(0, self.__data.shape[0]-1, num=self.__data.shape[0])),
+                torch.tensor(np.linspace(0, self.__data.shape[1]-1, num=self.__data.shape[1])),
+                torch.tensor(np.linspace(0, self.__data.shape[2]-1, num=self.__data.shape[2]))
+            ],
+            indexing='ij'
+        )
+        kji = torch.stack(kji)        
+        kji = kji.flatten(1).permute(1,0).type(torch.long)
+        
+        grads = self.grad_at(kji)
+        grads = grads.reshape(self.__data.shape[1],
+                              self.__data.shape[2],
+                              self.__data.shape[3], 
+                              3*self.__channels)
+        return grads
+        
+    def grad_at(self, positions: torch.Tensor) -> torch.Tensor:
+        '''
+        Computes the gradient at a grid point using first order central 
+        difference when in the interior of the volume, and using forward
+        or backward difference when on the boundary.
+        '''
+        assert self.__zdim > 1 and self.__ydim > 1 and self.__xdim > 1
+        assert positions.dtype is torch.long
+        grads : torch.Tensor = torch.empty(
+            [positions.shape[0], 3*self.__channels], 
+            device=self.__device)
+
+        if(self.__did_precompute_gradients):
+            #grads = self.__data_grad[positions.chunk(3,1)]
+            grads = self.__data_grad[positions[:,0],
+                                               positions[:,1],
+                                               positions[:,2],
+                                               :]
+            #grads = grads[:,0,:]
+        else:
+            # z derivative
+            forward_diff_indices : torch.Tensor = positions[:,0] == 0
+            backward_diff_indices : torch.Tensor = positions[:,0] == self.__zdim-1
+            central_diff_indices : torch.Tensor = torch.logical_and(
+                positions[:,0] > 0, positions[:,0] < self.__zdim-1)
+            
+            grads[forward_diff_indices, 0:self.__channels] = \
+                (self.solution_at(
+                    positions[forward_diff_indices]
+                            + torch.tensor([1,0,0], device=self.__device)
+                ) - self.solution_at(
+                    positions[forward_diff_indices]
+                ))*(1/self.__zdim)                      
+            grads[backward_diff_indices, 0:self.__channels] = \
+                (-self.solution_at(
+                    positions[backward_diff_indices]
+                            - torch.tensor([1,0,0], device=self.__device)
+                ) + self.solution_at(
+                    positions[backward_diff_indices]
+                ))*(1/self.__zdim)  
+                
+            grads[central_diff_indices, 0:self.__channels] = \
+                (self.solution_at(
+                    positions[central_diff_indices]
+                            + torch.tensor([1,0,0], device=self.__device)
+                ) - (self.solution_at(
+                    positions[central_diff_indices]
+                    - torch.tensor([1,0,0], device=self.__device))
+                ))*(1/self.__zdim)  
+
+            # y derivative
+            forward_diff_indices : torch.Tensor = positions[:,1] == 0
+            backward_diff_indices : torch.Tensor = positions[:,1] == self.__ydim-1
+            central_diff_indices : torch.Tensor = torch.logical_and(
+                positions[:,1] > 0,
+                positions[:,1] < self.__ydim-1)
+            
+            grads[forward_diff_indices, self.__channels:2*self.__channels] = \
+                (self.solution_at(
+                    positions[forward_diff_indices]
+                            + torch.tensor([0,1,0], device=self.__device)
+                ) - self.solution_at(
+                    positions[forward_diff_indices]
+                ))*(1/self.__ydim)                      
+            grads[backward_diff_indices, self.__channels:2*self.__channels] = \
+                (-self.solution_at(
+                    positions[backward_diff_indices]
+                            - torch.tensor([0,1,0], device=self.__device)
+                ) + self.solution_at(
+                    positions[backward_diff_indices]
+                ))*(1/self.__ydim)                  
+            grads[central_diff_indices, self.__channels:2*self.__channels] = \
+                (self.solution_at(
+                    positions[central_diff_indices]
+                            + torch.tensor([0,1,0], device=self.__device)
+                ) - (self.solution_at(
+                    positions[central_diff_indices]
+                    - torch.tensor([0,1,0], device=self.__device))
+                ))*(1/self.__ydim)  
+                
+
+            # x derivative
+            forward_diff_indices : torch.Tensor = positions[:,2] == 0
+            backward_diff_indices : torch.Tensor = positions[:,2] == self.__xdim-1
+            central_diff_indices : torch.Tensor = torch.logical_and(
+                positions[:,2] > 0,
+                positions[:,2] < self.__xdim-1)
+            
+            grads[forward_diff_indices, 2*self.__channels:3*self.__channels] = \
+                (self.solution_at(
+                    positions[forward_diff_indices]
+                            + torch.tensor([0,0,1], device=self.__device)
+                ) - self.solution_at(
+                    positions[forward_diff_indices]
+                ))*(1/self.__xdim)                      
+            grads[backward_diff_indices, 2*self.__channels:3*self.__channels] = \
+                (-self.solution_at(
+                    positions[backward_diff_indices]
+                            - torch.tensor([0,0,1], device=self.__device)
+                ) + self.solution_at(
+                    positions[backward_diff_indices]
+                ))*(1/self.__xdim)                  
+            grads[central_diff_indices, 2*self.__channels:3*self.__channels] = \
+                (self.solution_at(
+                    positions[central_diff_indices]
+                            + torch.tensor([0,0,1], device=self.__device)
+                ) - (self.solution_at(
+                    positions[central_diff_indices]
+                    - torch.tensor([0,0,1], device=self.__device))
+                ))*(1/self.__xdim)  
+
+        return grads
+
+    def interpolate(self, positions: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+        '''
+        Computes the value (v) given an index (position) and 
+        trilinear interpolation weights for the 8 neighboring cells. See
+        Grid.get_cell_at() for information about weight orders.
+        '''
+        assert positions.dtype is torch.long
+        values : torch.Tensor = torch.zeros([positions.shape[0], 
+                                             self.__channels], 
+                                            device=self.__device)
+        
+        max_values : torch.Tensor = torch.tensor(
+            [self.__zdim-1, self.__ydim-1, self.__xdim-1], 
+            device=self.__device).unsqueeze(0).repeat(
+                positions.shape[0], 1
+            )
+
+        values += weights[:,0:1] * self.solution_at(positions)
+
+        values += weights[:,1:2] * self.solution_at(torch.minimum(
+            positions + torch.tensor([1, 0, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,2:3] * self.solution_at(torch.minimum(
+            positions + torch.tensor([0, 1, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,3:4] * self.solution_at(torch.minimum(
+            positions + torch.tensor([1, 1, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,4:5] * self.solution_at(torch.minimum(
+            positions + torch.tensor([0, 0, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,5:6] * self.solution_at(torch.minimum(
+            positions + torch.tensor([1, 0, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,6:7] * self.solution_at(torch.minimum(
+            positions + torch.tensor([0, 1, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,7:8] * self.solution_at(torch.minimum(
+            positions + torch.tensor([1, 1, 1], 
+            device=self.__device),
+            max_values))
+
+        return values
+    
+    def interpolate_gradient(self, positions: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+        '''
+        Computes the gradient (g) given an index (position) and 
+        trilinear interpolation weights for the 8 neighboring cells. See
+        Grid.get_cell_at() for information about weight orders.
+        '''
+        assert positions.dtype is torch.long
+
+        values : torch.Tensor = torch.zeros([positions.shape[0], 
+                                             3*self.__channels], device=self.__device)
+        max_values = torch.tensor(
+        [self.__zdim-1, self.__ydim-1, self.__xdim-1], 
+        device=self.__device).unsqueeze(0).repeat(
+            positions.shape[0], 1
+        )
+        
+        values += weights[:,0:1] * self.grad_at(positions)
+        values += weights[:,1:2] * self.grad_at(torch.minimum(
+            positions + torch.tensor([1, 0, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,2:3] * self.grad_at(torch.minimum(
+            positions + torch.tensor([0, 1, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,3:4] * self.grad_at(torch.minimum(
+            positions + torch.tensor([1, 1, 0], 
+            device=self.__device),
+            max_values))
+        values += weights[:,4:5] * self.grad_at(torch.minimum(
+            positions + torch.tensor([0, 0, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,5:6] * self.grad_at(torch.minimum(
+            positions + torch.tensor([1, 0, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,6:7] * self.grad_at(torch.minimum(
+            positions + torch.tensor([0, 1, 1], 
+            device=self.__device),
+            max_values))
+        values += weights[:,7:8] * self.grad_at(torch.minimum(
+            positions + torch.tensor([1, 1, 1], 
+            device=self.__device),
+            max_values))
+
+        return values
+
+class Field(torch.nn.Module):
+    '''
+    A class that holds a solution and a grid associated with
+    the solution. Can use this grid to query physical locations
+    and return scalar values, or their gradients.
+    '''
+
+    def __init__(self, g : Grid, s : Solution):
+        '''
+        Initializes a Field with a grid and solution
+        '''
+        super().__init__()
+        self.__grid : Grid = g
+        self.__solution : Solution = s
+
+    def set_data(self, data : torch.Tensor):
+        self.__solution.set_data(data)
+
+    def set_grid(self, g: Grid):
+        '''
+        Sets the grid for the field.
+        '''
+        self.__grid = g
+    
+    def get_min(self) -> float:
+        return self.__solution.get_min()
+
+    def get_max(self) -> float:
+        return self.__solution.get_max()
+
+    def device(self) -> str:
+        return self.__solution.device()
+
+    def to_device(self, device: str):
+        self.__solution.to_device(device)
+
+    def get_grid(self) -> Grid:
+        return self.__grid
+
+    def set_solution(self, s: Solution):
+        '''
+        Sets the solution for the field.
+        '''
+        self.__solution = s
+    
+    def get_solution(self) -> Solution:
+        return self.__solution
+
+    def get_extents(self) -> List[float]:
+        '''
+        Returns the extents (min/max) for each dimension
+        in z, y, x order
+        '''
+        return self.__grid.get_extents()
+
+    def forward(self, positions: torch.Tensor) -> torch.Tensor:
+        '''
+        Computs the solutions at physical positions using the 
+        private grid to find the correct indices, and the solution 
+        class to solve the trilinear interpolation
+        '''
+        cells, weights = self.__grid.index_and_weights_for(positions)
+        vals = self.__solution.interpolate(cells, weights)
+        return vals
+
+    def gradient_at_phys_pos(self, positions: torch.Tensor) -> torch.Tensor:
+        '''
+        Computs the gradient at a physical position using the 
+        private grid to find the correct index, and the solution 
+        class to solve the trilinear interpolation
+        '''
+        assert self.__grid.in_bounds(positions).all(), "Position must be in bounds"
+
+        cells, weights = self.__grid.index_and_weights_for(positions)
+        vals = self.__solution.interpolate_gradient(cells, weights)
+        return vals
 
 class TransferFunction():
     '''
@@ -292,13 +834,36 @@ if __name__ == '__main__':
     )
     
     tf.set_min(-0.1)
-    tf.set_max(0.17)
+    tf.set_max(0.16)
+    
     
     with torch.no_grad():
         c_out = nvr_on_axis(model, dataset, tf,
-                          resolution=[512, 512],
+                          resolution=[1024, 1024],
                           total_steps=256,
                           axis='x',
                           device=args['device'])
 
-    tensor_to_img(c_out, "./render.jpg")
+    tensor_to_img(c_out, "./neural_render.jpg")
+    
+
+    sampled_sf = nc_to_tensor(os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
+    g = Grid(
+        -1, 1, dataset.data.shape[2],
+        -1, 1, dataset.data.shape[3],
+        -1, 1, dataset.data.shape[4],
+    )
+    s = Solution(
+        3, dataset.data.shape[2], dataset.data.shape[3], dataset.data.shape[4],
+        sampled_sf.to(opt['device']).squeeze().permute(2,1,0).unsqueeze(-1), opt['device']
+    )
+    
+    f = Field(g, s)
+    with torch.no_grad():
+        c_out = nvr_on_axis(f, dataset, tf,
+                          resolution=[1024, 1024],
+                          total_steps=256,
+                          axis='x',
+                          device=args['device'])
+
+    tensor_to_img(c_out, "./render_on_grid.jpg")
