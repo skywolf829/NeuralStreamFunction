@@ -22,7 +22,7 @@ save_folder = os.path.join(project_folder_path, "SavedModels")
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate a model on some tests')
 
-    parser.add_argument('--folder',default=None,type=str,help="Model name to load")
+    parser.add_argument('--error_files',default=None,type=str,nargs='+',help=".npy files to load")
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -31,14 +31,29 @@ if __name__ == '__main__':
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")
     
-    folder_with_npys = os.path.join(output_folder, args['folder'])
+    folder_with_npys = os.path.join(output_folder, "Error")
 
     arrays = []
+    files = args['error_files']
     names = []
-    for filename in os.listdir(folder_with_npys):
-        a = np.load(os.path.join(folder_with_npys, filename))
+
+
+
+    for filename in files:
+        full_path = os.path.join(folder_with_npys, filename)
+        a = np.load(full_path)
         arrays.append(a)
         names.append(filename.split('.npy')[0])
+
+    plt.style.use('ggplot')
+    #plt.style.use('seaborn')
+    #plt.style.use('seaborn-paper')
+
+    font = {#'font.family' : 'normal',
+        #'font.weight' : 'bold',
+        'font.size'   : 20,
+        'lines.linewidth' : 3}
+    plt.rcParams.update(font)
 
     plt.boxplot(arrays, vert=False, showfliers=False, labels=names)
     plt.xlabel("Orthogonality error")
