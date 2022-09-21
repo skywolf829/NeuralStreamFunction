@@ -10,7 +10,7 @@ sys.path.append(other_dir)
 sys.path.append(models_dir)
 sys.path.append(datasets_dir)
 sys.path.append(script_dir)
-from utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid
+from utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid, curl
 from models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
 from options import load_options
 import torch.nn.functional as F
@@ -106,8 +106,9 @@ def model_stream_function(model, dataset, opt):
     
     f = f.to(opt['data_device'])
     f_grad = f_grad.to(opt['data_device'])
+    d = dataset.data
     
-    cos_dist = F.cosine_similarity(dataset.data,
+    cos_dist = F.cosine_similarity(d,
             f_grad, dim=1)
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     angles = torch.acos(cos_dist)*(180/torch.pi)

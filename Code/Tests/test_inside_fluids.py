@@ -41,12 +41,13 @@ if __name__ == '__main__':
     print(vector_field.shape)
     print(inside_fluids_result.shape)
     inside_fluids_result = F.interpolate(inside_fluids_result,
-        size = vector_field.shape[2:], mode="trilinear", align_corners=False)
+        size = vector_field.shape[2:], mode="trilinear", align_corners=True)
+    print(inside_fluids_result.shape)
 
-    vorticity_field = curl(vector_field)
+    #vorticity_field = curl(vector_field)
     sx_grad = jacobian(inside_fluids_result, False)[0]
 
-    cos_dist = F.cosine_similarity(vorticity_field,
+    cos_dist = F.cosine_similarity(vector_field,
             sx_grad, dim=1)
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     angles = torch.acos(cos_dist)*(180/torch.pi)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
     print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
     create_path(os.path.join(output_folder, "Error"))
-    np.save(os.path.join(output_folder, "Error", args['data']+"_InsideFluids.npy"),
+    np.save(os.path.join(output_folder, "Error", args['data'].split(".nc")[0]+"_InsideFluids.npy"),
         angles.cpu().numpy().flatten())
 
     print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")

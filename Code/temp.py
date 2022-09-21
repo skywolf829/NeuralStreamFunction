@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import h5py
 import numpy as np
 import time
-from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid
+from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid, curl
 from math import pi
 from scipy.spatial.transform import Rotation as R
 from Models.options import *
@@ -157,6 +157,7 @@ def insidefluids():
     
 if __name__ == '__main__':
 
+    '''
     start = np.array([76.63355624865802, 50.46789668912503, 76.38933124022662])
     end = np.array([60.202556278981916, 69.8793142881013, 72.61491798871297])
     num_points = 50
@@ -165,3 +166,7 @@ if __name__ == '__main__':
         p = i / (num_points - 1)
         spot = start * (1-p) + end * p
         print(f"{spot[0]},{spot[1]},{spot[2]}")
+    '''
+    data = nc_to_tensor(os.path.join(data_folder, "hill.nc"))
+    data = curl(data)
+    tensor_to_cdf(data, os.path.join(data_folder, "hill_vort.nc"))

@@ -23,6 +23,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate a model on some tests')
 
     parser.add_argument('--error_files',default=None,type=str,nargs='+',help=".npy files to load")
+    parser.add_argument('--names',default=None,type=str,nargs='+',help=".npy files to load")
+    parser.add_argument('--title',default=None,type=str,help="Title")
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +37,7 @@ if __name__ == '__main__':
 
     arrays = []
     files = args['error_files']
-    names = []
+    names = args['names']
 
 
 
@@ -43,7 +45,7 @@ if __name__ == '__main__':
         full_path = os.path.join(folder_with_npys, filename)
         a = np.load(full_path)
         arrays.append(a)
-        names.append(filename.split('.npy')[0])
+        print(np.median(a))
 
     plt.style.use('ggplot')
     #plt.style.use('seaborn')
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     plt.rcParams.update(font)
 
     plt.boxplot(arrays, vert=False, showfliers=False, labels=names)
-    plt.xlabel("Orthogonality error")
+    plt.xlabel(args['title'])
     plt.show()
     
     
