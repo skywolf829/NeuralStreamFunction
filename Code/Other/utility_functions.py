@@ -351,7 +351,7 @@ def make_coord_grid(shape, device, flatten=True, align_corners=False):
             dtype=torch.float32).float()
 
         else:
-            r = (right - left) / (n+1)
+            r = (right - left) / n
             seq = left + r + r * \
             torch.arange(0, n, 
             device=device, 
