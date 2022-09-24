@@ -669,6 +669,7 @@ def nvr_on_axis(model, dataset, tf,
     axis="x", resolution=(128,128), 
     total_steps=128, phong_illumination=False,
     light_position = [-500.0, 0.0, 0.0],
+    background = [1.0, 1.0, 1.0],
     device="cuda"):
 
     c_in : torch.Tensor= torch.zeros([resolution[0], resolution[1], 3], 
@@ -770,8 +771,9 @@ def nvr_on_axis(model, dataset, tf,
     #print(f"Interpolation time: {solution_timing} seconds.")
     #print(f"Transfer function time: {transfer_function_timing} seconds.")
     #print(f"Compositing time: {compositing_timing} seconds.")
-    
-    return c_out
+    background = torch.tensor(background, device=device)
+    c_out = c_out + background*(1-a_out)
+    return c_out, a_out
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Performs neural volume rendering')
@@ -816,10 +818,10 @@ if __name__ == '__main__':
         torch.tensor([
             0.0,
             0.0,
-            0.1,
+            0.3,
             0.0,
             0.0,
-            0.1,
+            0.3,
             0.0,
             0.0
             ]).unsqueeze(1),
@@ -838,7 +840,7 @@ if __name__ == '__main__':
     
     
     with torch.no_grad():
-        c_out = nvr_on_axis(model, dataset, tf,
+        c_out, a_out = nvr_on_axis(model, dataset, tf,
                           resolution=[1024, 1024],
                           total_steps=256,
                           axis='x',
@@ -860,10 +862,11 @@ if __name__ == '__main__':
     
     f = Field(g, s)
     with torch.no_grad():
-        c_out = nvr_on_axis(f, dataset, tf,
+        c_out, a_out = nvr_on_axis(f, dataset, tf,
                           resolution=[1024, 1024],
                           total_steps=256,
                           axis='x',
                           device=args['device'])
 
+    background_color = torch.tensor([1.0, 1.0, 1.0, 1.0], device = c_out.device)
     tensor_to_img(c_out, "./render_on_grid.jpg")

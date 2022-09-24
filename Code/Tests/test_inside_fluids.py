@@ -37,14 +37,15 @@ if __name__ == '__main__':
     inside_fluids_result = nc_to_tensor(os.path.join((output_folder), 
         "InsideFluids",
         args['data']))[:,0:1]
-    inside_fluids_result = inside_fluids_result.permute(0,1,3,4,2).contiguous()
+    #inside_fluids_result = inside_fluids_result.permute(0,1,3,4,2).contiguous()
+    #tensor_to_cdf(inside_fluids_result, "test.nc")
     print(vector_field.shape)
     print(inside_fluids_result.shape)
     inside_fluids_result = F.interpolate(inside_fluids_result,
-        size = vector_field.shape[2:], mode="trilinear", align_corners=True)
+        size = vector_field.shape[2:], mode="trilinear", align_corners=False)
     print(inside_fluids_result.shape)
 
-    #vorticity_field = curl(vector_field)
+    vector_field = curl(vector_field)
     sx_grad = jacobian(inside_fluids_result, False)[0]
 
     cos_dist = F.cosine_similarity(vector_field,
