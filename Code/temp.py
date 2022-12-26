@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import h5py
 import numpy as np
 import time
-from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid, curl
+from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid, curl, spatial_gradient
 from math import pi
 from scipy.spatial.transform import Rotation as R
 from Models.options import *
@@ -167,6 +167,12 @@ if __name__ == '__main__':
         spot = start * (1-p) + end * p
         print(f"{spot[0]},{spot[1]},{spot[2]}")
     '''
-    data = nc_to_tensor(os.path.join(data_folder, "hill.nc"))
-    data = curl(data)
-    tensor_to_cdf(data, os.path.join(data_folder, "hill_vort.nc"))
+    #data = nc_to_tensor(os.path.join(data_folder, "hill.nc"))
+    #data = divergence(data)
+    #tensor_to_cdf(data, os.path.join(data_folder, "hill_vort.nc"))
+    t = nc_to_tensor(os.path.join(data_folder, "isabel.nc"))[:,:,7:,:,:]
+    print(t.shape)
+    div = spatial_gradient(t,2,0) + spatial_gradient(t,1,1) + spatial_gradient(t,0,2)
+    
+    print(torch.abs(div).mean())
+    tensor_to_cdf(div, "div.nc")

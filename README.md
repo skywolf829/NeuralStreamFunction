@@ -7,13 +7,13 @@ This project uses neural networks to model vector fields for visualization.
 We recommend conda for Python package management. To install, run the following:
 ```
 conda env create --file env.yml
-conda activate NDSF
+conda activate NeuralStreamFunction
 ```
 
 Creating the environment will take a while. If the above fails, use this as a backup:
 ```
-conda create --name NDSF python=3.9
-conda activate NDSF
+conda create --name NeuralStreamFunction python=3.9
+conda activate NeuralStreamFunction
 conda install netcdf4 vtk zeep opencv flask imageio h5py scikit-image pandas numba matplotlib tensorboard --channel conda-forge
 ```
 Both approaches should do the same thing and leave you with the same environment.

@@ -9,7 +9,7 @@ import os
 from netCDF4 import Dataset
 import pickle
 import h5py
-import numba as nb
+#import numba as nb
 
 def reset_grads(model,require_grad):
     for p in model.parameters():
@@ -655,6 +655,7 @@ def spatial_gradient(data, channel, dimension):
 
     return output
 
+'''
 #Modified Code from Scipy-source
 #https://github.com/scipy/scipy/blob/master/scipy/spatial/_hausdorff.pyx
 #Copyright (C)  Tyler Reddy, Richard Gowers, and Max Linke, 2016
@@ -718,7 +719,7 @@ def directed_hausdorff_nb(ar1, ar2):
             d_max = d_min
 
     return np.sqrt(d_max)
-
+'''
 @torch.jit.script
 def RK4_advection(vf : torch.Tensor, seeds : torch.Tensor, 
         h : float = 0.1, align_corners : bool = True):
