@@ -10,7 +10,7 @@ sys.path.append(datasets_dir)
 import torch
 import argparse
 from options import load_options
-from models import load_model, forward_w_grad
+from models import load_model, forward_w_grad, forward_maxpoints, sample_grid
 from datasets import get_dataset
 from utility_functions import nc_to_tensor
 import time
@@ -728,7 +728,8 @@ def nvr_on_axis(model, dataset, tf,
         
         #t_0: float = time.time()
         flattened_p = p.flatten(0,1)
-        v = model(flattened_p)
+        #v = model(flattened_p)
+        v = forward_maxpoints(model, flattened_p, 512**2)
         #solution_timing += (time.time() - t_0)
         
         #t_0: float = time.time()
@@ -818,14 +819,15 @@ if __name__ == '__main__':
         torch.tensor([
             0.0,
             0.0,
-            0.3,
+            0.1,
             0.0,
             0.0,
-            0.3,
+            0.0,
             0.0,
             0.0
             ]).unsqueeze(1),
-        torch.tensor([0.0,
+        torch.tensor([
+                    0.0,
                     0.2,
                     0.21,
                     0.22,
@@ -842,21 +844,27 @@ if __name__ == '__main__':
     with torch.no_grad():
         c_out, a_out = nvr_on_axis(model, dataset, tf,
                           resolution=[1024, 1024],
-                          total_steps=256,
-                          axis='x',
+                          total_steps=4096,
+                          axis='y',
                           device=args['device'])
 
     tensor_to_img(c_out, "./neural_render.jpg")
     
 
-    sampled_sf = nc_to_tensor(os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
+    #sampled_sf = nc_to_tensor(os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
+    grid_size = [64, 64, 64]
+    with torch.no_grad():
+        sampled_sf = sample_grid(model, 
+                                grid_size, 
+                                max_points=10000)[...,0:1]
+            
     g = Grid(
-        -1, 1, dataset.data.shape[2],
-        -1, 1, dataset.data.shape[3],
-        -1, 1, dataset.data.shape[4],
+        -1, 1, grid_size[0],
+        -1, 1, grid_size[1],
+        -1, 1, grid_size[2],
     )
     s = Solution(
-        3, dataset.data.shape[2], dataset.data.shape[3], dataset.data.shape[4],
+        3, grid_size[0], grid_size[1], grid_size[2],
         sampled_sf.to(opt['device']).squeeze().permute(2,1,0).unsqueeze(-1), opt['device']
     )
     
@@ -864,8 +872,8 @@ if __name__ == '__main__':
     with torch.no_grad():
         c_out, a_out = nvr_on_axis(f, dataset, tf,
                           resolution=[1024, 1024],
-                          total_steps=256,
-                          axis='x',
+                          total_steps=4096,
+                          axis='y',
                           device=args['device'])
 
     background_color = torch.tensor([1.0, 1.0, 1.0, 1.0], device = c_out.device)
