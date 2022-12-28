@@ -47,9 +47,10 @@ Now, all our test data should be in Data/ as NetCDF files, which can readily be 
 ## Usage
 
 ### ```start_jobs.py```
-This script is responsible for starting a set of jobs hosted in a JSON file in /Code/Batch_run_settings, and issuing each job to available GPUs on the system. The jobs in the JSON file can be training (```train.py```) or testing (```test.py```), and one job will be addressed to each device available for training/testing. When a job completes on a device, the device is released and becomes available for other jobs to be designated that device. The jobs are not run in sequential order unless you only have 1 device, so do not expect this script to train+test a model sequentially unless you use only one device.
+This script is responsible for starting a set of jobs hosted in a JSON file in /Code/Batch_run_settings, and issuing each job to available GPUs on the system. The jobs in the JSON file can be training (```train.py```) or testing (```test.py```), and one job will be addressed to each device available for training/testing. When a job completes on a device, the device is released and becomes available for other jobs to be designated that device. The jobs are not run in sequential order unless you only have 1 device, so do not expect this script to train+test a model sequentially unless you use only one device. Please see /Code/Batch_run_settings for examples of settings files - each job to run is either ```train.py``` or ```test.py``` with the command line arguments for those files.
 
 Command line arguments are:
+
 ```--settings```: the .json file (located in /Code/Batch_run_settings/) with the training/testing setups to run. See the examples in the folder for how to create a new settings file. Required argument.
 
 ```--devices```: the list of devices (comma separated) to issue jobs to. By default, "all" available CUDA devices are used. If no CUDA devices are detected, the CPU is used. 
@@ -77,3 +78,10 @@ The following will run the jobs defined in example_file.json on cuda devices 1 a
 (For M1 Macs with MPS) - The following will run the jobs defined in example_file.json on MPS (metal performance shaders), which is Apple's hardware for acceleration. Many PyTorch functions are not yet implemented for MPS as of Torch version 1.13.1, and as such our code cannot natively run on MPS at this time, but as more released of PyTorch come out, we expect this to run without issue in the future.
 
 ```python Code/start_jobs.py --settings example_file.json --devices mps```
+
+### ```train.py```
+This script is that will begin training a defined model with chosen hyperparameters and selected vector field. Default hyperparemeter values are what is shown in ```/Code/Models/options.py```, and will only be changed if added as a command line argument when running ```train.py```. A description of each argument can be seen by running ```python Code/train.py --help```. 
+
+Example of training a fSRN model on the lorenz data:
+
+```python Code/train.py --model fSRN --data lorenz.nc --training_mode f_any --n_dims 3 --save_name lorenz```

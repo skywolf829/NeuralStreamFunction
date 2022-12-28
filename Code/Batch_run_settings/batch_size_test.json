@@ -11,7 +11,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 105,
-        "streamline_loss": false,
         "save_name": "ABC_batchsize_0.005percent"     
     }],
     "2": [ "train.py",
@@ -25,7 +24,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 1048,
-        "streamline_loss": false,
         "save_name": "ABC_batchsize_0.05percent"     
     }],
     "3": [ "train.py",
@@ -39,7 +37,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 10485,
-        "streamline_loss": false,
         "save_name": "ABC_batchsize_0.5percent"     
     }],
     "4": [ "train.py",
@@ -53,7 +50,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 104857,
-        "streamline_loss": false,
         "save_name": "ABC_batchsize_5percent"     
     }],
 
@@ -68,7 +64,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 1250,
-        "streamline_loss": false,
         "save_name": "isabel_batchsize_0.005percent"     
     }],
     "6": [ "train.py",
@@ -82,7 +77,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 12500,
-        "streamline_loss": false,
         "save_name": "isabel_batchsize_0.05percent"     
     }],
     "7": [ "train.py",
@@ -96,7 +90,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 125000,
-        "streamline_loss": false,
         "save_name": "isabel_batchsize_0.5percent"     
     }],
     "8": [ "train.py",
@@ -110,7 +103,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 1250000,
-        "streamline_loss": false,
         "save_name": "isabel_batchsize_5percent"     
     }]
 }

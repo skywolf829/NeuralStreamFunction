@@ -11,7 +11,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": true,
         "save_name": "tornado_vort"     
     }],
@@ -26,7 +25,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": true,
         "save_name": "hill_vort"     
     }],
@@ -41,7 +39,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": true,
         "save_name": "delta_40_vort"     
     }]

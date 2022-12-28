@@ -11,7 +11,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_4x128"     
     }],
     "2": [ "train.py",
@@ -25,7 +24,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_6x128"     
     }],
     "3": [ "train.py",
@@ -39,7 +37,6 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_8x128"     
     }],
     "4": [ "train.py",
@@ -53,7 +50,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_4x256"     
     }],
     "5": [ "train.py",
@@ -67,7 +63,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_6x256"     
     }],
     "6": [ "train.py",
@@ -81,7 +76,6 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_8x256"     
     }],
     "7": [ "train.py",
@@ -95,7 +89,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_4x512"     
     }],
     "8": [ "train.py",
@@ -109,7 +102,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_6x512"     
     }],
     "9": [ "train.py",
@@ -123,7 +115,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "halfcylinder_8x512"     
     }]
 }

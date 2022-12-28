@@ -11,7 +11,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "seeding_points": "delta_40_seeds.csv",
         "save_name": "delta_40_seeds"     
@@ -27,7 +26,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "seeding_points": "ABC_seeds.csv",
         "save_name": "ABC_seeds"     
@@ -43,7 +41,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "vorticity": false,
         "seeding_points": "isabel_seeds.csv",
         "save_name": "isabel_seeds"     

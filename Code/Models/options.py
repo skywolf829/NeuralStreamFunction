@@ -19,7 +19,7 @@ class Options():
         opt['streamline_loss']                      = False
         opt['align_corners']                        = True
         opt['n_layers']                             = 2       
-        opt['nodes_per_layer']                      = 128
+        opt['nodes_per_layer']                      = 512
 
         opt['n_features']                           = 16
         opt['num_positional_encoding_terms']        = 6

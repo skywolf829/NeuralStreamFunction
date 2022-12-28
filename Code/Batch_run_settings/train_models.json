@@ -11,7 +11,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "ABC"     
     }],
     "2": [ "train.py",
@@ -25,7 +24,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "delta_40"     
     }],
     "4": [ "train.py",
@@ -39,7 +37,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "hill"     
     }],
     "5": [ "train.py",
@@ -53,7 +50,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 125000,
-        "streamline_loss": false,
         "save_name": "isabel"     
     }],
     "6": [ "train.py",
@@ -67,7 +63,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "non_closed"     
     }],
     "7": [ "train.py",
@@ -81,7 +76,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "isotropic512"     
     }],
     "8": [ "train.py",
@@ -95,7 +89,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "tangaroa"     
     }],
     "9": [ "train.py",
@@ -109,7 +102,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "streamline_loss": false,
         "save_name": "plume"     
     }],
     "10": [ "train.py",
@@ -123,7 +115,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "tornado"     
     }],
     "11": [ "train.py",
@@ -137,7 +128,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "vortices"     
     }],
     "12": [ "train.py",
@@ -151,7 +141,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "cylinder"     
     }],
     "13": [ "train.py",
@@ -165,7 +154,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "save_name": "ABC"     
     }]
 }

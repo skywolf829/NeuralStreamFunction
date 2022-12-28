@@ -12,7 +12,6 @@
         "omega": 20,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "save_name": "cylinder_PSS"     
     }],
@@ -28,7 +27,6 @@
         "omega": 20,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "save_name": "vortices_PSS"     
     }],
@@ -44,7 +42,6 @@
         "omega": 20,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "save_name": "tornado_PSS"     
     }],
@@ -60,7 +57,6 @@
         "omega": 30,
         "iterations": 10000,
         "points_per_iteration": 10000,
-        "streamline_loss": false,
         "vorticity": false,
         "save_name": "delta_40_PSS"     
     }]
