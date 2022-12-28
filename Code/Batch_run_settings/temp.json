@@ -12,7 +12,8 @@
         "iterations": 10000,
         "points_per_iteration": 10000,
         "streamline_loss": false,
-        "save_name": "lorenz"     
+        "save_name": "lorenz",
+        "interpolate": true
     }],
     "2": [ "test_model.py",
         {        
