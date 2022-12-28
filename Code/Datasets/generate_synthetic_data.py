@@ -336,7 +336,7 @@ def generate_lorenz_attractor(x_res, y_res, z_res, sigma=10, beta=8/3, rho=28):
             y_ind = y_ind + 1
         z_ind = z_ind + 1
     
-    return vf
+    return vf/np.linalg.norm(vf, axis=3).max()
 
 
 def generate_vortices_seed_points():    
