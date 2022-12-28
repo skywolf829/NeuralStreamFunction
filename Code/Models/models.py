@@ -202,11 +202,11 @@ def forward_w_grad(model, coords):
     return output, coords
 
 def forward_maxpoints(model, coords, max_points=100000):
-    print(coords.shape)
+    #print(coords.shape)
     output_shape = list(coords.shape)
-    output_shape[-1] = model.opt['n_outputs']
+    output_shape[-1] = 1
     output = torch.empty(output_shape, 
-        dtype=torch.float32, device=model.opt['device'])
+        dtype=torch.float32, device=coords.device)
     for start in range(0, coords.shape[0], max_points):
         #print("%i:%i" % (start, min(start+max_points, coords.shape[0])))
         output[start:min(start+max_points, coords.shape[0])] = \
