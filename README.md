@@ -46,7 +46,7 @@ Now, all our test data should be in Data/ as NetCDF files, which can readily be 
 
 ## Usage
 
-```start_jobs.py```
+### ```start_jobs.py```
 This script is responsible for starting a set of jobs hosted in a JSON file in /Code/Batch_run_settings, and issuing each job to available GPUs on the system. The jobs in the JSON file can be training (```train.py```) or testing (```test.py```), and one job will be addressed to each device available for training/testing. When a job completes on a device, the device is released and becomes available for other jobs to be designated that device. The jobs are not run in sequential order unless you only have 1 device, so do not expect this script to train+test a model sequentially unless you use only one device.
 
 Command line arguments are:
@@ -56,7 +56,7 @@ Command line arguments are:
 
 ```--data_devices```: the device to host the data (vector field) on. In some cases, the data may be too large to host on the same GPU that training is happening on, using system RAM instead of GPU VRAM may be preferred. Options are "same", implying using the same device for the data as is used for the model, and "cpu", which puts the data on system RAM. Default is "same".
 
-### Example usage:
+#### Example usage:
 
 The following will run the jobs defined in example_file.json on all available CUDA devices (if available) or the CPU if no CUDA devices are detected by PyTorch. The vector field data will be hosted on the same device that the models train on.
 
