@@ -151,3 +151,5 @@ nohup.out
 Code/log.txt
 .DS_Store
 data.tar.gz
+data.zip
+*/.DS_Store
