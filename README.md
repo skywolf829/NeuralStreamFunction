@@ -1,5 +1,5 @@
 # Neural Stream Function
-This project uses neural networks to model vector fields for visualization.
+This project uses neural networks to extract stream functions from vector fields, which can be visualized to understand the flow. The paper was submitted to Pacific Visualization 2023 and is under review.
 
 
 ## Installation
