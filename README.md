@@ -14,9 +14,8 @@ Creating the environment will take a while. If the above fails, use this as a ba
 ```
 conda create --name NeuralStreamFunction python=3.9
 conda activate NeuralStreamFunction
-conda install netcdf4 vtk zeep opencv flask imageio h5py scikit-image pandas matplotlib tensorboard --channel conda-forge
 ```
-Both approaches should do the same thing and leave you with the same environment.
+and then do ```conda install packageName1 packageName2 ...``` for each package name in env.yml.
 
 Once thats finished and the environment has been activated, navigate to https://pytorch.org/get-started/locally/ and follow instructions to install pytorch on your machine.
 
@@ -85,3 +84,16 @@ This script is that will begin training a defined model with chosen hyperparamet
 Example of training a fSRN model on the lorenz data:
 
 ```python Code/train.py --model fSRN --data lorenz.nc --training_mode f_any --n_dims 3 --save_name lorenz```
+
+More examples of usage of this code are encoded into the settings JSON files which are used by ```start_jobs.py```.
+
+### ```test.py```
+This script is responsible for the testing of trained models, and generating output stream functions as NetCDF4 files which can be visualized in ParaView. Output is saved to ```/Output/StreamFunctions/model_name.nc```. Similar to ```train.py```, it is usually ran from our ```start_jobs.py``` script, but can also be ran on its own. A description of each command line argument can be seen by running ```python Code/test.py --help```.
+
+Example of testing a trained model named lorenz:
+
+```python Code/Tests/test.py --load_from lorenz --tests_to_run streamfunction```
+
+## Contact 
+
+If there are any questions/issues, please contact me at swwurster@gmail.com. 

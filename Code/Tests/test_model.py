@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--load_from',default=None,type=str,help="Model name to load")
     parser.add_argument('--tests_to_run',default=None,type=str,
-                        help="A set of tests to run, separated by commas")
+                        help="A set of tests to run, separated by commas - in our final paper, only streamfunction is relevant")
     parser.add_argument('--device',default=None,type=str,
                         help="Device to load model to")
     parser.add_argument('--data_device',default=None,type=str,

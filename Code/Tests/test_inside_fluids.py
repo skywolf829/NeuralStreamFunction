@@ -22,9 +22,9 @@ output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Evaluate a model on some tests')
+    parser = argparse.ArgumentParser(description='Evaluate output from InsideFluids')
 
-    parser.add_argument('--data',default=None,type=str,help="Model name to load")
+    parser.add_argument('--data',default=None,type=str,help="The data saved from InsideFluids to load.")
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
