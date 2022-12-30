@@ -1,13 +1,24 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
-from Other.utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid
-from Models.models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
-from Models.options import *
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+models_dir = os.path.join(script_dir, "..", "Models")
+datasets_dir = os.path.join(script_dir, "..", "Datasets")
+sys.path.append(other_dir)
+sys.path.append(models_dir)
+sys.path.append(datasets_dir)
+sys.path.append(script_dir)
+from utility_functions import PSNR, tensor_to_cdf, create_path, particle_tracing, visualize_traces, make_coord_grid, curl
+from models import load_model, sample_grid, sample_grad_grid, forward_maxpoints
+from options import load_options
 import torch.nn.functional as F
-from Datasets.datasets import Dataset
+from datasets import Dataset
 import torch
 import time
+import matplotlib.pyplot as plt
+import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
@@ -95,18 +106,22 @@ def model_stream_function(model, dataset, opt):
     
     f = f.to(opt['data_device'])
     f_grad = f_grad.to(opt['data_device'])
+    d = dataset.data
     
-    cos_dist = F.cosine_similarity(dataset.data,
+    cos_dist = F.cosine_similarity(d,
             f_grad, dim=1)
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     angles = torch.acos(cos_dist)*(180/torch.pi)
-    print(f"Maximum angles dist {angles.max().item() : 0.03f} deg.")
-    print(f"Minimum angles dist {angles.min().item() : 0.03f} deg.")
     angles = torch.abs(90-angles)
-
-    print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
-    print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
+    #plt.boxplot(angles.cpu().numpy().flatten(), vert=False, showfliers=False)
+    #plt.show()
+    create_path(os.path.join(output_folder, "Error"))
+    np.save(os.path.join(output_folder, "Error", opt['save_name']+".npy"),
+        angles.cpu().numpy().flatten())
+    print(f"Minimum angle error off perpendicular {angles.min().item() : 0.03f} deg.")
     print(f"Median angle error off perpendicular {angles.median().item() : 0.03f} deg.")
+    print(f"Average angle error off perpendicular {angles.mean().item() : 0.03f} deg.")
+    print(f"Maximum angle error off perpendicular {angles.max().item() : 0.03f} deg.")
     GBytes = (torch.cuda.max_memory_allocated(device=opt['device']) \
             / (1024**3))
     #print(f"Inference took {t_1_ff-t_0_ff: 0.04f} sec. for grid {grid} with {total_points} points. {(t_1_ff-t_0_ff)/total_points: 0.09f} sec. per point")
@@ -118,6 +133,9 @@ def model_stream_function(model, dataset, opt):
                   os.path.join(output_folder, "StreamFunction", opt['save_name']+"_error.nc"))
     
     create_path(os.path.join(output_folder, "StreamFunction"))
+    
+    print(f"Min stream function value {f.min().item() : 0.03f}.")
+    print(f"Max stream function value {f.max().item() : 0.03f}.")
     tensor_to_cdf(f, os.path.join(output_folder, "StreamFunction", opt['save_name']+".nc"))
 
 def model_streamline_error(model, dataset, opt):
@@ -166,7 +184,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--load_from',default=None,type=str,help="Model name to load")
     parser.add_argument('--tests_to_run',default=None,type=str,
-                        help="A set of tests to run, separated by commas")
+                        help="A set of tests to run, separated by commas - in our final paper, only streamfunction is relevant")
     parser.add_argument('--device',default=None,type=str,
                         help="Device to load model to")
     parser.add_argument('--data_device',default=None,type=str,
@@ -174,7 +192,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     project_folder_path = os.path.dirname(os.path.abspath(__file__))
-    project_folder_path = os.path.join(project_folder_path, "..")
+    project_folder_path = os.path.join(project_folder_path, "..", "..")
     data_folder = os.path.join(project_folder_path, "Data")
     output_folder = os.path.join(project_folder_path, "Output")
     save_folder = os.path.join(project_folder_path, "SavedModels")

@@ -10,7 +10,7 @@ from torch import tensor
 script_dir = os.path.dirname(__file__)
 utility_fn_dir = os.path.join(script_dir, "..", "Other")
 sys.path.append(utility_fn_dir)
-from utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal
+from utility_functions import tensor_to_cdf, tensor_to_h5, jacobian, normal, binormal, spatial_gradient
 import h5py
 
 
@@ -93,19 +93,50 @@ def generate_flow_past_cylinder(resolution = 128, a=2):
     x = zyx[2].clone()
     y = zyx[1].clone()
     z = zyx[0].clone()
-    r = (x**2 + y**2)**0.5
-    theta = torch.atan(y/x)
+    #r = (x**2 + y**2)**0.5
+    #mask = r < a
+    #theta = torch.atan(y/x)
 
-    u = torch.cos(2*theta) / r**2 - 1
-    v = torch.sin(2*theta) / r**2
+    u = ((a**2)*(x**2 - y**2))/((x**2 + y**2)**2) - 1
+    v = ((a**3)*x*y) / ((x**2 + y**2)**2)
+    
+    #u = torch.cos(2*theta) / r**2 - 1
+    #v = torch.sin(2*theta) / r**2
     w = torch.zeros_like(u)
     
     vf = torch.stack([u, v, w], dim=0)
-    
-    tensor_to_cdf(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "flow_past_cylinder.nc")    
-    tensor_to_h5(torch.tensor(vf).unsqueeze(0).type(torch.float32), 
-        "flow_past_cylinder.h5")
+    #vf = vf * ~mask
+
+    dudx = -(a**3)*x*(x**2-3*y**2) / ((x**2 + y**2)**3)
+    dudy = -(a**3)*y*(y**2-3*x**2) / ((x**2 + y**2)**3)
+    dudz = torch.zeros_like(dudx)
+    dvdx = (a**3)*y*(y**2-3*x**2) / ((x**2 + y**2)**3)
+    dvdy = (a**3)*x*(x**2-3*y**2) / ((x**2 + y**2)**3)
+    dvdz = torch.zeros_like(dudx)
+    dwdx = torch.zeros_like(dudx)
+    dwdy = torch.zeros_like(dudx)
+    dwdz = torch.zeros_like(dudx)
+
+    J = torch.stack([
+        torch.stack([dudx, dudy, dudz]),
+        torch.stack([dvdx, dvdy, dvdz]),
+        torch.stack([dwdx, dwdy, dwdz])
+    ])
+    print(J.shape)
+    J = J.flatten(2).permute(2,0,1)
+    print(J.shape)
+    print(vf.shape)
+    vf = vf.flatten(1).permute(1,0).unsqueeze(2)
+    print(vf.shape)
+    Jv = torch.bmm(J, vf)
+    print(Jv.shape)
+    b = torch.cross(Jv, vf)
+    print(b.shape)
+    n = torch.cross(b, vf)
+    tensor_to_cdf(b.squeeze().permute(1,0).reshape(1,3,128,128,128), "binormal.nc")
+    tensor_to_cdf(n.squeeze().permute(1,0).reshape(1,3,128,128,128), "normal.nc")
+    #tensor_to_cdf(vf.unsqueeze(0).type(torch.float32), 
+    #    "cylinder.nc")    
 
 def generate_ABC_flow(resolution = 128, 
                       A=np.sqrt(3), B=np.sqrt(2), C=1):
@@ -144,8 +175,8 @@ def generate_ABC_flow(resolution = 128,
 
 def generate_hill_vortex(resolution = 128, 
                       A=np.sqrt(3), B=np.sqrt(2), C=1):
-    start = -1
-    end = 1
+    start = -2
+    end = 2
     
     zyx = torch.meshgrid(
         [torch.linspace(start, end, steps=resolution),
@@ -176,65 +207,6 @@ def generate_hill_vortex(resolution = 128,
     channel_names = ['u', 'v', 'w']
     tensor_to_cdf(hill.type(torch.float32), 
         "hill.nc", channel_names)
-
-def generate_isolated_zero_vortex(resolution = 128):
-    start = -1
-    end = 1
-    
-    zyx = torch.meshgrid(
-        [torch.linspace(start, end, steps=resolution),
-        torch.linspace(start, end, steps=resolution),
-        torch.linspace(start, end, steps=resolution)],
-        indexing='ij'
-    )
-    zyx = torch.stack(zyx).type(torch.float32)
-    x = zyx[2].clone()
-    y = zyx[1].clone()
-    z = zyx[0].clone()
-    
-    
-    hill = torch.stack([x,y,-2*z], dim=0).unsqueeze(0)
-    print(hill.shape)
-    print(hill.max())
-    print(hill.min())
-    print(hill.mean())
-    print(hill.norm(dim=1).max())
-    hill /= hill.norm(dim=1).max()
-    
-    channel_names = ['u', 'v', 'w']
-    tensor_to_cdf(hill.type(torch.float32), 
-        "isolated_zero.nc", channel_names)
-
-def generate_non_closed_vortex(resolution = 128):
-    start = -1
-    end = 1
-    
-    zyx = torch.meshgrid(
-        [torch.linspace(start, end, steps=resolution),
-        torch.linspace(start, end, steps=resolution),
-        torch.linspace(start, end, steps=resolution)],
-        indexing='ij'
-    )
-    zyx = torch.stack(zyx).type(torch.float32)
-    x = zyx[2].clone()
-    y = zyx[1].clone()
-    z = zyx[0].clone()
-    r = (x**2 + y**2 + z**2)**0.5
-    u = 1.5*(x*z) - y
-    v = 1.5*(y*z) + x
-    w = 1.5*(1 - 2*(x**2 + y**2) - z**2)
-    
-    non_closed = torch.stack([u,v,w], dim=0).unsqueeze(0)
-    print(non_closed.shape)
-    print(non_closed.max())
-    print(non_closed.min())
-    print(non_closed.mean())
-    print(non_closed.norm(dim=1).max())
-    non_closed /= non_closed.norm(dim=1).max()
-    
-    channel_names = ['u', 'v', 'w']
-    tensor_to_cdf(non_closed.type(torch.float32), 
-        "non_closed.nc", channel_names)
 
 def isabel_from_bin():
     u = np.fromfile('U.bin', dtype='>f')
@@ -272,7 +244,101 @@ def plume_data_reading():
     w = torch.tensor(w).reshape(1024, 252, 252)
     uvw = torch.stack([u, v, w]).unsqueeze(0)
     tensor_to_h5(uvw, "plume.h5")
-   
+
+'''
+Comments from Professor Crawfis's original code hosted at
+http://web.cse.ohio-state.edu/~crawfis.3/Data/Tornado/tornadoSrc.c
+
+Gen_Tornado creates a vector field of dimension [xs,ys,zs,3] from
+a proceedural function. By passing in different time arguements,
+a slightly different and rotating field is created.
+
+The magnitude of the vector field is highest at some funnel shape
+and values range from 0.0 to around 0.4 (I think).
+
+I just wrote these comments, 8 years after I wrote the function.
+
+Developed by Roger A. Crawfis, The Ohio State University
+'''
+def generate_crawfis_tornado(x_res, y_res, z_res, time=0):
+
+    tornado = np.zeros([z_res, y_res, x_res, 3])
+    r2 = 8
+    SMALL = 0.00000000001
+    xdelta = 1.0 / (x_res-1)
+    ydelta = 1.0 / (y_res-1)
+    zdelta = 1.0 / (z_res-1)
+
+    z_ind = 0
+    for z in np.arange(0.0, 1.0, zdelta):
+        xc = 0.5 + 0.1*sin(0.04*time+10.0*z);           #For each z-slice, determine the spiral circle.
+        yc = 0.5 + 0.1*cos(0.03*time+3.0*z);            #(xc,yc) determine the center of the circle.
+        r = 0.1 + 0.4 * z*z + 0.1 * z * sin(8.0*z);     #The radius also changes at each z-slice.
+        r2 = 0.2 + 0.1*z;                               #r is the center radius, r2 is for damping
+        y_ind = 0               
+        for y in np.arange(0.0, 1.0, ydelta):
+            x_ind = 0
+            for x in np.arange(0.0, 1.0, xdelta):
+                temp = ( (y-yc)*(y-yc) + (x-xc)*(x-xc) ) ** 0.5
+                scale = abs( r - temp )
+                '''
+                I do not like this next line. It produces a discontinuity 
+                in the magnitude. Fix it later.
+                '''
+                if ( scale > r2 ):
+                    scale = 0.8 - scale
+                else:
+                    scale = 1.0
+
+                z0 = 0.1 * (0.1 - temp*z )
+                if ( z0 < 0.0 ):
+                    z0 = 0.0
+
+                temp = ( temp*temp + z0*z0 )**0.5
+                scale = (r + r2 - temp) * scale / (temp + SMALL)
+                scale = scale / (1+z)
+
+                # In u,v,w order 
+                tornado[z_ind, y_ind, x_ind, 0] = scale * (y-yc) + 0.1*(x-xc)
+                tornado[z_ind, y_ind, x_ind, 1] = scale * -(x-xc) + 0.1*(y-yc)
+                tornado[z_ind, y_ind, x_ind, 2] = scale * z0
+
+                x_ind = x_ind + 1
+            y_ind = y_ind + 1
+        z_ind = z_ind + 1
+    
+    return tornado
+
+def generate_lorenz_attractor(x_res, y_res, z_res, sigma=10, beta=8/3, rho=28):
+
+    vf = np.zeros([z_res, y_res, x_res, 3])
+    
+    start = -50
+    end = 50
+    xdelta = (end-start) / (x_res-1)
+    ydelta = (end-start) / (y_res-1)
+    zdelta = (end-start) / (z_res-1)
+
+    z_ind = 0
+    for z in np.arange(start, end, zdelta): 
+        
+        y_ind = 0               
+        for y in np.arange(start, end, ydelta):
+
+            x_ind = 0
+            for x in np.arange(start, end, xdelta):
+                
+                vf[z_ind, y_ind, x_ind, 0] = sigma * (y-x)
+                vf[z_ind, y_ind, x_ind, 1] = x * (rho - z) - y
+                vf[z_ind, y_ind, x_ind, 2] = x*y - beta*z
+
+                x_ind = x_ind + 1
+            y_ind = y_ind + 1
+        z_ind = z_ind + 1
+    
+    return vf/np.linalg.norm(vf, axis=3).max()
+
+
 def generate_vortices_seed_points():    
     seeds = torch.rand([100, 3])*2-1
     seeds *= 64
@@ -389,6 +455,10 @@ if __name__ == '__main__':
     #generate_seed_files()
     #generate_flow_past_cylinder(resolution=10, a=2)
     #generate_vortices_data(resolution=10)
-    generate_isolated_zero_vortex(resolution=64)
-    #generate_non_closed_vortex(resolution=64)
+    #generate_flow_past_cylinder(resolution=128)
+    #t = generate_crawfis_tornado(128, 128, 128, 0)
+    #t = torch.tensor(t).permute(3, 0, 1, 2).unsqueeze(0).type(torch.float32)
+    t = generate_lorenz_attractor(128, 128, 128)
+    t = torch.tensor(t).permute(3, 0, 1, 2).unsqueeze(0).type(torch.float32)
+    tensor_to_cdf(t, "lorenz.nc")
     quit()

@@ -23,14 +23,18 @@ def build_commands(settings_path):
         command_names.append(run_name)
         script_name = data[run_name][0]
         variables = data[run_name][1]
-        command = "python Code/" + str(script_name) + " "
+        if(script_name == "train.py"):
+            command = "python Code/" + str(script_name) + " "
+        elif(script_name == "test_model.py"):
+            command = "python Code/Tests/" + str(script_name) + " "
+            
         for var_name in variables.keys():
             command = command + "--" + str(var_name) + " "
             command = command + str(variables[var_name]) + " "
         commands.append(command)
         if(script_name == "train.py"):
             log_locations.append(os.path.join(save_folder, variables["save_name"], "train_log.txt"))
-        elif(script_name == "test.py"):
+        elif(script_name == "test_model.py"):
             log_locations.append(os.path.join(save_folder,  variables['load_from'], "test_log.txt"))
     f.close()
     return command_names, commands, log_locations
@@ -61,8 +65,11 @@ if __name__ == '__main__':
 
     if(args['devices'] == "all"):
         available_devices = []
-        for i in range(torch.cuda.device_count()):
-            available_devices.append("cuda:" + str(i))
+        if(torch.cuda.is_available()):
+            for i in range(torch.cuda.device_count()):
+                available_devices.append("cuda:" + str(i))
+        else:
+            available_devices.append("cpu")
             
     else:
         available_devices = parse_devices(args['devices'])

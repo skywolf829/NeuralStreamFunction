@@ -1,0 +1,42 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "ABC_batchsize_0.005percent",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "ABC_batchsize_0.05percent",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test_model.py",
+        {        
+        "load_from": "ABC_batchsize_0.5percent",
+        "tests": "streamfunction"
+    }],
+    "4": [ "test_model.py",
+        {        
+        "load_from": "ABC_batchsize_5percent",
+        "tests": "streamfunction"
+    }],
+    "5": [ "test_model.py",
+        {        
+        "load_from": "isabel_batchsize_0.005percent",
+        "tests": "streamfunction"
+    }],
+    "6": [ "test_model.py",
+        {        
+        "load_from": "isabel_batchsize_0.05percent",
+        "tests": "streamfunction"
+    }],
+    "7": [ "test_model.py",
+        {        
+        "load_from": "isabel_batchsize_0.5percent",
+        "tests": "streamfunction"
+    }],
+    "8": [ "test_model.py",
+        {        
+        "load_from": "isabel_batchsize_5percent",
+        "tests": "streamfunction"
+    }]
+}

@@ -1,0 +1,48 @@
+{
+    
+    "1": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "delta_40.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "vorticity": false,
+        "seeding_points": "delta_40_seeds.csv",
+        "save_name": "delta_40_seeds"     
+    }],
+    "2": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "ABC.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "vorticity": false,
+        "seeding_points": "ABC_seeds.csv",
+        "save_name": "ABC_seeds"     
+    }],
+    "3": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "isabel.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 100000,
+        "vorticity": false,
+        "seeding_points": "isabel_seeds.csv",
+        "save_name": "isabel_seeds"     
+    }]
+}

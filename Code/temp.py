@@ -5,15 +5,19 @@ from netCDF4 import Dataset
 import h5py
 import numpy as np
 import time
-from Other.utility_functions import nc_to_tensor, tensor_to_cdf, curl, make_coord_grid, tensor_to_obj
+from Other.utility_functions import nc_to_tensor, tensor_to_cdf, make_coord_grid, curl, spatial_gradient
 from math import pi
 from scipy.spatial.transform import Rotation as R
+from Models.options import *
+from Models.models import create_model
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..")
 data_folder = os.path.join(project_folder_path, "Data")
 output_folder = os.path.join(project_folder_path, "Output")
 save_folder = os.path.join(project_folder_path, "SavedModels")
+
+
 
 def asSpherical(xyz):
     #takes list xyz (single coord)
@@ -86,10 +90,9 @@ def quaternion_multiply(a, b):
     return result
 
 def psi_to_nc():
-    from netCDF4 import Dataset
     
-    psi1 = torch.tensor(np.load("psi1.npy"))
-    psi2 = torch.tensor(np.load("psi2.npy"))
+    psi1 = torch.tensor(np.load("psi1.npy")).reshape(64, 64, 64)
+    psi2 = torch.tensor(np.load("psi2.npy")).reshape(64, 64, 64)
     
     grid = make_coord_grid(psi1.shape, "cpu", False, False)
     #grid = np.transpose(grid, (3, 0, 1, 2))
@@ -141,12 +144,35 @@ def delta_40_load():
     uvw = np.array(uvw).reshape(z_size, y_size, x_size, 3)
     uvw = torch.tensor(uvw).permute(3, 0, 1, 2).unsqueeze(0)
     tensor_to_cdf(uvw, "delta_40.nc")
-    
+
+def insidefluids():
+    from netCDF4 import Dataset
+    shape = [64, 64, 64]
+    sx = torch.tensor(np.load("deltawing_sx.npy").reshape(shape))
+    sy = torch.tensor(np.load("deltawing_sy.npy").reshape(shape))
+    sz = torch.tensor(np.load("deltawing_sz.npy").reshape(shape))
+    t = torch.stack([sx, sy, sz]).unsqueeze(0)
+    tensor_to_cdf(t, "InsideFluids.nc", 
+        channel_names=["sx", "sy", "sz"])
     
 if __name__ == '__main__':
-    
-    t = nc_to_tensor(os.path.join(data_folder, "tornado.nc"))
-    t = curl(t)
-    tensor_to_cdf(t, "tornado_vort.nc")
 
-    quit()
+    '''
+    start = np.array([76.63355624865802, 50.46789668912503, 76.38933124022662])
+    end = np.array([60.202556278981916, 69.8793142881013, 72.61491798871297])
+    num_points = 50
+    
+    for i in range(num_points):
+        p = i / (num_points - 1)
+        spot = start * (1-p) + end * p
+        print(f"{spot[0]},{spot[1]},{spot[2]}")
+    '''
+    #data = nc_to_tensor(os.path.join(data_folder, "hill.nc"))
+    #data = divergence(data)
+    #tensor_to_cdf(data, os.path.join(data_folder, "hill_vort.nc"))
+    t = nc_to_tensor(os.path.join(data_folder, "isabel.nc"))[:,:,7:,:,:]
+    print(t.shape)
+    div = spatial_gradient(t,2,0) + spatial_gradient(t,1,1) + spatial_gradient(t,0,2)
+    
+    print(torch.abs(div).mean())
+    tensor_to_cdf(div, "div.nc")

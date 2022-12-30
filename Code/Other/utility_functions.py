@@ -9,13 +9,68 @@ import os
 from netCDF4 import Dataset
 import pickle
 import h5py
-import numba as nb
-  
+#import numba as nb
+
 def reset_grads(model,require_grad):
     for p in model.parameters():
         p.requires_grad_(require_grad)
     return model
 
+class PositionalEncoding(torch.nn.Module):
+    def __init__(self, opt):
+        super(PositionalEncoding, self).__init__()        
+        self.opt = opt
+        self.L = opt['num_positional_encoding_terms']
+        self.L_terms = torch.arange(0, opt['num_positional_encoding_terms'], 
+            device=opt['device'], dtype=torch.float32).repeat_interleave(2*opt['n_dims'])
+        self.L_terms = torch.pow(2, self.L_terms) * torch.pi
+
+        self.L_terms_new = torch.arange(0, opt['num_positional_encoding_terms'], 
+            device=opt['device'], dtype=torch.float32)
+        self.L_terms_new = torch.pow(2, self.L_terms_new) * torch.pi
+        
+    def forward(self, locations):
+        out =  torch.cat(
+            [
+                torch.sin(locations[:,:]*self.L_terms_new[0]),
+                torch.cos(locations[:,:]*self.L_terms_new[0]),
+                torch.sin(locations[:,:]*self.L_terms_new[1]),
+                torch.cos(locations[:,:]*self.L_terms_new[1]),
+                torch.sin(locations[:,:]*self.L_terms_new[2]),
+                torch.cos(locations[:,:]*self.L_terms_new[2]),
+                torch.sin(locations[:,:]*self.L_terms_new[3]),
+                torch.cos(locations[:,:]*self.L_terms_new[3]),
+                torch.sin(locations[:,:]*self.L_terms_new[4]),
+                torch.cos(locations[:,:]*self.L_terms_new[4]),
+                torch.sin(locations[:,:]*self.L_terms_new[5]),
+                torch.cos(locations[:,:]*self.L_terms_new[5])
+            ], dim=1
+        )
+        return out
+        
+        
+
+    def forward_old(self, locations):
+        repeats = len(list(locations.shape)) * [1]
+        repeats[-1] = self.L*2
+        locations = locations.repeat(repeats).contiguous()
+        
+        locations = locations * self.L_terms# + self.phase_shift
+        if(self.opt['n_dims'] == 2):
+            locations[..., 0::4] = torch.sin(locations[..., 0::4])
+            locations[..., 1::4] = torch.sin(locations[..., 1::4])
+            locations[..., 2::4] = torch.cos(locations[..., 2::4])
+            locations[..., 3::4] = torch.cos(locations[..., 3::4])
+        else:
+            locations[..., 0::6] = torch.sin(locations[..., 0::6])
+            locations[..., 1::6] = torch.sin(locations[..., 1::6])
+            locations[..., 2::6] = torch.sin(locations[..., 2::6])
+            locations[..., 3::6] = torch.cos(locations[..., 3::6])
+            locations[..., 4::6] = torch.cos(locations[..., 4::6])
+            locations[..., 5::6] = torch.cos(locations[..., 5::6])
+            
+        return locations
+       
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv2d') != -1:
@@ -296,7 +351,7 @@ def make_coord_grid(shape, device, flatten=True, align_corners=False):
             dtype=torch.float32).float()
 
         else:
-            r = (right - left) / (n+1)
+            r = (right - left) / n
             seq = left + r + r * \
             torch.arange(0, n, 
             device=device, 
@@ -469,7 +524,7 @@ def normal(vf, b=None, normalize=True):
     # jac: [1, 3, 3, d, h, w]
     
     if b is None:
-        b = binormal(vf)
+        b = binormal(vf, normalize=normalize)
     b = b.squeeze().flatten(1).permute(1,0).unsqueeze(2)
     n = torch.cross(b,
         vf[0].permute(1, 2, 3, 0).flatten(0, 2).unsqueeze(2))
@@ -497,6 +552,7 @@ def binormal(vf, jac=None, normalize=True):
         vf.shape[3], vf.shape[4]).unsqueeze(0)
     if(normalize):
         b /= (b.norm(dim=1) + 1e-8)
+    #tensor_to_cdf(b, "binormal.nc")
     return b
 
 def jacobian(data, normalize=True):
@@ -627,6 +683,7 @@ def spatial_gradient(data, channel, dimension):
 
     return output
 
+'''
 #Modified Code from Scipy-source
 #https://github.com/scipy/scipy/blob/master/scipy/spatial/_hausdorff.pyx
 #Copyright (C)  Tyler Reddy, Richard Gowers, and Max Linke, 2016
@@ -690,7 +747,7 @@ def directed_hausdorff_nb(ar1, ar2):
             d_max = d_min
 
     return np.sqrt(d_max)
-
+'''
 @torch.jit.script
 def RK4_advection(vf : torch.Tensor, seeds : torch.Tensor, 
         h : float = 0.1, align_corners : bool = True):

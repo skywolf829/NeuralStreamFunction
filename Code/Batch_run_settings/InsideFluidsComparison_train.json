@@ -1,0 +1,45 @@
+{
+    
+    "1": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "tornado.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "vorticity": true,
+        "save_name": "tornado_vort"     
+    }],
+    "2": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "hill.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "vorticity": true,
+        "save_name": "hill_vort"     
+    }],
+    "3": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "delta_40.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 512,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "vorticity": true,
+        "save_name": "delta_40_vort"     
+    }]
+}

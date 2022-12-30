@@ -4,14 +4,17 @@ import torch.autograd
 import torch.nn as nn
 import torch.nn.functional as F
 import os
-from math import pi
-from Models.options import *
-from Other.utility_functions import create_folder
-from Models.siren import SIREN
-from Models.fSRN import fSRN
-from Models.fVSRN import fVSRN
-from Models.grid import Grid
-from Other.utility_functions import make_coord_grid
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+sys.path.append(script_dir)
+from siren import SIREN
+from fSRN import fSRN
+from fVSRN import fVSRN
+from grid import Grid
+from options import save_options
+from utility_functions import make_coord_grid, create_folder
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
 project_folder_path = os.path.join(project_folder_path, "..", "..")
@@ -37,7 +40,7 @@ def load_model(opt, device):
         map_location = device)
     
     model.load_state_dict(ckpt['state_dict'])
-
+    model = model.to(opt['device'])
     return model
 
 def create_model(opt):
@@ -199,11 +202,11 @@ def forward_w_grad(model, coords):
     return output, coords
 
 def forward_maxpoints(model, coords, max_points=100000):
-    print(coords.shape)
+    #print(coords.shape)
     output_shape = list(coords.shape)
-    output_shape[-1] = model.opt['n_outputs']
+    output_shape[-1] = 1
     output = torch.empty(output_shape, 
-        dtype=torch.float32, device=model.opt['device'])
+        dtype=torch.float32, device=coords.device)
     for start in range(0, coords.shape[0], max_points):
         #print("%i:%i" % (start, min(start+max_points, coords.shape[0])))
         output[start:min(start+max_points, coords.shape[0])] = \

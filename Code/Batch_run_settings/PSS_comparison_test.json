@@ -1,0 +1,22 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "cylinder_PSS",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "vortices_PSS",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test_model.py",
+        {        
+        "load_from": "tornado_PSS",
+        "tests": "streamfunction"
+    }],
+    "4": [ "test_model.py",
+        {        
+        "load_from": "delta_40_PSS",
+        "tests": "streamfunction"
+    }]
+}

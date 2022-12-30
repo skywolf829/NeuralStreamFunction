@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 import argparse
-from inspect import trace
 from Datasets.datasets import get_dataset
 import datetime
 from Other.utility_functions import str2bool, particle_tracing
@@ -11,7 +10,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 import time
 import os
-from Models.options import *
+from Models.options import load_options, Options
 from torch.utils.tensorboard import SummaryWriter
 import torch.multiprocessing as mp
 from Models.losses import *
@@ -170,30 +169,30 @@ if __name__ == '__main__':
     parser.add_argument('--n_dims',default=None,type=int,
         help='Number of dimensions in the data')
     parser.add_argument('--n_outputs',default=None,type=int,
-        help='Number of output channels for the data (ex. 1 for scalar field, 3 for image or vector field)')
+        help='Number of output channels for the data - should be 1 for neural stream function models')
     parser.add_argument('--model',default=None,type=str,
-        help='The model architecture used for training')
+        help='The model architecture used for training. Options are siren or fSRN')
     parser.add_argument('--training_mode',default=None,type=str,
         help='Training mode chooses the loss function for the model, as ' + \
-        'well as assumes what each output from the model means.'
+        'well as assumes what each output from the model means. Options are ' + \
+        'f_any, which is L_{\perp} in our paper, or f_parallel, which is L_{PSS} in our paper'
     )
     parser.add_argument('--device',default=None, type=str,
-        help='Which device to train on')
+        help='Which device to train on - do not enter if running this from start_jobs.py')
     parser.add_argument('--data_device',default=None,type=str,
-        help='Which device to keep the data on')
+        help='Which device to keep the data on - do not enter if running this from start_jobs.py')
     
     parser.add_argument('--data',default=None,type=str,
-        help='Data file name')
+        help='Data file name, include .nc at the end')
     parser.add_argument('--interpolate',default=None,type=str2bool,
-        help='Interpolate points during training')
+        help='Interpolate points during training rather than sampling exact grid points')
     parser.add_argument('--vorticity',default=None,type=str2bool,
-        help='Fine integral of vorticity')
+        help='Calculate the vorticity of the supplied vector field, and find a stream function for that vorticity field instead')
     parser.add_argument('--align_corners',default=None,type=str2bool,
-        help='Aligns corners in implicit model.')
+        help='Aligns corners in implicit model such that the extents are exactly [-1, 1]^3')
     parser.add_argument('--seeding_points',default=None,type=str,
-        help='Seeding points file')
-    parser.add_argument('--streamline_loss',default=None,type=str2bool,
-        help='Streamline regularization loss enabled or not')
+        help='If a stream surface going through a set of seeding points is requested such as ' + \
+            'L_{seeds} in our paper, this argument is the csv file of seeds hosted in /Data/Seeds/')
     parser.add_argument('--save_name',default=None,type=str,
         help='Save name for the model')
     
@@ -202,21 +201,10 @@ if __name__ == '__main__':
     parser.add_argument('--nodes_per_layer',default=None,type=int,
         help='Nodes per layer in the model')    
 
-    parser.add_argument('--n_features',default=None,type=int,
-        help='Number of features in the feature grid')    
     parser.add_argument('--num_positional_encoding_terms',default=None,type=int,
         help='Number of fourier features')
-    parser.add_argument('--grid_size',default=None,type=int,
-        help='Feature grid size, or grid size for direct solving')    
-    
-    parser.add_argument('--train_distributed',default=None,type=str2bool,
-        help='Train on multiple GPUs')
-    parser.add_argument('--gpus_per_node',default=None, type=int,
-        help='GPUs per node when training distributed')
-    parser.add_argument('--num_nodes',default=None, type=int,
-        help='Number of nodes')
-    parser.add_argument('--ranking',default=None, type=int,
-        help='Not used.')
+    parser.add_argument('--omega',default=None,type=float,
+        help='Omega for weight initialization - see SIREN paper for details')
 
     parser.add_argument('--iterations',default=None, type=int,
         help='Number of iterations to train')
@@ -229,19 +217,12 @@ if __name__ == '__main__':
     parser.add_argument('--beta_2',default=None, type=float,
         help='Beta2 for the adam optimizer')
 
-    parser.add_argument('--iteration_number',default=None, type=int,
-        help="Not used.")
     parser.add_argument('--save_every',default=None, type=int,
         help='How often to save the model')
     parser.add_argument('--log_every',default=None, type=int,
         help='How often to log the loss')
     parser.add_argument('--load_from',default=None, type=str,
         help='Model to load to start training from')
-    parser.add_argument('--log_image',default=None, type=str2bool,
-        help='Whether or not to log an image. Slows down training.')
-    parser.add_argument('--log_gradient',default=None, type=str2bool,
-        help='Whether or not to log the gradient of the output. Slows down training.')
-
 
     args = vars(parser.parse_args())
 

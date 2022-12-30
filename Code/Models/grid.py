@@ -1,7 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from Other.utility_functions import jacobian
+import os
+import sys
+script_dir = os.path.dirname(__file__)
+other_dir = os.path.join(script_dir, "..", "Other")
+sys.path.append(other_dir)
+from utility_functions import jacobian
 
 '''
 Backwards is not implemented for pytorch's grid sample, so we use
