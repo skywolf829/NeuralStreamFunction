@@ -41,7 +41,7 @@ gdown 10EUDp7D7B6-LokxEHrfcoggixQ5jL998
 tar -xvf data.tar.gz
 rm data.tar.gz
 ```
-Now, all our test data should be in Data/ as NetCDF files, which can readily be visualized in ParaView.
+Now, all our test data should be in ```/Data``` as NetCDF files, which can readily be visualized in ParaView.
 
 ## Usage
 
