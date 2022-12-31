@@ -170,9 +170,9 @@ if __name__ == '__main__':
     #data = nc_to_tensor(os.path.join(data_folder, "hill.nc"))
     #data = divergence(data)
     #tensor_to_cdf(data, os.path.join(data_folder, "hill_vort.nc"))
-    t = nc_to_tensor(os.path.join(data_folder, "isabel.nc"))[:,:,7:,:,:]
+    t = nc_to_tensor(os.path.join(data_folder, "isotropic_1024^3.nc"))#[:,:,7:,:,:]
     print(t.shape)
     div = spatial_gradient(t,2,0) + spatial_gradient(t,1,1) + spatial_gradient(t,0,2)
     
     print(torch.abs(div).mean())
-    tensor_to_cdf(div, "div.nc")
+    #tensor_to_cdf(div, "Isotropic_divergence.nc", channel_names=["divergence"])
