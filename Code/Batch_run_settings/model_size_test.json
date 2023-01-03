@@ -3,7 +3,7 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -11,12 +11,12 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_4x128"     
+        "save_name": "isabel_4x128"     
     }],
     "2": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -24,12 +24,12 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_6x128"     
+        "save_name": "isabel_6x128"     
     }],
     "3": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -37,12 +37,12 @@
         "nodes_per_layer": 128,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_8x128"     
+        "save_name": "isabel_8x128"     
     }],
     "4": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -50,12 +50,12 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_4x256"     
+        "save_name": "isabel_4x256"     
     }],
     "5": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -63,12 +63,12 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_6x256"     
+        "save_name": "isabel_6x256"     
     }],
     "6": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -76,12 +76,12 @@
         "nodes_per_layer": 256,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_8x256"     
+        "save_name": "isabel_8x256"     
     }],
     "7": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -89,12 +89,12 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_4x512"     
+        "save_name": "isabel_4x512"     
     }],
     "8": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -102,12 +102,12 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_6x512"     
+        "save_name": "isabel_6x512"     
     }],
     "9": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "halfcylinder_re160_ts100.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -115,6 +115,6 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "halfcylinder_8x512"     
+        "save_name": "isabel_8x512"     
     }]
 }
