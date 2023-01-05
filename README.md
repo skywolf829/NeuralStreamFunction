@@ -1,6 +1,7 @@
 # Neural Stream Function
 This project uses neural networks to extract stream functions from vector fields, which can be visualized to understand the flow. The paper was submitted to Pacific Visualization 2023 and is under review.
 
+![alt text](https://github.com/skywolf829/NeuralStreamFunction/blob/main/Figures/streamfunctions.jpg)
 
 ## Installation
 
@@ -93,6 +94,11 @@ This script is responsible for the testing of trained models, and generating out
 Example of testing a trained model named lorenz:
 
 ```python Code/Tests/test.py --load_from lorenz --tests_to_run streamfunction```
+
+## Other
+
+Though not included in our published paper, there are other useful applications of implicit representations for vector field visualization.
+For example, 
 
 ## Contact 
 
