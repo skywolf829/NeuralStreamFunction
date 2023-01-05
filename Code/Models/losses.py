@@ -170,6 +170,13 @@ def f_any_loss(network_output, target):
     normal_err = angle_orthogonal_loss(grads_f, target['data'])
     return normal_err
 
+def APAP_loss(network_output, target):
+    grads_f = torch.autograd.grad(network_output[:,0], target['inputs'], 
+        grad_outputs=torch.ones_like(network_output[:,0]),
+        create_graph=True)[0]
+    angles = F.cosine_similarity(grads_f, target['data'])
+    return (1-angles**2).mean()
+
 def f_parallel_loss(network_output, target):
     grads_f = torch.autograd.grad(network_output[:,0], target['inputs'], 
         grad_outputs=torch.ones_like(network_output[:,0]),
@@ -233,6 +240,8 @@ def get_loss_func(opt):
         return l1_normal_loss
     elif(opt['training_mode'] == "vorticity"):
         return vortex_tubes_loss
+    elif(opt['training_mode'] == "APAP"):
+        return APAP_loss
     else:
         print(f"Missing loss function {opt['training_mode']}. Exiting.")
         quit()

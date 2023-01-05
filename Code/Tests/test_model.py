@@ -63,7 +63,7 @@ def model_stream_function(model, dataset, opt):
         total_points *= grid[i]
     
     if("dsf" in opt['training_mode'] or opt['training_mode'].startswith("f_") \
-        or opt['training_mode'] == "vorticity"):          
+        or opt['training_mode'] == "vorticity" or opt['training_mode'] == "APAP"):          
         t_0_ff = time.time()
         with torch.no_grad():
             f = sample_grid(model, grid, max_points=10000)[...,0:1]
@@ -171,7 +171,7 @@ def perform_tests(model, data, tests, opt):
         if("dsf" in opt['training_mode'] or \
             "uvwf" in opt['training_mode'] or
             "f_" in opt['training_mode'] or "PSF" in opt['training_mode'] \
-                or "vorticity" in opt['training_mode']):
+                or "vorticity" in opt['training_mode'] or "APAP" in opt['training_mode']):
             model_stream_function(model, data, opt)
         else:
             print(f"Training mode {opt['training_mode']} does not support the stream function task")

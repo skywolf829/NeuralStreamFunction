@@ -1,0 +1,8 @@
+{
+    "2": [ "test_model.py",
+        {        
+        "load_from": "cylinder_APAP",
+        "tests": "streamfunction"
+    }]
+
+}
