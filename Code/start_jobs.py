@@ -50,9 +50,9 @@ def parse_devices(devices_text):
     return devices
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Trains models given settings on available gpus')
+    parser = argparse.ArgumentParser(description='Trains/tests models given settings on available gpus')
     parser.add_argument('--settings',default=None,type=str,
-        help='The settings file with options for each model to train')
+        help='The settings file with options for each model to train/test')
     parser.add_argument('--devices',default="all",type=str,
         help='Which [cuda] devices(s) to train on, separated with commas. Default: all, which uses all available CUDA devices')
     parser.add_argument('--data_devices',default="same",type=str,

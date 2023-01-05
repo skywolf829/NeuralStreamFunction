@@ -208,6 +208,8 @@ if __name__ == '__main__':
     
     # Load the reference data
     data = Dataset(opt)
+    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Number of parameters {n_params}")
     
     # Perform tests
     perform_tests(model, data, tests_to_run, opt)
