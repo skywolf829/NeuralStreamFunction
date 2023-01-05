@@ -2,7 +2,7 @@
     "4": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "isotropic.nc",
+        "data": "isotropic_128^3.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -10,11 +10,11 @@
         "nodes_per_layer": 512,
         "iterations": 10000,
         "points_per_iteration": 100000,
-        "save_name": "isotropic"     
+        "save_name": "isotropic128"     
     }],
     "5": [ "test_model.py",
         {        
-        "load_from": "isotropic",
+        "load_from": "isotropic128",
         "tests": "streamfunction"
     }]
 }
