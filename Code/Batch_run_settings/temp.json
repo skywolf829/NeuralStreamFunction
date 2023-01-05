@@ -16,5 +16,5 @@
         {        
         "load_from": "isotropic",
         "tests": "streamfunction"
-    }],
+    }]
 }
