@@ -254,10 +254,11 @@ if __name__ == '__main__':
         for k in args.keys():
             if args[k] is not None:
                 opt[k] = args[k]
-        if args['save_name'] is None:
-            opt["save_name"] = args["load_from"]
         dataset = get_dataset(opt)
+        new_name = opt['save_name']
+        opt['save_name'] = args['load_from']
         model = load_model(opt, opt['device'])
+        opt['save_name'] = new_name
 
     now = datetime.datetime.now()
     start_time = time.time()
