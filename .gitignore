@@ -142,8 +142,6 @@ dmypy.json
 *.gif
 *.out
 *.nc
-*.jpg
-*.jpeg
 *.torch
 *.dat
 .DS_Store
