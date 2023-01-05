@@ -250,10 +250,11 @@ if __name__ == '__main__':
     else:        
         opt = load_options(os.path.join(save_folder, args["load_from"]))
         opt["device"] = args["device"]
-        opt["save_name"] = args["load_from"]
         for k in args.keys():
             if args[k] is not None:
                 opt[k] = args[k]
+        if args['save_name'] is None:
+            opt["save_name"] = args["load_from"]
         dataset = get_dataset(opt)
         model = load_model(opt, opt['device'])
 

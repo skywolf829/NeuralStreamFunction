@@ -1,0 +1,18 @@
+{
+    "1": [ "test_model.py",
+        {        
+        "load_from": "cylinder_warm_start",
+        "tests": "streamfunction"
+    }],
+    "2": [ "test_model.py",
+        {        
+        "load_from": "cylinder_retrain_warm_start",
+        "tests": "streamfunction"
+    }],
+    "3": [ "test_model.py",
+        {        
+        "load_from": "cylinder_retrain_cold_start",
+        "tests": "streamfunction"
+    }]
+
+}

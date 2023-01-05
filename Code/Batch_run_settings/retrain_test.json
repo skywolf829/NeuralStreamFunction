@@ -1,0 +1,46 @@
+{
+    
+    "1": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "cylinder.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 128,
+        "seeding_points": "tornado_seeding_curve1.csv",
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "save_name": "cylinder_warm_start"     
+    }],
+    "2": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "cylinder.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 128,
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "seeding_points": "tornado_seeding_curve3.csv",
+        "load_from": "cylinder_warm_start",
+        "save_name": "cylinder_retrain_warm_start"     
+    }],
+    "3": [ "train.py",
+        {        
+        "model": "fSRN",
+        "data": "cylinder.nc",
+        "training_mode": "f_any",
+        "n_dims": 3,
+        "n_outputs": 1,
+        "n_layers": 2,
+        "nodes_per_layer": 128,
+        "seeding_points": "tornado_seeding_curve3.csv",
+        "iterations": 10000,
+        "points_per_iteration": 10000,
+        "save_name": "cylinder_retrain_cold_start"     
+    }]
+}
