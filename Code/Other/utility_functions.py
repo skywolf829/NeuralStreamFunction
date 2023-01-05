@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch.nn import functional as F
-from matplotlib.pyplot import cm
 from math import exp
 from typing import Optional
 import argparse
@@ -225,6 +224,8 @@ def ssim3D_distributed(img1, img2, window_size = 11, size_average = True):
     return _ssim_3D_distributed(img1, img2, window, window_size, channel, size_average)
 
 def toImg(data, renorm_channels = True):
+    
+    from matplotlib.pyplot import cm
     #print("In to toImg: " + str(data.shape))
     if(renorm_channels):
         for c in range(data.shape[0]):
