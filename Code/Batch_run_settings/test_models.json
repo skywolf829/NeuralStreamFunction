@@ -21,42 +21,22 @@
     }],
     "5": [ "test_model.py",
         {        
-        "load_from": "non_closed",
+        "load_from": "isotropic512",
         "tests": "streamfunction"
     }],
     "6": [ "test_model.py",
         {        
-        "load_from": "isotropic512",
+        "load_from": "tornado",
         "tests": "streamfunction"
     }],
     "7": [ "test_model.py",
         {        
-        "load_from": "tangaroa",
+        "load_from": "cylinder",
         "tests": "streamfunction"
     }],
     "8": [ "test_model.py",
         {        
-        "load_from": "plume",
-        "tests": "streamfunction"
-    }],
-    "9": [ "test_model.py",
-        {        
-        "load_from": "tornado",
-        "tests": "streamfunction"
-    }],
-    "10": [ "test_model.py",
-        {        
-        "load_from": "cylinder",
-        "tests": "streamfunction"
-    }],
-    "11": [ "test_model.py",
-        {        
         "load_from": "ABC",
-        "tests": "streamfunction"
-    }],
-    "12": [ "test_model.py",
-        {        
-        "load_from": "vortices",
         "tests": "streamfunction"
     }]
 }

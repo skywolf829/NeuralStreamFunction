@@ -18,5 +18,10 @@
         {        
         "load_from": "delta_40_PSS",
         "tests": "streamfunction"
+    }],    
+    "5": [ "test_model.py",
+        {        
+        "load_from": "ABC_PSS",
+        "tests": "streamfunction"
     }]
 }

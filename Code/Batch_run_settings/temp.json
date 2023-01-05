@@ -1,27 +1,20 @@
 {
-    
-    "1": [ "train.py",
+    "4": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "cylinder.nc",
-        "training_mode": "APAP",
+        "data": "isotropic.nc",
+        "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 2,
-        "nodes_per_layer": 128,
+        "nodes_per_layer": 512,
         "iterations": 10000,
-        "points_per_iteration": 10000,
-<<<<<<< Updated upstream
-        "save_name": "lorenz",
-        "interpolate": true
-=======
-        "streamline_loss": false,
-        "save_name": "cylinder_APAP"     
->>>>>>> Stashed changes
+        "points_per_iteration": 100000,
+        "save_name": "isotropic"     
     }],
-    "2": [ "test_model.py",
+    "5": [ "test_model.py",
         {        
-        "load_from": "cylinder_APAP",
+        "load_from": "isotropic",
         "tests": "streamfunction"
-    }]
+    }],
 }
