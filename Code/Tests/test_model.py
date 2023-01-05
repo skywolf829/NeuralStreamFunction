@@ -17,7 +17,6 @@ import torch.nn.functional as F
 from datasets import Dataset
 import torch
 import time
-import matplotlib.pyplot as plt
 import numpy as np
 
 project_folder_path = os.path.dirname(os.path.abspath(__file__))
@@ -113,6 +112,8 @@ def model_stream_function(model, dataset, opt):
     cos_dist = torch.clamp(cos_dist, min=-1 + 1E-6, max=1-1E-6)
     angles = torch.acos(cos_dist)*(180/torch.pi)
     angles = torch.abs(90-angles)
+    
+    #import matplotlib.pyplot as plt
     #plt.boxplot(angles.cpu().numpy().flatten(), vert=False, showfliers=False)
     #plt.show()
     create_path(os.path.join(output_folder, "Error"))
