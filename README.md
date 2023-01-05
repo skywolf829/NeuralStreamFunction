@@ -98,7 +98,13 @@ Example of testing a trained model named lorenz:
 ## Other
 
 Though not included in our published paper, there are other useful applications of implicit representations for vector field visualization.
-For example, 
+Specifically, the gradients of the network can be exposed and utilized to train the network with loss functions requiring the gradient of an output field.
+
+For example, as-perpendicular-as-possible surfaces (shown below) can be extracted by using a modified loss function. A least-squares version of this goal is described in "Schulze M, R ̈ossl C, Germer T, Theisel H. As-perpendicular-as-possible surfaces for flow visualization. In 2012 IEEE Pacific Visualization Symposium 2012 Feb 28 (pp. 153-160)."
+
+![alt text](https://github.com/skywolf829/NeuralStreamFunction/blob/main/Figures/APAP.jpg)
+
+Another option is learn the Helmholtz-Hodge decomposition within a single implicit neural network. Small experiments for this method have been conducted and reported here: https://github.com/skywolf829/NN-HHD.
 
 ## Contact 
 
