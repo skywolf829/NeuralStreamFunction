@@ -143,16 +143,11 @@ def princpal_stream_function(
                     N = np.cross(B, V) * np.linalg.norm(V)
                     dp = (p - pp) / (vf_shape-1)
                     
-                    
                     dp_step = 1 / (vf_shape[0]-1)
                     sf[k,j,i] = \
                         sf[pp[2], pp[1], pp[0]] + \
-                            n[0,0,pp[2],pp[1],pp[0]]*dp[0]+n[0,1,pp[2],pp[1],pp[0]]*dp[1]+n[0,2,pp[2],pp[1],pp[0]]*dp[2]# + \
-                                #0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
-                    #sf[i,j,k] = \
-                    #    sf[pp[2], pp[1], pp[0]] + \
-                    #        np.linalg.norm(V) * dp_step + \
-                    #            0.5 * np.linalg.norm(A) * dp_step**2
+                            n[0,0,pp[2],pp[1],pp[0]]*dp[0]+n[0,1,pp[2],pp[1],pp[0]]*dp[1]+n[0,2,pp[2],pp[1],pp[0]]*dp[2] #+ \
+                    #            0.5 * (A[0]*dp[0]**2 + A[1]*dp[1]**2 + A[2]*dp[2]**2 )
 
     sf -= sf.min()
     sf /= sf.max()
@@ -161,9 +156,9 @@ def princpal_stream_function(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--device',default=None, type=str,
+    parser.add_argument('--device',default="cuda", type=str,
         help='Which device to use')
-    parser.add_argument('--data_device',default=None,type=str,
+    parser.add_argument('--data_device',default="cuda",type=str,
         help='Which device to keep the data on')
     parser.add_argument('--data',default=None,type=str,
         help='Data file name')
@@ -192,7 +187,7 @@ if __name__ == '__main__':
     #n = n*mask + (-n* ~mask)
     
 
-    tensor_to_cdf(n, "cylinder_normal.nc")
+    #tensor_to_cdf(n, "cylinder_normal.nc")
     end_time = time.time()
     print(f"Finished preprocessing in {end_time-start_time : 0.02f} seconds")
     print(f"Normal vf shape {n.shape}")
@@ -208,4 +203,4 @@ if __name__ == '__main__':
     print(f"Finished stream function calculation in {end_time-start_time : 0.02f} seconds")
     
     tensor_to_cdf(torch.tensor(sf).unsqueeze(0).unsqueeze(0), "sf_"+args['data'])
-    tensor_to_cdf(n, "normal_"+args['data'])
+    #tensor_to_cdf(n, "normal_"+args['data'])
