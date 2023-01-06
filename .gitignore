@@ -135,6 +135,8 @@ dmypy.json
 /Other
 /Output
 /tensorboard
+/Code/Paraview_filter
+/Code/TestingScripts
 /ForVisualization
 /App
 /Code/ShellScripts/Old
