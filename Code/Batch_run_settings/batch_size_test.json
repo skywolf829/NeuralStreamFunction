@@ -3,7 +3,7 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "Isabel.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -16,7 +16,7 @@
     "2": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "Isabel.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -29,7 +29,7 @@
     "3": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "Isabel.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
@@ -42,7 +42,7 @@
     "4": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "Isabel.nc",
+        "data": "isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
