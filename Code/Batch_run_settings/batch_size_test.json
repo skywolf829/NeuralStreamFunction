@@ -3,106 +3,54 @@
     "1": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "ABC.nc",
+        "data": "Isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 3,
         "nodes_per_layer": 128,
         "iterations": 10000,
-        "points_per_iteration": 105,
-        "save_name": "ABC_batchsize_0.005percent"     
+        "points_per_iteration": 1000,
+        "save_name": "Isabel_batchsize_1000"     
     }],
     "2": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "ABC.nc",
+        "data": "Isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 3,
         "nodes_per_layer": 128,
         "iterations": 10000,
-        "points_per_iteration": 1048,
-        "save_name": "ABC_batchsize_0.05percent"     
+        "points_per_iteration": 10000,
+        "save_name": "Isabel_batchsize_10000"     
     }],
     "3": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "ABC.nc",
+        "data": "Isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 3,
         "nodes_per_layer": 128,
         "iterations": 10000,
-        "points_per_iteration": 10485,
-        "save_name": "ABC_batchsize_0.5percent"     
+        "points_per_iteration": 100000,
+        "save_name": "Isabel_batchsize_100000"     
     }],
     "4": [ "train.py",
         {        
         "model": "fSRN",
-        "data": "ABC.nc",
+        "data": "Isabel.nc",
         "training_mode": "f_any",
         "n_dims": 3,
         "n_outputs": 1,
         "n_layers": 3,
         "nodes_per_layer": 128,
         "iterations": 10000,
-        "points_per_iteration": 104857,
-        "save_name": "ABC_batchsize_5percent"     
-    }],
-
-    "5": [ "train.py",
-    {        
-        "model": "fSRN",
-        "data": "isabel.nc",
-        "training_mode": "f_any",
-        "n_dims": 3,
-        "n_outputs": 1,
-        "n_layers": 2,
-        "nodes_per_layer": 256,
-        "iterations": 10000,
-        "points_per_iteration": 1250,
-        "save_name": "isabel_batchsize_0.005percent"     
-    }],
-    "6": [ "train.py",
-        {        
-        "model": "fSRN",
-        "data": "isabel.nc",
-        "training_mode": "f_any",
-        "n_dims": 3,
-        "n_outputs": 1,
-        "n_layers": 2,
-        "nodes_per_layer": 256,
-        "iterations": 10000,
-        "points_per_iteration": 12500,
-        "save_name": "isabel_batchsize_0.05percent"     
-    }],
-    "7": [ "train.py",
-        {        
-        "model": "fSRN",
-        "data": "isabel.nc",
-        "training_mode": "f_any",
-        "n_dims": 3,
-        "n_outputs": 1,
-        "n_layers": 2,
-        "nodes_per_layer": 256,
-        "iterations": 10000,
-        "points_per_iteration": 125000,
-        "save_name": "isabel_batchsize_0.5percent"     
-    }],
-    "8": [ "train.py",
-        {        
-        "model": "fSRN",
-        "data": "isabel.nc",
-        "training_mode": "f_any",
-        "n_dims": 3,
-        "n_outputs": 1,
-        "n_layers": 2,
-        "nodes_per_layer": 256,
-        "iterations": 10000,
-        "points_per_iteration": 1250000,
-        "save_name": "isabel_batchsize_5percent"     
+        "points_per_iteration": 1000000,
+        "save_name": "Isabel_batchsize_1000000"     
     }]
+
 }
